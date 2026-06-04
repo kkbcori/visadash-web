@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casefile — Immigration Document Comparator</title>
+<meta name="description" content="Compare DS-160 applications, passports, and supporting documents side by side. Runs entirely in your browser — no upload, no server, nothing stored.">
+<meta name="theme-color" content="#1f3b54">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<!-- Replace visadash.org with your live domain after deploy -->
+<link rel="canonical" href="https://visadash.org/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Casefile">
+<meta property="og:title" content="Casefile — Immigration Document Comparator">
+<meta property="og:description" content="Compare DS-160s, passports & supporting documents. 100% on-device — nothing is uploaded.">
+<meta property="og:url" content="https://visadash.org/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Casefile — Immigration Document Comparator">
+<meta name="twitter:description" content="Compare DS-160s, passports & supporting documents. 100% on-device — nothing is uploaded.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<style>
+  :root{
+    --paper:#f3f0e8; --paper-2:#ece8db; --panel:#fbfaf5;
+    --ink:#20211d; --ink-soft:#5d5c52; --ink-faint:#8b8a7d;
+    --line:#ccc6b3; --line-soft:#ddd8c8;
+    --navy:#1f3b54; --navy-deep:#142838;
+    --match:#2f6a47; --match-bg:#e4efe5;
+    --miss:#a8392f; --miss-bg:#f6e1de;
+    --warn:#876018; --warn-bg:#f2e8cd;
+    --info:#2a5670; --info-bg:#e1ebf0;
+    --radius:7px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(31,59,84,.045), transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(136,96,24,.05), transparent 42%);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 28px 80px}
+
+  /* ---- header ---- */
+  header{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px;margin-bottom:8px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  }
+  .brand h1{
+    font-family:'Newsreader',serif;font-weight:600;font-size:2.55rem;
+    letter-spacing:-.015em;line-height:1.02;
+  }
+  .brand .sub{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-soft);margin-top:6px;
+  }
+  .stamp{
+    border:1.5px solid var(--navy);color:var(--navy);
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;font-weight:600;
+    letter-spacing:.13em;text-transform:uppercase;
+    padding:9px 13px;border-radius:5px;transform:rotate(-3deg);
+    text-align:center;line-height:1.45;background:rgba(255,255,255,.4);
+  }
+  .stamp .lock{font-size:.9rem;display:block;margin-bottom:2px}
+
+  .intro{
+    margin:20px 0 26px;font-family:'Newsreader',serif;font-size:1.12rem;
+    color:var(--ink-soft);max-width:760px;
+  }
+  .privacy{
+    display:flex;gap:11px;align-items:flex-start;
+    background:var(--match-bg);border:1px solid #bcd6bf;border-radius:var(--radius);
+    padding:12px 15px;margin-bottom:30px;font-size:.86rem;color:#2c4e38;
+  }
+  .privacy b{color:var(--match)}
+
+  /* ---- mode bar ---- */
+  .modebar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .modebar .lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+  .seg button{
+    border:0;background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.82rem;font-weight:500;
+    padding:7px 14px;color:var(--ink-soft);border-right:1px solid var(--line-soft);
+  }
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--navy);color:#fff}
+
+  /* ---- slots ---- */
+  .slots{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:8px}
+  @media(max-width:760px){.slots{grid-template-columns:1fr}}
+  .slot{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  .slot-head{
+    padding:12px 16px;border-bottom:1px solid var(--line-soft);
+    display:flex;align-items:baseline;gap:9px;background:var(--paper-2);
+  }
+  .slot-tag{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.78rem;
+    background:var(--navy);color:#fff;width:22px;height:22px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .slot-head h3{font-family:'Newsreader',serif;font-weight:600;font-size:1.18rem}
+  .slot-head .when{font-size:.78rem;color:var(--ink-faint);margin-left:auto;font-style:italic;font-family:'Newsreader',serif}
+  .slot-body{padding:16px}
+
+  .drop{
+    border:1.5px dashed var(--line);border-radius:6px;
+    padding:26px 16px;text-align:center;cursor:pointer;
+    transition:border-color .15s,background .15s;
+  }
+  .drop:hover,.drop.over{border-color:var(--navy);background:#f1f4f6}
+  .drop .ico{font-size:1.5rem;opacity:.55}
+  .drop p{font-size:.88rem;margin-top:6px}
+  .drop .hint{font-size:.74rem;color:var(--ink-faint);margin-top:3px}
+  input[type=file]{display:none}
+
+  .filelist{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+  .fileitem{
+    display:flex;align-items:center;gap:9px;font-size:.82rem;
+    background:var(--paper-2);border:1px solid var(--line-soft);
+    border-radius:5px;padding:6px 10px;
+  }
+  .fileitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fileitem .sz{color:var(--ink-faint);font-size:.74rem;font-family:'IBM Plex Mono',monospace}
+  .fileitem .x{cursor:pointer;color:var(--miss);font-weight:600;padding:0 4px}
+
+  .mrztoggle{
+    margin-top:12px;font-size:.78rem;color:var(--navy);cursor:pointer;
+    text-decoration:underline;text-underline-offset:2px;
+  }
+  .mrzbox{display:none;margin-top:10px}
+  .mrzbox.show{display:block}
+  .mrzbox label{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  textarea.mrz{
+    width:100%;margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:.8rem;
+    border:1px solid var(--line);border-radius:5px;padding:9px;resize:vertical;
+    min-height:62px;background:#fff;color:var(--ink);letter-spacing:.04em;
+  }
+  textarea.mrz:focus{outline:2px solid var(--navy);outline-offset:-1px}
+
+  /* ---- action ---- */
+  .actions{display:flex;align-items:center;gap:16px;margin:24px 0 4px;flex-wrap:wrap}
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:.92rem;
+    border:0;border-radius:6px;cursor:pointer;padding:12px 26px;
+    background:var(--navy);color:#fff;letter-spacing:.01em;
+    transition:background .15s,transform .05s;
+  }
+  .btn:hover{background:var(--navy-deep)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{background:var(--ink-faint);cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+  .btn.ghost:hover{background:#eef2f4}
+  .btn.sm{padding:8px 16px;font-size:.82rem}
+
+  /* ---- log ---- */
+  #log{
+    margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:.78rem;
+    color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line-soft);
+    border-radius:6px;padding:12px 14px;max-height:170px;overflow:auto;display:none;
+  }
+  #log.show{display:block}
+  #log .ln{padding:1px 0}
+  #log .err{color:var(--miss)}
+  #log .ok{color:var(--match)}
+
+  /* ---- results ---- */
+  #results{margin-top:34px;display:none}
+  #results.show{display:block}
+  .res-head{
+    border-top:2px solid var(--ink);padding-top:20px;margin-bottom:18px;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  .res-head h2{font-family:'Newsreader',serif;font-weight:600;font-size:1.7rem}
+  .doc-kind{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;
+    text-transform:uppercase;background:var(--navy);color:#fff;
+    padding:4px 9px;border-radius:4px;
+  }
+  .summary{
+    display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:24px;
+  }
+  .summary .cell{
+    flex:1;min-width:130px;padding:15px 18px;border-right:1px solid var(--line-soft);
+    background:var(--panel);
+  }
+  .summary .cell:last-child{border-right:0}
+  .summary .num{font-family:'Newsreader',serif;font-size:2rem;font-weight:600;line-height:1}
+  .summary .cap{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:5px;
+  }
+  .summary .cell.flag{background:var(--miss-bg)}
+  .summary .cell.flag .num{color:var(--miss)}
+  .summary .cell.good .num{color:var(--match)}
+
+  .alertbar{
+    padding:12px 16px;border-radius:var(--radius);margin-bottom:22px;
+    font-size:.88rem;display:flex;gap:10px;align-items:flex-start;
+  }
+  .alertbar.danger{background:var(--miss-bg);border:1px solid #d8b3ae;color:#7e2d25}
+  .alertbar.safe{background:var(--match-bg);border:1px solid #bcd6bf;color:#2c4e38}
+  .alertbar.note{background:var(--warn-bg);border:1px solid #ddca96;color:#6c4d14}
+
+  .block{margin-bottom:30px}
+  .block h3{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.28rem;margin-bottom:4px;
+  }
+  .block .desc{font-size:.84rem;color:var(--ink-soft);margin-bottom:13px}
+
+  table.cmp{width:100%;border-collapse:collapse;font-size:.87rem}
+  table.cmp th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-weight:500;
+    font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-faint);padding:7px 12px;border-bottom:1.5px solid var(--ink);
+  }
+  table.cmp td{
+    padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top;
+  }
+  table.cmp td.field{font-weight:500;width:24%}
+  table.cmp td.val{font-family:'IBM Plex Mono',monospace;font-size:.82rem;width:28%;word-break:break-word}
+  table.cmp td.val.empty{color:var(--ink-faint)}
+  table.cmp tr.row-miss td{background:var(--miss-bg)}
+  table.cmp tr.row-match td{background:var(--match-bg)}
+  .pill{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.66rem;
+    font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 8px;border-radius:4px;white-space:nowrap;
+  }
+  .pill.match{background:var(--match);color:#fff}
+  .pill.miss{background:var(--miss);color:#fff}
+  .pill.warn{background:var(--warn);color:#fff}
+  .pill.info{background:var(--info);color:#fff}
+
+  .checks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chk{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;padding:5px 9px;
+    border-radius:4px;border:1px solid;
+  }
+  .chk.pass{background:var(--match-bg);border-color:#bcd6bf;color:var(--match)}
+  .chk.fail{background:var(--miss-bg);border-color:#d8b3ae;color:var(--miss)}
+
+  .diffctl{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .diffctl label{font-size:.8rem;color:var(--ink-soft);display:flex;gap:6px;align-items:center;cursor:pointer}
+  .diff{
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    font-family:'IBM Plex Mono',monospace;font-size:.78rem;
+  }
+  .diff .dl{display:flex;padding:2px 0;border-bottom:1px solid #f0ecde}
+  .diff .dl:last-child{border-bottom:0}
+  .diff .gut{
+    width:30px;flex:none;text-align:center;color:#fff;font-weight:600;
+    user-select:none;
+  }
+  .diff .dl .tx{padding:1px 11px;white-space:pre-wrap;word-break:break-word;flex:1}
+  .diff .dl.same .gut{background:var(--line)}
+  .diff .dl.same .tx{color:var(--ink-soft)}
+  .diff .dl.del .gut{background:var(--miss)}
+  .diff .dl.del{background:var(--miss-bg)}
+  .diff .dl.add .gut{background:var(--match)}
+  .diff .dl.add{background:var(--match-bg)}
+  .diff.hidesame .dl.same{display:none}
+
+  details.raw{margin-top:14px}
+  details.raw summary{cursor:pointer;font-size:.82rem;color:var(--navy);font-weight:500}
+
+  footer{
+    margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  footer b{color:var(--ink-soft)}
+
+  .empty-note{font-size:.84rem;color:var(--ink-faint);font-style:italic;font-family:'Newsreader',serif}
+
+  @media print{
+    body{background:#fff}
+    .no-print{display:none!important}
+    #results{display:block!important;margin-top:0}
+    .wrap{max-width:100%;padding:0}
+    .diff.hidesame .dl.same{display:flex}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>Casefile</h1>
+      <div class="sub">Document Comparator · Immigration Practice Edition</div>
+    </div>
+    <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
+  </header>
+
+  <p class="intro">Compare two versions of a client's document — an earlier DS&#8209;160 against a refile, an expiring passport against a renewal, or any supporting paperwork — and surface every discrepancy before it reaches a consular officer.</p>
+
+  <div class="privacy no-print">
+    <span>&#128274;</span>
+    <span><b>Nothing leaves this machine.</b> All text extraction, OCR and comparison run inside your browser. No file is uploaded to any server. Keep this HTML file locally and you can run it fully offline (the OCR engine downloads once on first use, then caches).</span>
+  </div>
+
+  <!-- mode -->
+  <div class="modebar no-print">
+    <span class="lbl">Comparison&nbsp;type</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="auto" class="on">Auto-detect</button>
+      <button data-m="ds160">DS-160</button>
+      <button data-m="passport">Passport</button>
+      <button data-m="general">Other docs</button>
+    </div>
+  </div>
+
+  <!-- slots -->
+  <div class="slots no-print">
+    <div class="slot">
+      <div class="slot-head">
+        <span class="slot-tag">A</span>
+        <h3>Earlier version</h3>
+        <span class="when">prior filing</span>
+      </div>
+      <div class="slot-body" data-slot="A">
+        <div class="drop" tabindex="0">
+          <div class="ico">&#128228;</div>
+          <p>Drop files here, or click to browse</p>
+          <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+        </div>
+        <input type="file" multiple accept=".pdf,image/*">
+        <div class="filelist"></div>
+        <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+        <div class="mrzbox">
+          <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+          <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z1234567&lt;8IND8801019F3001012&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="slot">
+      <div class="slot-head">
+        <span class="slot-tag">B</span>
+        <h3>Later version</h3>
+        <span class="when">current filing</span>
+      </div>
+      <div class="slot-body" data-slot="B">
+        <div class="drop" tabindex="0">
+          <div class="ico">&#128228;</div>
+          <p>Drop files here, or click to browse</p>
+          <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+        </div>
+        <input type="file" multiple accept=".pdf,image/*">
+        <div class="filelist"></div>
+        <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+        <div class="mrzbox">
+          <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+          <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z7654321&lt;2IND8801019F3401015&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;08"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions no-print">
+    <button class="btn" id="runBtn">Compare documents</button>
+    <button class="btn ghost sm" id="resetBtn">Clear all</button>
+  </div>
+
+  <div id="log" class="no-print"></div>
+
+  <!-- results -->
+  <section id="results"></section>
+
+  <footer>
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
+    &bull; <b>Passports:</b> a sharp, flat photo of the photo page works, but pasting the two MRZ lines is faster and 100% reliable &mdash; the tool validates them against ICAO check digits.<br>
+    &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.<br><br>
+    <b>Not legal advice or a filing tool.</b> Casefile is a review aid &mdash; it highlights differences for a human to assess. It does not transmit, store, or submit anything. Verify all findings against the source documents.
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+/* ============ state ============ */
+const slots = {
+  A: { files: [], mrzShown: false },
+  B: { files: [], mrzShown: false }
+};
+let mode = "auto";
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* ============ slot UI ============ */
+$$(".slot-body").forEach(body => {
+  const key   = body.dataset.slot;
+  const drop  = body.querySelector(".drop");
+  const input = body.querySelector("input[type=file]");
+  const toggle= body.querySelector(".mrztoggle");
+  const mrzbox= body.querySelector(".mrzbox");
+
+  drop.addEventListener("click", () => input.click());
+  drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") input.click(); });
+  ["dragover","dragenter"].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => addFiles(key, e.dataTransfer.files));
+  input.addEventListener("change", e => { addFiles(key, e.target.files); input.value = ""; });
+
+  toggle.addEventListener("click", () => {
+    slots[key].mrzShown = !slots[key].mrzShown;
+    mrzbox.classList.toggle("show", slots[key].mrzShown);
+    toggle.innerHTML = (slots[key].mrzShown ? "&#9652;" : "&#9662;") +
+      " or paste the passport MRZ instead";
+  });
+});
+
+function addFiles(key, fileList) {
+  for (const f of fileList) slots[key].files.push(f);
+  renderFiles(key);
+}
+function renderFiles(key) {
+  const list = $(`.slot-body[data-slot=${key}] .filelist`);
+  list.innerHTML = "";
+  slots[key].files.forEach((f, i) => {
+    const row = document.createElement("div");
+    row.className = "fileitem";
+    row.innerHTML =
+      `<span>&#128196;</span>
+       <span class="nm">${escapeHtml(f.name)}</span>
+       <span class="sz">${(f.size/1024).toFixed(0)} KB</span>
+       <span class="x" title="Remove">&times;</span>`;
+    row.querySelector(".x").addEventListener("click", () => {
+      slots[key].files.splice(i, 1); renderFiles(key);
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ============ mode toggle ============ */
+$("#modeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("#modeSeg button").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+  mode = b.dataset.m;
+});
+
+/* ============ logging ============ */
+function log(msg, cls = "") {
+  const box = $("#log");
+  box.classList.add("show");
+  const ln = document.createElement("div");
+  ln.className = "ln " + cls;
+  ln.textContent = msg;
+  box.appendChild(ln);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ============ extraction ============ */
+function getMrz(key) {
+  const ta = $(`.slot-body[data-slot=${key}] textarea.mrz`);
+  return ta ? ta.value.trim() : "";
+}
+
+async function readPdf(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let lines = [], rawChars = 0;
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    rawChars += tc.items.reduce((s, it) => s + it.str.length, 0);
+    lines = lines.concat(itemsToLines(tc.items));
+  }
+  return { pdf, lines, rawChars };
+}
+function itemsToLines(items) {
+  const its = items
+    .filter(it => it.str.trim().length)
+    .map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5] }))
+    .sort((a, b) => (b.y - a.y) || (a.x - b.x));
+  const lines = []; let cur = [], curY = null;
+  for (const it of its) {
+    if (curY === null || Math.abs(it.y - curY) <= 3) { cur.push(it); if (curY === null) curY = it.y; }
+    else { lines.push(cur); cur = [it]; curY = it.y; }
+  }
+  if (cur.length) lines.push(cur);
+  return lines.map(ln =>
+    ln.sort((a, b) => a.x - b.x).map(i => i.s).join(" ").replace(/\s+/g, " ").trim());
+}
+async function ocrPdf(pdf, key, maxPages = 8) {
+  let text = "";
+  const n = Math.min(pdf.numPages, maxPages);
+  for (let p = 1; p <= n; p++) {
+    const page = await pdf.getPage(p);
+    const vp = page.getViewport({ scale: 2 });
+    const c = document.createElement("canvas");
+    c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+    const r = await Tesseract.recognize(c, "eng", { logger: ocrLogger(key, p) });
+    text += "\n" + r.data.text;
+  }
+  if (pdf.numPages > maxPages) log(`  (OCR limited to first ${maxPages} pages)`, "");
+  return text;
+}
+function ocrLogger(key, page) {
+  let last = -1;
+  return m => {
+    if (m.status === "recognizing text") {
+      const pct = Math.round(m.progress * 100);
+      if (pct >= last + 25) { last = pct; log(`  [${key}] OCR${page?" p"+page:""} ${pct}%`); }
+    }
+  };
+}
+
+async function buildSide(key) {
+  const mrz = getMrz(key);
+  if (mrz) {
+    log(`[${key}] using pasted MRZ`, "ok");
+    return { kind: "passport", source: "pasted MRZ",
+             text: mrz, lines: mrz.split(/\n/).map(s => s.trim()).filter(Boolean) };
+  }
+  if (!slots[key].files.length) throw new Error(`No files or MRZ provided for side ${key}.`);
+
+  let lines = [], text = "";
+  for (const file of slots[key].files) {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    const isImg = /^image\//.test(file.type) || /\.(png|jpe?g|webp|bmp|gif|tiff?)$/i.test(file.name);
+    log(`[${key}] reading ${file.name}…`);
+    try {
+      if (isPdf) {
+        const { pdf, lines: L, rawChars } = await readPdf(file);
+        if (rawChars < 30 * pdf.numPages) {
+          log(`  scanned PDF detected — running OCR…`);
+          const t = await ocrPdf(pdf, key);
+          lines = lines.concat(t.split(/\n/).map(s => s.trim()).filter(Boolean));
+          text += "\n" + t;
+        } else {
+          lines = lines.concat(L);
+          text += "\n" + L.join("\n");
+        }
+      } else if (isImg) {
+        log(`  image — running OCR…`);
+        const r = await Tesseract.recognize(file, "eng", { logger: ocrLogger(key) });
+        const t = r.data.text;
+        lines = lines.concat(t.split(/\n/).map(s => s.trim()).filter(Boolean));
+        text += "\n" + t;
+      } else {
+        const t = await file.text();
+        lines = lines.concat(t.split(/\n/));
+        text += "\n" + t;
+      }
+    } catch (err) {
+      log(`  ! failed on ${file.name}: ${err.message}`, "err");
+      throw err;
+    }
+  }
+  return { kind: detectKind(text), source: slots[key].files.map(f => f.name).join(", "),
+           text, lines };
+}
+
+function detectKind(text) {
+  const up = text.toUpperCase();
+  if (/DS[-\s]?160/.test(up) || /NONIMMIGRANT VISA APPLICATION/.test(up)) return "ds160";
+  if (findMRZ(text)) return "passport";
+  return "general";
+}
+
+/* ============ MRZ (ICAO 9303 TD3) ============ */
+function findMRZ(text) {
+  const cand = text.split(/\n/)
+    .map(l => l.replace(/\s+/g, "").toUpperCase())
+    .filter(l => /^[A-Z0-9<]{28,}$/.test(l) && l.includes("<"));
+  for (let i = 0; i < cand.length - 1; i++)
+    if (/^P[A-Z0-9<]/.test(cand[i])) return [pad44(cand[i]), pad44(cand[i + 1])];
+  if (cand.length >= 2) return [pad44(cand[cand.length - 2]), pad44(cand[cand.length - 1])];
+  return null;
+}
+function pad44(l) {
+  l = l.replace(/\s+/g, "").toUpperCase();
+  return (l + "<".repeat(44)).slice(0, 44);
+}
+function checkDigit(str) {
+  const w = [7, 3, 1]; let s = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i]; let v = 0;
+    if (c >= "0" && c <= "9") v = +c;
+    else if (c >= "A" && c <= "Z") v = c.charCodeAt(0) - 55;
+    s += v * w[i % 3];
+  }
+  return s % 10;
+}
+function ckOk(field, actual) {
+  return /[0-9]/.test(actual) && +actual === checkDigit(field);
+}
+function fmtDate(raw, kind) {
+  if (!/^\d{6}$/.test(raw)) return raw || "—";
+  const yy = +raw.slice(0, 2), mm = raw.slice(2, 4), dd = raw.slice(4, 6);
+  let year;
+  if (kind === "exp") year = 2000 + yy;
+  else { const cut = new Date().getFullYear() % 100; year = yy <= cut ? 2000 + yy : 1900 + yy; }
+  return `${year}-${mm}-${dd}`;
+}
+function parseMRZ(side) {
+  const lines = side.lines.filter(Boolean);
+  let l1, l2;
+  if (side.source === "pasted MRZ" && lines.length >= 2) {
+    l1 = pad44(lines[0]); l2 = pad44(lines[1]);
+  } else {
+    const m = findMRZ(side.text);
+    if (!m) return null;
+    [l1, l2] = m;
+  }
+  const nameParts = l1.slice(5, 44).split("<<");
+  const surname = (nameParts[0] || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const given   = (nameParts.slice(1).join(" ") || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const f = {
+    l1, l2,
+    docType: l1.slice(0, 2).replace(/</g, "").trim() || "P",
+    issuer:  l1.slice(2, 5).replace(/</g, "").trim(),
+    surname, given,
+    docNumber: l2.slice(0, 9).replace(/</g, "").trim(),
+    nationality: l2.slice(10, 13).replace(/</g, "").trim(),
+    dob: fmtDate(l2.slice(13, 19), "dob"),
+    sex: (l2.slice(20, 21).replace(/</g, "X") || "X"),
+    expiry: fmtDate(l2.slice(21, 27), "exp"),
+    personalNumber: l2.slice(28, 42).replace(/</g, "").trim()
+  };
+  f.checks = {
+    "Passport number": ckOk(l2.slice(0, 9), l2[9]),
+    "Date of birth":   ckOk(l2.slice(13, 19), l2[19]),
+    "Expiry date":     ckOk(l2.slice(21, 27), l2[27]),
+    "Composite":       ckOk(l2.slice(0,10)+l2.slice(13,20)+l2.slice(21,28)+l2.slice(28,43), l2[43])
+  };
+  return f;
+}
+
+/* ============ line diff (LCS) ============ */
+function normLine(s) { return s.replace(/\s+/g, " ").trim(); }
+function diffLines(aRaw, bRaw) {
+  const a = aRaw.map(normLine).filter(Boolean);
+  const b = bRaw.map(normLine).filter(Boolean);
+  const cap = 3500;
+  const A = a.slice(0, cap), B = b.slice(0, cap);
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = A[i] === B[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (A[i] === B[j]) { out.push({ t: "same", x: A[i] }); i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]) { out.push({ t: "del", x: A[i] }); i++; }
+    else { out.push({ t: "add", x: B[j] }); j++; }
+  }
+  while (i < n) out.push({ t: "del", x: A[i++] });
+  while (j < m) out.push({ t: "add", x: B[j++] });
+  return out;
+}
+
+/* ============ field extractors ============ */
+const DS_LABELS = [
+  "Surnames", "Surname", "Given Names", "Full Name in Native Alphabet",
+  "Other Names Used", "Sex", "Marital Status", "Date of Birth",
+  "City of Birth", "State/Province of Birth", "Country/Region of Birth",
+  "Country/Region of Origin (Nationality)", "Nationality",
+  "National Identification Number", "U.S. Social Security Number",
+  "U.S. Taxpayer ID Number", "Passport/Travel Document Number",
+  "Passport Number", "Passport Book Number",
+  "Country/Authority that Issued Passport/Travel Document",
+  "Passport Issuance Date", "Passport Expiration Date",
+  "Purpose of Trip to the U.S.", "Intended Date of Arrival",
+  "Email Address", "Primary Phone Number"
+];
+function parseDS160(lines) {
+  const L = lines.map(normLine).filter(Boolean);
+  const found = {};
+  for (const label of DS_LABELS) {
+    const lc = label.toLowerCase();
+    for (let i = 0; i < L.length; i++) {
+      const idx = L[i].toLowerCase().indexOf(lc);
+      if (idx === -1) continue;
+      let val = L[i].slice(idx + label.length).replace(/^[\s:.\-]+/, "").trim();
+      if (!val && i + 1 < L.length) val = L[i + 1].trim();
+      const key = label.replace(/s$/, "");
+      if (!found[key] && val) found[key] = val;
+      break;
+    }
+  }
+  return found;
+}
+
+/* ============ comparison ============ */
+function normEq(a, b) {
+  const k = s => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return k(a) === k(b) && k(a) !== "";
+}
+
+const PASSPORT_FIELDS = [
+  ["Document type",   "docType",        "same"],
+  ["Issuing country", "issuer",         "same"],
+  ["Surname",         "surname",        "same"],
+  ["Given names",     "given",          "same"],
+  ["Date of birth",   "dob",            "same"],
+  ["Sex",             "sex",            "same"],
+  ["Nationality",     "nationality",    "same"],
+  ["Passport number", "docNumber",      "differ"],
+  ["Expiry date",     "expiry",         "differ"],
+  ["Personal number", "personalNumber", "either"]
+];
+
+function comparePassport(a, b) {
+  const pa = parseMRZ(a), pb = parseMRZ(b);
+  if (!pa || !pb) return { error: "Could not locate a valid MRZ on " +
+    (!pa ? "side A" : "side B") + ". Upload a clearer passport image or paste the MRZ lines." };
+  const rows = [];
+  let discrepancies = 0, consistent = 0;
+  for (const [label, key, expect] of PASSPORT_FIELDS) {
+    const av = pa[key] || "", bv = pb[key] || "";
+    if (!av && !bv) continue;
+    const eq = normEq(av, bv);
+    let status, cls;
+    if (expect === "same") {
+      if (eq) { status = "Match"; cls = "match"; consistent++; }
+      else    { status = "Discrepancy"; cls = "miss"; discrepancies++; }
+    } else if (expect === "differ") {
+      if (eq) { status = "Unchanged"; cls = "warn"; }
+      else    { status = "Updated"; cls = "info"; }
+    } else {
+      if (eq) { status = "Match"; cls = "match"; }
+      else    { status = "Changed"; cls = "info"; }
+    }
+    rows.push({ label, av, bv, status, cls });
+  }
+  return { kind: "passport", rows, pa, pb, discrepancies, consistent,
+           diff: diffLines([pa.l1, pa.l2], [pb.l1, pb.l2]) };
+}
+
+function compareDS160(a, b) {
+  const fa = parseDS160(a.lines), fb = parseDS160(b.lines);
+  const keys = [...new Set([...Object.keys(fa), ...Object.keys(fb)])];
+  const rows = [];
+  let discrepancies = 0, consistent = 0;
+  for (const k of keys) {
+    const av = fa[k] || "", bv = fb[k] || "";
+    let status, cls;
+    if (av && bv) {
+      if (normEq(av, bv)) { status = "Match"; cls = "match"; consistent++; }
+      else { status = "Changed"; cls = "miss"; discrepancies++; }
+    } else if (av) { status = "A only"; cls = "warn"; discrepancies++; }
+    else { status = "B only"; cls = "warn"; discrepancies++; }
+    rows.push({ label: k, av, bv, status, cls });
+  }
+  rows.sort((x, y) => x.label.localeCompare(y.label));
+  return { kind: "ds160", rows, discrepancies, consistent,
+           diff: diffLines(a.lines, b.lines) };
+}
+
+function compareGeneral(a, b) {
+  const diff = diffLines(a.lines, b.lines);
+  const changes = diff.filter(d => d.t !== "same").length;
+  const sameCount = diff.filter(d => d.t === "same").length;
+  return { kind: "general", diff, discrepancies: changes, consistent: sameCount, rows: [] };
+}
+
+/* ============ run ============ */
+$("#runBtn").addEventListener("click", run);
+$("#resetBtn").addEventListener("click", () => location.reload());
+
+async function run() {
+  const btn = $("#runBtn");
+  $("#log").innerHTML = ""; $("#log").classList.add("show");
+  $("#results").classList.remove("show");
+  btn.disabled = true; btn.textContent = "Working…";
+  try {
+    if (!window.pdfjsLib) throw new Error("PDF engine failed to load — check your internet connection and reload.");
+    log("Starting comparison…");
+    const a = await buildSide("A");
+    const b = await buildSide("B");
+    log(`Side A detected as: ${a.kind.toUpperCase()}`, "ok");
+    log(`Side B detected as: ${b.kind.toUpperCase()}`, "ok");
+
+    let kind = mode;
+    if (mode === "auto") {
+      kind = (a.kind === b.kind) ? a.kind : "general";
+    }
+    let result, typeMismatch = (a.kind !== b.kind);
+
+    if (kind === "passport")      result = comparePassport(a, b);
+    else if (kind === "ds160")    result = compareDS160(a, b);
+    else                          result = compareGeneral(a, b);
+
+    if (result.error) { log("! " + result.error, "err"); renderError(result.error); }
+    else { renderResults(result, a, b, kind, typeMismatch && mode === "auto"); log("Done.", "ok"); }
+  } catch (err) {
+    log("! " + err.message, "err");
+    renderError(err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Compare documents";
+  }
+}
+
+/* ============ render ============ */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+}
+function renderError(msg) {
+  const r = $("#results");
+  r.classList.add("show");
+  r.innerHTML = `<div class="alertbar danger"><span>&#9888;</span><span>${escapeHtml(msg)}</span></div>`;
+}
+
+function diffHtml(diff) {
+  const sym = { same: " ", del: "\u2212", add: "+" };
+  return diff.map(d =>
+    `<div class="dl ${d.t}"><div class="gut">${sym[d.t]}</div>` +
+    `<div class="tx">${escapeHtml(d.x)}</div></div>`).join("");
+}
+
+function renderResults(res, a, b, kind, typeMismatch) {
+  const r = $("#results");
+  const kindName = { passport:"Passport \u2194 Passport", ds160:"DS-160 \u2194 DS-160",
+                     general:"Document \u2194 Document" }[kind];
+  let html = `
+    <div class="res-head">
+      <h2>Comparison report</h2>
+      <span class="doc-kind">${kindName}</span>
+    </div>`;
+
+  const total = res.consistent + res.discrepancies;
+  html += `<div class="summary">
+      <div class="cell"><div class="num">${total}</div><div class="cap">${kind==="general"?"Lines analysed":"Fields compared"}</div></div>
+      <div class="cell good"><div class="num">${res.consistent}</div><div class="cap">${kind==="general"?"Unchanged":"Consistent"}</div></div>
+      <div class="cell ${res.discrepancies?"flag":""}"><div class="num">${res.discrepancies}</div><div class="cap">${kind==="general"?"Differences":"Need review"}</div></div>
+    </div>`;
+
+  if (typeMismatch) {
+    html += `<div class="alertbar note"><span>&#9888;</span><span>Side A and Side B appear to be <b>different document types</b> (${a.kind.toUpperCase()} vs ${b.kind.toUpperCase()}). Showing a general text comparison &mdash; pick a specific type above if that's wrong.</span></div>`;
+  }
+
+  /* top alert */
+  if (kind === "passport" || kind === "ds160") {
+    if (res.discrepancies > 0)
+      html += `<div class="alertbar danger"><span>&#9873;</span><span><b>${res.discrepancies} item${res.discrepancies>1?"s":""} flagged for review.</b> Fields that should stay identical across versions do not match. Verify each against the source document.</span></div>`;
+    else
+      html += `<div class="alertbar safe"><span>&#10003;</span><span><b>No discrepancies found.</b> Every field that should be consistent matches between the two versions.</span></div>`;
+  }
+
+  /* passport MRZ validity */
+  if (kind === "passport") {
+    html += `<div class="block"><h3>MRZ integrity check</h3>
+      <div class="desc">ICAO 9303 check digits confirm the machine-readable zone was read correctly. A failed check usually means an OCR misread &mdash; re-paste the MRZ if so.</div>`;
+    for (const [side, p] of [["A", res.pa], ["B", res.pb]]) {
+      html += `<div style="margin-bottom:8px"><b style="font-size:.85rem">Side ${side}</b><div class="checks">`;
+      for (const [name, ok] of Object.entries(p.checks))
+        html += `<span class="chk ${ok?"pass":"fail"}">${ok?"\u2713":"\u2717"} ${name}</span>`;
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+
+  /* field table */
+  if (res.rows && res.rows.length) {
+    const title = kind === "passport" ? "Passport fields" : "DS-160 key fields";
+    const desc = kind === "passport"
+      ? "Identity fields should be identical between an old and renewed passport; the passport number and expiry are expected to change."
+      : "Heuristically detected from the form text. Treat this as a shortlist &mdash; the full text diff below catches everything else.";
+    html += `<div class="block"><h3>${title}</h3><div class="desc">${desc}</div>
+      <table class="cmp"><thead><tr>
+        <th>Field</th><th>Side A &mdash; earlier</th><th>Side B &mdash; later</th><th>Status</th>
+      </tr></thead><tbody>`;
+    for (const row of res.rows) {
+      const rowCls = row.cls === "miss" ? "row-miss" : (row.cls === "match" ? "row-match" : "");
+      html += `<tr class="${rowCls}">
+        <td class="field">${escapeHtml(row.label)}</td>
+        <td class="val ${row.av?"":"empty"}">${escapeHtml(row.av || "—")}</td>
+        <td class="val ${row.bv?"":"empty"}">${escapeHtml(row.bv || "—")}</td>
+        <td><span class="pill ${row.cls}">${row.status}</span></td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else if (kind === "ds160") {
+    html += `<div class="block"><h3>DS-160 key fields</h3>
+      <p class="empty-note">No standard DS-160 labels were detected &mdash; make sure you used the full Application printout PDF. The full text diff below still applies.</p></div>`;
+  }
+
+  /* diff */
+  html += `<div class="block"><h3>${kind==="passport"?"MRZ line-by-line":"Full text comparison"}</h3>
+    <div class="desc">Every line that differs between the two versions. Side A in red, Side B in green.</div>
+    <div class="diffctl no-print">
+      <label><input type="checkbox" id="hideSame" checked> Show only differences</label>
+    </div>
+    <div class="diff hidesame" id="diffView">${diffHtml(res.diff)}</div></div>`;
+
+  /* actions */
+  html += `<div class="actions no-print">
+      <button class="btn sm" id="printBtn">Print / Save as PDF</button>
+      <button class="btn ghost sm" id="dlBtn">Download report (HTML)</button>
+    </div>`;
+
+  r.innerHTML = html;
+  r.classList.add("show");
+
+  $("#hideSame").addEventListener("change", e =>
+    $("#diffView").classList.toggle("hidesame", e.target.checked));
+  $("#printBtn").addEventListener("click", () => window.print());
+  $("#dlBtn").addEventListener("click", () => downloadReport(r));
+
+  r.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function downloadReport(node) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  clone.querySelectorAll(".diff").forEach(n => n.classList.remove("hidesame"));
+  const css = document.querySelector("style").innerHTML;
+  const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Casefile report ${stamp}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>${css}</style></head>
+    <body><div class="wrap"><div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#8b8a7d;margin-bottom:14px">CASEFILE COMPARISON REPORT &middot; GENERATED ${stamp}</div>
+    ${clone.innerHTML}</div></body></html>`;
+  const blob = new Blob([doc], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `casefile-report-${stamp.replace(/[: ]/g, "-")}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
