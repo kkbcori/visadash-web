@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casefile — Immigration Document Comparator</title>
-<meta name="description" content="Compare DS-160 applications, passports, and supporting documents side by side. Runs entirely in your browser — no upload, no server, nothing stored.">
+<title>VisaDash — Immigration Toolkit: DS-160 Comparison, Visa Bulletin, Processing Times & Wages</title>
+<meta name="description" content="A free, on-device immigration toolkit: compare DS-160s & passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Runs entirely in your browser — nothing uploaded.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- Replace visadash.org with your live domain after deploy -->
 <link rel="canonical" href="https://visadash.org/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Casefile">
-<meta property="og:title" content="Casefile — Immigration Document Comparator">
-<meta property="og:description" content="Compare DS-160s, passports & supporting documents. 100% on-device — nothing is uploaded.">
+<meta property="og:site_name" content="VisaDash">
+<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
+<meta property="og:description" content="Compare DS-160s & passports, form-filling guides, Visa Bulletin tracker, USCIS processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
 <meta property="og:url" content="https://visadash.org/">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Casefile — Immigration Document Comparator">
-<meta name="twitter:description" content="Compare DS-160s, passports & supporting documents. 100% on-device — nothing is uploaded.">
+<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
+<meta name="twitter:description" content="DS-160 comparison, form guides, Visa Bulletin, processing times & prevailing wages. 100% on-device — nothing is uploaded.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -301,6 +301,172 @@
     .wrap{max-width:100%;padding:0}
     .diff.hidesame .dl.same{display:flex}
   }
+
+  /* ===================== nav tabs ===================== */
+  .tabs{
+    display:flex;gap:2px;flex-wrap:wrap;
+    border-bottom:2px solid var(--ink);margin:18px 0 30px;
+  }
+  .tabs button{
+    border:0;background:transparent;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:.74rem;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;
+    padding:11px 15px;color:var(--ink-soft);
+    border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;
+    position:relative;top:2px;transition:background .15s,color .15s;
+  }
+  .tabs button:hover{color:var(--ink);background:var(--paper-2)}
+  .tabs button.on{
+    background:var(--navy);color:#fff;border-color:var(--navy);
+  }
+  @media(max-width:760px){
+    .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .tabs button{white-space:nowrap}
+  }
+
+  /* tab panels */
+  .tab{display:none}
+  .tab.active{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* shared tab chrome */
+  .tab-lede{
+    font-family:'Newsreader',serif;font-size:1.12rem;color:var(--ink-soft);
+    max-width:780px;margin:0 0 8px;
+  }
+  .freshness{
+    display:inline-flex;gap:8px;align-items:center;
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.06em;
+    color:var(--ink-faint);background:var(--info-bg);border:1px solid #c7d9e2;
+    padding:6px 11px;border-radius:5px;margin:14px 0 24px;
+  }
+  .freshness .dot{width:7px;height:7px;border-radius:50%;background:var(--info);flex:none}
+
+  .secTitle{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.4rem;
+    margin:30px 0 4px;padding-top:18px;border-top:1px solid var(--line);
+  }
+  .secTitle:first-of-type{border-top:0;padding-top:0;margin-top:18px}
+  .secSub{font-size:.85rem;color:var(--ink-soft);margin-bottom:16px;max-width:760px}
+
+  /* controls (selects / inputs) */
+  .ctrls{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+  .ctrl{display:flex;flex-direction:column;gap:5px}
+  .ctrl label{
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  .ctrl select,.ctrl input{
+    font-family:'IBM Plex Sans',sans-serif;font-size:.88rem;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:9px 11px;min-width:170px;
+  }
+  .ctrl select:focus,.ctrl input:focus{outline:2px solid var(--navy);outline-offset:-1px}
+
+  /* generic data table */
+  table.dt{width:100%;border-collapse:collapse;font-size:.86rem;margin:6px 0 4px}
+  table.dt th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-weight:500;
+    font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);padding:9px 12px;border-bottom:1.5px solid var(--ink);
+    white-space:nowrap;cursor:default;
+  }
+  table.dt th.sortable{cursor:pointer;user-select:none}
+  table.dt th.sortable:hover{color:var(--ink)}
+  table.dt th .arr{opacity:.5;font-size:.8em}
+  table.dt td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.dt tr:hover td{background:var(--paper-2)}
+  table.dt td.num{font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap}
+  .tbl-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto;background:var(--panel)}
+  .tbl-wrap table.dt{margin:0}
+  .tbl-wrap table.dt tr:last-child td{border-bottom:0}
+
+  /* grade / status badges */
+  .grade{
+    display:inline-flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.78rem;
+    min-width:34px;padding:3px 7px;border-radius:5px;
+  }
+  .grade.A{background:var(--match-bg);color:var(--match);border:1px solid #bcd6bf}
+  .grade.B{background:var(--info-bg);color:var(--info);border:1px solid #c7d9e2}
+  .grade.C{background:var(--warn-bg);color:var(--warn);border:1px solid #ddca96}
+  .grade.D{background:var(--miss-bg);color:var(--miss);border:1px solid #d8b3ae}
+  .tag{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.62rem;
+    font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 7px;border-radius:4px;margin-left:5px;
+    background:var(--paper-2);color:var(--ink-soft);border:1px solid var(--line-soft);
+  }
+  .tag.warn{background:var(--warn-bg);color:var(--warn);border-color:#ddca96}
+
+  /* result callout (used by mini-tools) */
+  .callout{
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);
+    padding:16px 18px;margin-top:8px;
+  }
+  .callout.danger{background:var(--miss-bg);border-color:#d8b3ae}
+  .callout.safe{background:var(--match-bg);border-color:#bcd6bf}
+  .callout.note{background:var(--warn-bg);border-color:#ddca96}
+  .callout .big{font-family:'Newsreader',serif;font-size:1.5rem;font-weight:600;line-height:1.1}
+  .callout .lbl{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+  .callout .sub{font-size:.85rem;color:var(--ink-soft);margin-top:7px}
+
+  /* card grid */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:6px 0}
+  .mini{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:15px 16px;
+  }
+  .mini .k{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .mini .v{font-family:'Newsreader',serif;font-size:1.7rem;font-weight:600;line-height:1.1;margin-top:4px}
+  .mini .v.good{color:var(--match)} .mini .v.bad{color:var(--miss)} .mini .v.warn{color:var(--warn)}
+  .mini .n{font-size:.8rem;color:var(--ink-soft);margin-top:5px}
+
+  /* accordion (form guides) */
+  .acc{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;background:var(--panel)}
+  .acc>summary{
+    cursor:pointer;list-style:none;padding:15px 18px;
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  .acc>summary::-webkit-details-marker{display:none}
+  .acc>summary:hover{background:var(--paper-2)}
+  .acc>summary .form-code{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.82rem;
+    background:var(--navy);color:#fff;padding:4px 9px;border-radius:4px;flex:none;
+  }
+  .acc>summary .form-name{font-family:'Newsreader',serif;font-weight:600;font-size:1.15rem}
+  .acc>summary .form-for{font-size:.8rem;color:var(--ink-faint);font-style:italic;font-family:'Newsreader',serif;margin-left:auto}
+  .acc[open]>summary{border-bottom:1px solid var(--line-soft);background:var(--paper-2)}
+  .acc .body{padding:4px 20px 20px}
+  .acc .body h4{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin:18px 0 8px;
+  }
+  .acc .body p{font-size:.9rem;margin-bottom:8px}
+  .acc .body ul{margin:0 0 8px 2px;list-style:none}
+  .acc .body li{font-size:.88rem;padding:4px 0 4px 22px;position:relative;line-height:1.5}
+  .acc .body li::before{content:"›";position:absolute;left:6px;color:var(--navy);font-weight:600}
+  .acc .body li.warn::before{content:"!";color:var(--miss)}
+  .acc .body li.ok::before{content:"✓";color:var(--match)}
+  .acc .body .tip{
+    background:var(--info-bg);border:1px solid #c7d9e2;border-radius:6px;
+    padding:11px 14px;font-size:.85rem;color:#2a4656;margin:10px 0;
+  }
+  .acc .body .tip b{color:var(--info)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);margin:14px 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .site-footer{
+    margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  .site-footer b{color:var(--ink-soft)}
+  .tool-notes{
+    margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  .tool-notes b{color:var(--ink-soft)}
 </style>
 </head>
 <body>
@@ -308,11 +474,22 @@
 
   <header>
     <div class="brand">
-      <h1>Casefile</h1>
-      <div class="sub">Document Comparator · Immigration Practice Edition</div>
+      <h1>VisaDash</h1>
+      <div class="sub">Immigration Toolkit · On-device</div>
     </div>
     <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
   </header>
+
+  <nav class="tabs no-print" id="tabnav" aria-label="Sections">
+    <button data-tab="compare" class="on">DS-160 Comparison Tool</button>
+    <button data-tab="guides">Form-Filling Guides</button>
+    <button data-tab="bulletin">Visa Bulletin</button>
+    <button data-tab="processing">Processing Times</button>
+    <button data-tab="wages">Wages &amp; Sponsors</button>
+  </nav>
+
+  <!-- ════════════════ TAB: DS-160 Comparison Tool ════════════════ -->
+  <section class="tab active" id="tab-compare">
 
   <p class="intro">Compare two versions of a client's document — an earlier DS&#8209;160 against a refile, an expiring passport against a renewal, or any supporting paperwork — and surface every discrepancy before it reaches a consular officer.</p>
 
@@ -389,12 +566,123 @@
   <!-- results -->
   <section id="results"></section>
 
-  <footer>
+  <div class="tool-notes no-print">
     <b>How to get the cleanest results.</b><br>
     &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
     &bull; <b>Passports:</b> a sharp, flat photo of the photo page works, but pasting the two MRZ lines is faster and 100% reliable &mdash; the tool validates them against ICAO check digits.<br>
-    &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.<br><br>
-    <b>Not legal advice or a filing tool.</b> Casefile is a review aid &mdash; it highlights differences for a human to assess. It does not transmit, store, or submit anything. Verify all findings against the source documents.
+    &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
+  </div>
+
+  </section><!-- /tab-compare -->
+
+  <!-- ════════════════ TAB: Form-Filling Guides ════════════════ -->
+  <section class="tab" id="tab-guides">
+    <p class="tab-lede">Field-by-field help for the forms that come up most in U.S. immigration &mdash; what each form is for, who files it, the answers that trip people up, and the documents to have ready before you start.</p>
+    <div class="freshness"><span class="dot"></span> Educational guidance &middot; always confirm against the official instructions on uscis.gov &amp; travel.state.gov</div>
+    <div id="guides-list"></div>
+  </section>
+
+  <!-- ════════════════ TAB: Visa Bulletin ════════════════ -->
+  <section class="tab" id="tab-bulletin">
+    <p class="tab-lede">Employment-based Final Action Dates from the most recent Visa Bulletin, plus a quick check of whether your priority date is current.</p>
+    <div class="freshness" id="bulletin-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Am I current?</h3>
+    <p class="secSub">Enter your category, country of chargeability and priority date to see if a green-card number is available this month.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="vb-cat">Category</label>
+        <select id="vb-cat"><option>EB1</option><option selected>EB2</option><option>EB3</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="vb-country">Country of chargeability</label>
+        <select id="vb-country"><option>All</option><option selected>India</option><option>China</option><option>Mexico</option><option>Philippines</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="vb-pd">Priority date</label>
+        <input type="date" id="vb-pd" value="2014-06-01">
+      </div>
+    </div>
+    <div id="vb-result"></div>
+
+    <h3 class="secTitle">Final Action Dates &mdash; Employment-Based</h3>
+    <p class="secSub">&ldquo;C&rdquo; means the category is current (no backlog). A date means only priority dates <i>earlier</i> than it can file/receive a visa number.</p>
+    <div class="tbl-wrap"><table class="dt" id="vb-table"></table></div>
+    <div id="vb-movement"></div>
+  </section>
+
+  <!-- ════════════════ TAB: Processing Times ════════════════ -->
+  <section class="tab" id="tab-processing">
+    <p class="tab-lede">Typical USCIS processing times by form and service center &mdash; median, plus the 75th and 90th percentile so you can see the long tail, not just the average.</p>
+    <div class="freshness" id="pt-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Estimate my wait</h3>
+    <p class="secSub">Pick a form and the service center on your receipt notice (the three-letter prefix on your receipt number).</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="pt-form">Form</label>
+        <select id="pt-form"></select>
+      </div>
+      <div class="ctrl">
+        <label for="pt-center">Service center</label>
+        <select id="pt-center"></select>
+      </div>
+    </div>
+    <div id="pt-result"></div>
+
+    <h3 class="secTitle">All processing times</h3>
+    <div class="tbl-wrap"><table class="dt" id="pt-table"></table></div>
+  </section>
+
+  <!-- ════════════════ TAB: Wages & Sponsors ════════════════ -->
+  <section class="tab" id="tab-wages">
+    <p class="tab-lede">Two checks that decide a lot of H-1B and PERM cases: is the offered salary at or above the prevailing wage, and is the sponsoring employer a strong, low-risk filer?</p>
+    <div class="freshness" id="wg-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Prevailing-wage check</h3>
+    <p class="secSub">Look up the DOL prevailing wage for an occupation, state and wage level, then compare it to a salary offer.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="wg-soc">Occupation (SOC)</label>
+        <select id="wg-soc"></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-state">Worksite state</label>
+        <select id="wg-state"></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-level">Wage level</label>
+        <select id="wg-level"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-offer">Offered salary (optional)</label>
+        <input type="number" id="wg-offer" placeholder="e.g. 120000" min="0" step="1000">
+      </div>
+    </div>
+    <div id="wg-result"></div>
+
+    <h3 class="secTitle">H-1B sponsor grades</h3>
+    <p class="secSub">Top sponsors by petition volume, with approval rate and risk flags. Click a column to sort.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="emp-search">Filter employer</label>
+        <input type="text" id="emp-search" placeholder="Type a company name…">
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="dt" id="emp-table"></table></div>
+    <div class="legend">
+      <span><span class="grade A" style="min-width:auto">A</span> 92%+ approvals</span>
+      <span><span class="grade B" style="min-width:auto">B</span> 84–92%</span>
+      <span><span class="grade C" style="min-width:auto">C</span> &lt;84%</span>
+      <span><span class="tag warn">Dependent</span> H-1B-dependent employer (extra attestations)</span>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <b>VisaDash is not legal advice and is not affiliated with USCIS, the Department of State, or the Department of Labor.</b>
+    It is a free educational toolkit &mdash; the comparison tool, guides, and lookups help you spot issues and understand the process, for a human to verify.
+    Everything runs in your browser: no file is uploaded, nothing is stored on a server (the OCR engine downloads once, then caches for offline use).
+    Bulletin, processing-time, wage and sponsor figures are periodic snapshots &mdash; always confirm against the official sources before you rely on them.
   </footer>
 
 </div>
@@ -956,6 +1244,271 @@ function downloadReport(node) {
   a.click();
   URL.revokeObjectURL(url);
 }
+</script>
+
+<!-- ════════════════ VisaDash hub: tabs + data tools ════════════════ -->
+<script>
+"use strict";
+(function(){
+  const qs  = (s,r=document)=>r.querySelector(s);
+  const qsa = (s,r=document)=>[...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const money = n => "$"+Math.round(n).toLocaleString("en-US");
+
+  /* ---------------- embedded data (periodic snapshots, on-device) ---------------- */
+  const BULLETIN = {
+    month:"March 2026", fetched:"2026-03-18", source:"travel.state.gov",
+    eb:{
+      EB1:{All:"C",China:"2022-11-08",India:"2023-01-01",Mexico:"C",Philippines:"C"},
+      EB2:{All:"C",China:"2020-06-01",India:"2012-01-01",Mexico:"C",Philippines:"C"},
+      EB3:{All:"C",China:"2020-10-01",India:"2012-04-01",Mexico:"C",Philippines:"2021-10-01"}
+    },
+    movement:{ "EB1 · India":"+2.5 weeks","EB2 · India":"+2.5 weeks","EB3 · India":"+3.5 weeks","EB2 · China":"No movement" }
+  };
+  const PT_FETCHED="2026-03-18", PT_SOURCE="egov.uscis.gov/processing-times";
+  const PROCESSING = {"I-129_WAC":{form:"I-129",center:"WAC",median_months:4.2,p75_months:6.1,p90_months:8.4,recent_approvals:847},"I-129_LIN":{form:"I-129",center:"LIN",median_months:3.8,p75_months:5.6,p90_months:7.2,recent_approvals:1203},"I-129_VSC":{form:"I-129",center:"VSC",median_months:4.6,p75_months:6.4,p90_months:8.9,recent_approvals:621},"I-129_EAC":{form:"I-129",center:"EAC",median_months:3.2,p75_months:4.8,p90_months:6.5,recent_approvals:982},"I-140_WAC":{form:"I-140",center:"WAC",median_months:6.2,p75_months:9.1,p90_months:14.3,recent_approvals:412},"I-140_VSC":{form:"I-140",center:"VSC",median_months:5.8,p75_months:8.4,p90_months:12.1,recent_approvals:389},"I-765_NBC":{form:"I-765",center:"NBC",median_months:3.1,p75_months:4.2,p90_months:5.8,recent_approvals:2841},"I-485_NBC":{form:"I-485",center:"NBC",median_months:18.4,p75_months:24.2,p90_months:36.1,recent_approvals:1204}};
+  const FORM_LABEL = {"I-129":"I-129 — Nonimmigrant worker (H-1B/L/O/etc.)","I-140":"I-140 — Immigrant petition (EB green card)","I-485":"I-485 — Adjustment of status","I-765":"I-765 — Employment authorization (EAD)"};
+  const CENTER_LABEL = {WAC:"WAC — California (CSC)",LIN:"LIN — Nebraska (NSC)",VSC:"VSC — Vermont (VSC)",EAC:"EAC — Vermont (EAC)",NBC:"NBC — National Benefits Center"};
+
+  const WG_FETCHED="2026-03-18", WG_SOURCE="DOL OFLC LCA Disclosure Data FY2025 Q4";
+  const SOC_TITLES={"15-1252":"Software Developers & Engineers","15-1211":"Computer Systems Analysts","15-2051":"Data Scientists"};
+  const WAGES=[{soc:"15-1252",state:"TX",level:"I",wage:78540},{soc:"15-1252",state:"TX",level:"II",wage:98000},{soc:"15-1252",state:"TX",level:"III",wage:112847},{soc:"15-1252",state:"TX",level:"IV",wage:138290},{soc:"15-1252",state:"CA",level:"I",wage:112000},{soc:"15-1252",state:"CA",level:"II",wage:142000},{soc:"15-1252",state:"CA",level:"III",wage:172500},{soc:"15-1252",state:"CA",level:"IV",wage:215000},{soc:"15-1252",state:"NY",level:"I",wage:98000},{soc:"15-1252",state:"NY",level:"II",wage:122000},{soc:"15-1252",state:"NY",level:"III",wage:148000},{soc:"15-1252",state:"NY",level:"IV",wage:182000},{soc:"15-1252",state:"WA",level:"I",wage:105000},{soc:"15-1252",state:"WA",level:"II",wage:130000},{soc:"15-1252",state:"WA",level:"III",wage:158000},{soc:"15-1252",state:"WA",level:"IV",wage:195000},{soc:"15-1211",state:"TX",level:"I",wage:72100},{soc:"15-1211",state:"TX",level:"II",wage:89400},{soc:"15-1211",state:"TX",level:"III",wage:104200},{soc:"15-1211",state:"TX",level:"IV",wage:126800},{soc:"15-2051",state:"TX",level:"I",wage:82000},{soc:"15-2051",state:"TX",level:"II",wage:104000},{soc:"15-2051",state:"TX",level:"III",wage:124000},{soc:"15-2051",state:"TX",level:"IV",wage:152000}];
+  const EMPLOYERS=[{name:"AMAZON.COM SERVICES LLC",total:13670,rate:88.4,grade:"B",state:"WA",dep:false},{name:"INFOSYS LIMITED",total:12480,rate:85.2,grade:"B",state:"TX",dep:true},{name:"TATA CONSULTANCY SERVICES",total:11500,rate:84.0,grade:"B",state:"NJ",dep:true},{name:"GOOGLE LLC",total:10842,rate:97.8,grade:"A",state:"CA",dep:false},{name:"COGNIZANT TECHNOLOGY SOLUTIONS",total:9840,rate:83.1,grade:"B",state:"NJ",dep:true},{name:"MICROSOFT CORPORATION",total:9410,rate:96.2,grade:"A",state:"WA",dep:false},{name:"WIPRO LIMITED",total:9320,rate:82.4,grade:"B-",state:"CA",dep:true},{name:"META PLATFORMS INC",total:7900,rate:96.0,grade:"A",state:"CA",dep:false},{name:"HCL AMERICA INC",total:7290,rate:83.8,grade:"B",state:"TX",dep:true},{name:"APPLE INC",total:7040,rate:96.5,grade:"A+",state:"CA",dep:false},{name:"ERNST & YOUNG LLP",total:6400,rate:88.1,grade:"B+",state:"NY",dep:false},{name:"DELOITTE CONSULTING LLP",total:6380,rate:88.5,grade:"B+",state:"NY",dep:false},{name:"DELL TECHNOLOGIES INC",total:4970,rate:93.2,grade:"A-",state:"TX",dep:false},{name:"JPMORGAN CHASE BANK",total:4640,rate:93.1,grade:"A-",state:"NY",dep:false},{name:"SALESFORCE INC",total:3824,rate:94.8,grade:"A",state:"CA",dep:false}];
+
+  const GUIDES=[
+    {code:"DS-160",name:"Online Nonimmigrant Visa Application",who:"Visa applicants abroad",
+     purpose:"The form every nonimmigrant visa applicant completes online before a U.S. consular interview (H-1B, F-1, B-1/B-2, etc.). Generates the barcode confirmation page you bring to the interview.",
+     fields:["Use your name <b>exactly</b> as printed in your passport — same spelling, same order.","List <b>every</b> country you've visited in the last five years, and all prior U.S. visits and visas.","Travel/contact, work and education history must line up with your résumé and prior filings.","Social-media handles are required — list the accounts you actually use."],
+     mistakes:["Misspelling your name or transposing given/surname vs. the passport.","Leaving the SEVIS/petition receipt number blank or mistyped for petition-based visas.","Forgetting a short trip or a previously refused visa — both are asked and are checkable."],
+     docs:["Passport (valid 6+ months)","Petition receipt (I-797) or SEVIS I-20/DS-2019 if applicable","Travel dates & U.S. point-of-contact","Employment and education history"],
+     tip:"Print the full <i>Application</i> PDF from the review screen, not just the one-page confirmation. Run two versions through the <b>DS-160 Comparison Tool</b> tab to catch any drift between a prior filing and a refile."},
+    {code:"I-129",name:"Petition for a Nonimmigrant Worker",who:"U.S. employers",
+     purpose:"Employer-filed petition to classify a worker in H-1B, L-1, O-1, TN and similar categories. The H-1B version requires a certified LCA first.",
+     fields:["Job title, SOC code and worksite must match the certified LCA exactly.","Offered wage must be at or above the prevailing wage for that SOC, area and level.","Beneficiary's name and dates of birth must match the passport and prior I-94s."],
+     mistakes:["Filing before the LCA is certified, or with an LCA wage level below prevailing.","Worksite address on the petition not matching the LCA.","Specialty-occupation argument that doesn't tie the degree to the duties."],
+     docs:["Certified LCA (ETA-9035)","Beneficiary's degree/credential evaluation","Detailed job description & itinerary","Company financials / ability to pay"],
+     tip:"Check the offer against the <b>Wages &amp; Sponsors</b> tab before filing — a wage below the prevailing level is the most common avoidable RFE."},
+    {code:"I-140",name:"Immigrant Petition for Alien Worker",who:"Employers (EB-1/2/3)",
+     purpose:"Establishes the employment-based green-card category (EB-1/2/3). For PERM-based cases it follows a certified labor certification and sets your priority date.",
+     fields:["Priority date = PERM filing date (or I-140 receipt for categories without PERM). Track it on the <b>Visa Bulletin</b> tab.","Job requirements must match the PERM exactly.","Ability-to-pay evidence must cover from the priority date forward."],
+     mistakes:["Education/experience that doesn't meet the PERM minimum requirements.","Switching the offered position or worksite from the PERM without explanation."],
+     docs:["Approved PERM (ETA-9089) where required","Degrees, transcripts, experience letters","Employer's tax returns / audited financials"],
+     tip:"Your priority date controls everything downstream — note it the day the I-140 is filed and watch it against the bulletin."},
+    {code:"I-485",name:"Application to Register Permanent Residence",who:"Applicants in the U.S.",
+     purpose:"Adjusts status to lawful permanent resident without leaving the U.S. Can only be filed when a visa number is available for your category and priority date.",
+     fields:["Confirm your priority date is current on the bulletin's <i>Dates for Filing</i> chart before filing.","Address and immigration history must be complete and consistent across all I-485 sections.","Medical exam (I-693) should be signed and sealed by a civil surgeon."],
+     mistakes:["Filing when the category is retrogressed and no number is available.","Gaps or inconsistencies in the 5-year address/employment history.","Letting underlying nonimmigrant status lapse before AOS is filed (non-214(b) cases)."],
+     docs:["I-797 approval for the underlying I-140/I-130","Sealed I-693 medical exam","Birth certificate + certified translation","Two passport photos, I-94, EAD/AP if applicable"],
+     tip:"You can usually file I-765 (EAD) and I-131 (Advance Parole) together with the I-485 — bundle them to get a work/travel document while you wait."},
+    {code:"I-130",name:"Petition for Alien Relative",who:"U.S. citizens / residents",
+     purpose:"Establishes a qualifying family relationship (spouse, child, parent, sibling) so the relative can pursue a green card.",
+     fields:["Relationship evidence must be specific — marriage certificate, joint accounts, birth records.","Petitioner's status (USC vs. LPR) decides the category and the wait.","Beneficiary's biographic details must match their passport/birth certificate."],
+     mistakes:["Thin marriage evidence in bona-fides — one document instead of a pattern over time.","Mismatched names across the marriage certificate, passport and prior filings."],
+     docs:["Proof of petitioner's citizenship/residency","Marriage or birth certificates establishing the relationship","Bona-fide-relationship evidence (for spouses)"],
+     tip:"For spouse cases, build the bona-fides file from day one — joint lease, accounts, photos over time beat a last-minute stack."},
+    {code:"N-400",name:"Application for Naturalization",who:"Eligible green-card holders",
+     purpose:"Application to become a U.S. citizen, generally after 5 years as a permanent resident (3 if married to a U.S. citizen).",
+     fields:["Confirm continuous residence and physical-presence day counts before filing.","Disclose every trip outside the U.S. of 24 hours or more.","Answer the good-moral-character questions honestly — omissions are the real risk."],
+     mistakes:["A single trip of 6+ months that breaks continuous residence, filed too early.","Unpaid taxes, unreported arrests, or missed selective-service registration left undisclosed."],
+     docs:["Green card (both sides)","Travel history for the statutory period","Tax transcripts","Records for any citations/arrests, if any"],
+     tip:"Count your physical-presence days carefully — applying even a few weeks early on the residence requirement gets the case denied."}
+  ];
+
+  /* ---------------- tab routing ---------------- */
+  const TABS=["compare","guides","bulletin","processing","wages"];
+  function showTab(name,push){
+    if(!TABS.includes(name)) name="compare";
+    qsa("#tabnav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===name));
+    qsa(".tab").forEach(s=>s.classList.toggle("active",s.id==="tab-"+name));
+    try{localStorage.setItem("vd_tab",name);}catch(e){}
+    if(push && location.hash!=="#"+name) history.replaceState(null,"","#"+name);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  qs("#tabnav").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    showTab(b.dataset.tab,true);
+  });
+  window.addEventListener("hashchange",()=>showTab(location.hash.slice(1),false));
+
+  /* ---------------- Form guides ---------------- */
+  function renderGuides(){
+    qs("#guides-list").innerHTML = GUIDES.map(g=>`
+      <details class="acc">
+        <summary>
+          <span class="form-code">${esc(g.code)}</span>
+          <span class="form-name">${esc(g.name)}</span>
+          <span class="form-for">${esc(g.who)}</span>
+        </summary>
+        <div class="body">
+          <p>${g.purpose}</p>
+          <h4>Key fields to get right</h4>
+          <ul>${g.fields.map(f=>`<li>${f}</li>`).join("")}</ul>
+          <h4>Common mistakes</h4>
+          <ul>${g.mistakes.map(m=>`<li class="warn">${m}</li>`).join("")}</ul>
+          <h4>Documents to have ready</h4>
+          <ul>${g.docs.map(d=>`<li class="ok">${esc(d)}</li>`).join("")}</ul>
+          <div class="tip"><b>Tip.</b> ${g.tip}</div>
+        </div>
+      </details>`).join("");
+  }
+
+  /* ---------------- Visa Bulletin ---------------- */
+  const COUNTRIES=["All","China","India","Mexico","Philippines"];
+  function fmtDate(s){
+    if(s==="C") return "Current";
+    const d=new Date(s+"T00:00:00");
+    return d.toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});
+  }
+  function renderBulletin(){
+    qs("#bulletin-fresh").innerHTML=`<span class="dot"></span> ${BULLETIN.month} Visa Bulletin &middot; snapshot ${BULLETIN.fetched} &middot; source: ${BULLETIN.source}`;
+    let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`;
+    for(const cat of ["EB1","EB2","EB3"]){
+      h+=`<tr><td><b>${cat}</b></td>`+COUNTRIES.map(c=>{
+        const v=BULLETIN.eb[cat][c];
+        return v==="C"
+          ? `<td><span class="grade A" style="min-width:auto">C</span></td>`
+          : `<td class="num">${fmtDate(v)}</td>`;
+      }).join("")+`</tr>`;
+    }
+    qs("#vb-table").innerHTML=h+"</tbody>";
+    qs("#vb-movement").innerHTML=`<h3 class="secTitle">Recent movement</h3>
+      <div class="cards">`+Object.entries(BULLETIN.movement).map(([k,v])=>{
+        const good=v.startsWith("+"), cls=good?"good":(v==="No movement"?"warn":"");
+        return `<div class="mini"><div class="k">${esc(k)}</div><div class="v ${cls}">${esc(v)}</div></div>`;
+      }).join("")+`</div>`;
+  }
+  function checkCurrent(){
+    const cat=qs("#vb-cat").value, country=qs("#vb-country").value, pd=qs("#vb-pd").value;
+    const out=qs("#vb-result");
+    if(!pd){ out.innerHTML=""; return; }
+    const cutoff=BULLETIN.eb[cat][country];
+    const pdDate=new Date(pd+"T00:00:00");
+    let cls,big,sub;
+    if(cutoff==="C"){
+      cls="safe"; big="Current ✓";
+      sub=`${cat} for ${country} is <b>current</b> — a visa number is available regardless of your priority date.`;
+    } else {
+      const cut=new Date(cutoff+"T00:00:00");
+      if(pdDate < cut){
+        cls="safe"; big="You're current ✓";
+        sub=`Your priority date (${fmtDate(pd)}) is <b>earlier</b> than the ${cat} · ${country} cutoff of <b>${fmtDate(cutoff)}</b> — a number is available this month.`;
+      } else {
+        const days=Math.round((pdDate-cut)/86400000);
+        cls="danger"; big="Not yet";
+        sub=`Your priority date (${fmtDate(pd)}) is <b>${days.toLocaleString()} days after</b> the ${cat} · ${country} cutoff of <b>${fmtDate(cutoff)}</b>. Keep watching — the cutoff moves forward over time.`;
+      }
+    }
+    out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${cat} · ${country}</div><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
+  }
+
+  /* ---------------- Processing times ---------------- */
+  function months(n){ return n>=12 ? (n/12).toFixed(1)+" yr" : n+" mo"; }
+  function renderProcessing(){
+    qs("#pt-fresh").innerHTML=`<span class="dot"></span> Snapshot ${PT_FETCHED} &middot; source: ${PT_SOURCE}`;
+    const forms=[...new Set(Object.values(PROCESSING).map(p=>p.form))];
+    qs("#pt-form").innerHTML=forms.map(f=>`<option value="${f}">${esc(FORM_LABEL[f]||f)}</option>`).join("");
+    syncCenters();
+    qs("#pt-form").addEventListener("change",()=>{syncCenters();ptEstimate();});
+    qs("#pt-center").addEventListener("change",ptEstimate);
+    // table
+    let h=`<thead><tr><th>Form</th><th>Center</th><th class="num">Median</th><th class="num">75%</th><th class="num">90%</th><th class="num">Recent approvals</th></tr></thead><tbody>`;
+    h+=Object.values(PROCESSING).map(p=>`<tr><td><b>${p.form}</b></td><td>${p.center}</td><td class="num">${months(p.median_months)}</td><td class="num">${months(p.p75_months)}</td><td class="num">${months(p.p90_months)}</td><td class="num">${p.recent_approvals.toLocaleString()}</td></tr>`).join("");
+    qs("#pt-table").innerHTML=h+"</tbody>";
+    ptEstimate();
+  }
+  function syncCenters(){
+    const form=qs("#pt-form").value;
+    const centers=Object.values(PROCESSING).filter(p=>p.form===form).map(p=>p.center);
+    qs("#pt-center").innerHTML=centers.map(c=>`<option value="${c}">${esc(CENTER_LABEL[c]||c)}</option>`).join("");
+  }
+  function ptEstimate(){
+    const form=qs("#pt-form").value, center=qs("#pt-center").value;
+    const p=PROCESSING[form+"_"+center]; if(!p){qs("#pt-result").innerHTML="";return;}
+    qs("#pt-result").innerHTML=`<div class="callout"><div class="lbl">${p.form} · ${p.center}</div>
+      <div class="big">${months(p.median_months)} <span style="font-size:.7em;color:var(--ink-faint)">typical</span></div>
+      <div class="sub">Half of recent ${p.form} cases at this center finished within <b>${months(p.median_months)}</b>; 9 in 10 within <b>${months(p.p90_months)}</b>. Based on ${p.recent_approvals.toLocaleString()} recent approvals. If your case is past the 90% mark, an inquiry may be warranted.</div></div>`;
+  }
+
+  /* ---------------- Wages ---------------- */
+  function renderWages(){
+    qs("#wg-fresh").innerHTML=`<span class="dot"></span> ${WG_SOURCE} &middot; snapshot ${WG_FETCHED}`;
+    const socs=[...new Set(WAGES.map(w=>w.soc))];
+    qs("#wg-soc").innerHTML=socs.map(s=>`<option value="${s}">${esc(SOC_TITLES[s]||s)} (${s})</option>`).join("");
+    refreshStates();
+    qs("#wg-soc").addEventListener("change",()=>{refreshStates();wgCheck();});
+    ["wg-state","wg-level","wg-offer"].forEach(id=>qs("#"+id).addEventListener("input",wgCheck));
+    wgCheck();
+    // employers
+    renderEmployers();
+    qs("#emp-search").addEventListener("input",renderEmployers);
+  }
+  function refreshStates(){
+    const soc=qs("#wg-soc").value;
+    const states=[...new Set(WAGES.filter(w=>w.soc===soc).map(w=>w.state))];
+    qs("#wg-state").innerHTML=states.map(s=>`<option value="${s}">${s}</option>`).join("");
+  }
+  function wgCheck(){
+    const soc=qs("#wg-soc").value, state=qs("#wg-state").value, level=qs("#wg-level").value;
+    const row=WAGES.find(w=>w.soc===soc&&w.state===state&&w.level===level);
+    const out=qs("#wg-result");
+    if(!row){ out.innerHTML=`<div class="callout note"><div class="sub">No wage data for that occupation, state and level combination in this snapshot.</div></div>`; return; }
+    const offer=parseFloat(qs("#wg-offer").value);
+    let extra="", cls="";
+    if(!isNaN(offer)&&offer>0){
+      const diff=offer-row.wage, pct=(diff/row.wage*100);
+      if(diff>=0){ cls="safe"; extra=`<div class="sub">The offer of <b>${money(offer)}</b> is <b>${money(diff)} (${pct.toFixed(1)}%) above</b> the prevailing wage — compliant for this level. ✓</div>`; }
+      else { cls="danger"; extra=`<div class="sub">The offer of <b>${money(offer)}</b> is <b>${money(-diff)} (${Math.abs(pct).toFixed(1)}%) below</b> the prevailing wage. An LCA at this level would not be certifiable — raise the wage or lower the level.</div>`; }
+    }
+    out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${esc(SOC_TITLES[soc]||soc)} · ${state} · Level ${level}</div>
+      <div class="big">${money(row.wage)} <span style="font-size:.6em;color:var(--ink-faint)">prevailing / yr</span></div>${extra}</div>`;
+  }
+  let empSort={key:"total",dir:-1};
+  function renderEmployers(){
+    const q=(qs("#emp-search").value||"").toLowerCase().trim();
+    let rows=EMPLOYERS.filter(e=>e.name.toLowerCase().includes(q));
+    rows.sort((a,b)=>{
+      let x=a[empSort.key],y=b[empSort.key];
+      if(typeof x==="string"){x=x.toLowerCase();y=y.toLowerCase();}
+      return (x<y?-1:x>y?1:0)*empSort.dir;
+    });
+    const arr=k=> empSort.key===k ? `<span class="arr">${empSort.dir>0?"▲":"▼"}</span>` : "";
+    const gradeClass=g=>g[0];
+    let h=`<thead><tr>
+      <th class="sortable" data-k="name">Employer ${arr("name")}</th>
+      <th class="sortable" data-k="state">State ${arr("state")}</th>
+      <th class="sortable num" data-k="total">Petitions ${arr("total")}</th>
+      <th class="sortable num" data-k="rate">Approval ${arr("rate")}</th>
+      <th class="sortable" data-k="grade">Grade ${arr("grade")}</th>
+    </tr></thead><tbody>`;
+    h+=rows.map(e=>`<tr>
+      <td>${esc(e.name)}${e.dep?'<span class="tag warn">Dependent</span>':""}</td>
+      <td>${e.state}</td>
+      <td class="num">${e.total.toLocaleString()}</td>
+      <td class="num">${e.rate.toFixed(1)}%</td>
+      <td><span class="grade ${gradeClass(e.grade)}">${e.grade}</span></td>
+    </tr>`).join("");
+    if(!rows.length) h+=`<tr><td colspan="5" style="color:var(--ink-faint);font-style:italic">No employer matches that filter.</td></tr>`;
+    qs("#emp-table").innerHTML=h+"</tbody>";
+    qsa("#emp-table th.sortable").forEach(th=>th.addEventListener("click",()=>{
+      const k=th.dataset.k;
+      if(empSort.key===k) empSort.dir*=-1;
+      else empSort={key:k,dir:(k==="name"||k==="state")?1:-1};
+      renderEmployers();
+    }));
+  }
+
+  /* ---------------- init ---------------- */
+  renderGuides();
+  renderBulletin();
+  renderProcessing();
+  renderWages();
+  ["vb-cat","vb-country","vb-pd"].forEach(id=>qs("#"+id).addEventListener("input",checkCurrent));
+  checkCurrent();
+
+  let start = location.hash.slice(1);
+  if(!TABS.includes(start)){ try{ start=localStorage.getItem("vd_tab"); }catch(e){} }
+  if(TABS.includes(start) && start!=="compare") showTab(start,false);
+})();
 </script>
 </body>
 </html>
