@@ -553,7 +553,24 @@
   table.dt th .arr{opacity:.5;font-size:.8em}
   table.dt td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
   table.dt tr:hover td{background:var(--paper-2)}
-  table.dt td.num{font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap}
+  table.dt th.num, table.dt td.num{
+    font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap;
+  }
+  table.dt.vb-current th:first-child,
+  table.dt.vb-current td:first-child{text-align:left}
+  table.dt.vb-current th:not(:first-child),
+  table.dt.vb-current td:not(:first-child){text-align:right}
+  table.dt.vb-current td:not(:first-child) .grade{margin-left:auto;display:inline-flex}
+  table.dt.vb-compare{table-layout:fixed;width:100%;min-width:640px}
+  table.dt.vb-compare th:first-child,
+  table.dt.vb-compare td:first-child,
+  table.dt.vb-compare th:nth-child(2),
+  table.dt.vb-compare td:nth-child(2){text-align:left}
+  table.dt.vb-compare th.num,
+  table.dt.vb-compare td.num{text-align:right;min-width:108px}
+  table.dt.vb-compare th:last-child,
+  table.dt.vb-compare td.mov{text-align:left;min-width:120px}
+  table.dt.vb-compare td.num .grade{display:inline-flex;margin-left:auto}
   table.dt td.cell-advance{background:var(--match-bg);color:var(--match)}
   table.dt td.cell-retro{background:var(--miss-bg);color:var(--miss)}
   table.dt td.cell-warn{background:var(--warn-bg);color:var(--warn)}
@@ -868,6 +885,15 @@
     <p class="tab-lede">Employment-based Final Action Dates from the most recent Visa Bulletin, plus a quick check of whether your priority date is current.</p>
     <div class="freshness" id="bulletin-fresh"><span class="dot"></span></div>
 
+    <h3 class="secTitle">Final Action Dates &mdash; Employment-Based (latest)</h3>
+    <p class="secSub">&ldquo;C&rdquo; means current (no backlog). A date means only priority dates <i>earlier</i> than it can receive a visa number. <b>U</b> = unavailable this month.</p>
+    <div class="tbl-wrap"><table class="dt vb-current" id="vb-table"></table></div>
+
+    <h3 class="secTitle">3-month comparison</h3>
+    <p class="secSub">Final Action Dates for June, July, and August 2026 side by side — green cells advanced, red cells retrogressed or became unavailable.</p>
+    <div class="tbl-wrap"><table class="dt vb-compare" id="vb-compare" aria-label="Three month visa bulletin comparison"></table></div>
+    <div id="vb-movement"></div>
+
     <h3 class="secTitle">Am I current?</h3>
     <p class="secSub">Enter your category, country of chargeability and priority date to see if a green-card number is available this month.</p>
     <div class="ctrls">
@@ -885,15 +911,6 @@
       </div>
     </div>
     <div id="vb-result"></div>
-
-    <h3 class="secTitle">Final Action Dates &mdash; Employment-Based</h3>
-    <p class="secSub">&ldquo;C&rdquo; means the category is current (no backlog). A date means only priority dates <i>earlier</i> than it can file/receive a visa number.</p>
-    <div class="tbl-wrap"><table class="dt" id="vb-table"></table></div>
-
-    <h3 class="secTitle">3-month comparison</h3>
-    <p class="secSub">Final Action Dates for the last three published bulletins — see how cutoffs moved month to month. <span class="tag warn">Unavailable</span> means no visas are being issued in that category this month.</p>
-    <div class="tbl-wrap"><table class="dt" id="vb-compare"></table></div>
-    <div id="vb-movement"></div>
   </section>
 
   <!-- ════════════════ TAB: Processing Times ════════════════ -->
@@ -2084,25 +2101,36 @@ function downloadReport(node) {
     return r>0 ? "cell-advance" : r<0 ? "cell-retro" : "";
   }
   function renderBulletinCompare(){
+    const el=qs("#vb-compare");
+    if(!el) return;
     const months=BULLETIN.months;
-    let h=`<thead><tr><th>Category</th><th>Country</th>`;
-    months.forEach(m=>{ h+=`<th class="num">${esc(m.label.replace(" 2026",""))} '26</th>`; });
-    h+=`<th>Jun → Aug</th></tr></thead><tbody>`;
+    if(!months || months.length<2){
+      el.innerHTML=`<tbody><tr><td colspan="6" style="color:var(--ink-faint);font-style:italic;padding:16px">Comparison data is loading…</td></tr></tbody>`;
+      return;
+    }
+    let h=`<colgroup>
+      <col style="width:52px"><col style="width:88px">
+      <col style="width:108px"><col style="width:108px"><col style="width:108px">
+      <col style="width:128px"></colgroup>
+      <thead><tr><th>Cat.</th><th>Country</th>`;
+    months.forEach(m=>{ h+=`<th class="num">${esc(m.label.replace(" 2026",""))}&nbsp;'26</th>`; });
+    h+=`<th>Jun &rarr; Aug</th></tr></thead><tbody>`;
     for(const cat of ["EB1","EB2","EB3"]){
       for(const country of COUNTRIES){
         const vals=months.map(m=>m.eb[cat][country]);
         const mov=movementLabel(vals[0], vals[vals.length-1]);
         h+=`<tr><td><b>${cat}</b></td><td>${country}</td>`;
         vals.forEach((v,i)=>{
-          const cls=[];
+          const cls=["num"];
           if(v==="U") cls.push("cell-u");
-          else if(i>0) cls.push(cellClass(vals[i-1], v));
-          h+=`<td class="num ${cls.join(" ")}">${v==="C"?'<span class="grade A" style="min-width:auto">C</span>':v==="U"?"U":fmtDate(v)}</td>`;
+          else if(i>0) { const cc=cellClass(vals[i-1], v); if(cc) cls.push(cc); }
+          const inner=v==="C"?'<span class="grade A" style="min-width:auto">C</span>':v==="U"?"U":fmtDate(v);
+          h+=`<td class="${cls.join(" ")}">${inner}</td>`;
         });
         h+=`<td class="mov ${mov.cls}">${esc(mov.text)}</td></tr>`;
       }
     }
-    qs("#vb-compare").innerHTML=h+"</tbody>";
+    el.innerHTML=h+"</tbody>";
   }
   function computeMovement(){
     const first=BULLETIN.months[0], last=BULLETIN.months[BULLETIN.months.length-1];
@@ -2118,14 +2146,14 @@ function downloadReport(node) {
   }
   function renderBulletin(){
     qs("#bulletin-fresh").innerHTML=`<span class="dot"></span> ${BULLETIN.month} Visa Bulletin &middot; snapshot ${BULLETIN.fetched} &middot; source: ${BULLETIN.source}`;
-    let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`;
+    let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th class="num">${c}</th>`).join("")}</tr></thead><tbody>`;
     for(const cat of ["EB1","EB2","EB3"]){
       h+=`<tr><td><b>${cat}</b></td>`+COUNTRIES.map(c=>{
         const v=BULLETIN.eb[cat][c];
         return v==="C"
-          ? `<td><span class="grade A" style="min-width:auto">C</span></td>`
+          ? `<td class="num"><span class="grade A" style="min-width:auto">C</span></td>`
           : v==="U"
-          ? `<td class="cell-u"><b>U</b></td>`
+          ? `<td class="num cell-u"><b>U</b></td>`
           : `<td class="num">${fmtDate(v)}</td>`;
       }).join("")+`</tr>`;
     }
