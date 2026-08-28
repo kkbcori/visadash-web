@@ -22,7 +22,7 @@ Tab keys: `compare, guides, bulletin, processing, wages`.
 - **compare** — DS-160 comparison tool (preserved verbatim).
 - **guides** — `GUIDES[]` array of form-filling guides (DS-160, I-129, I-140, I-485, I-130,
   N-400) rendered as `<details>` accordions. Pure static content.
-- **bulletin** — `BULLETIN` (EB1/2/3 final action dates + movement) + an "Am I current?"
+- **bulletin** — `VB_MONTHS` / `BULLETIN` (EB1/2/3 final action dates for last 3 months + comparison table) + "Am I current?"
   date check.
 - **processing** — `PROCESSING` (USCIS times by form×center) + estimate callout.
 - **wages** — `WAGES` (DOL prevailing wage) + offer check, and `EMPLOYERS` (H-1B sponsor
