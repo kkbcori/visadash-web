@@ -59,6 +59,9 @@
     font-family:'Newsreader',serif;font-weight:600;font-size:2.55rem;
     letter-spacing:-.015em;line-height:1.02;
   }
+  .brand a{text-decoration:none;color:inherit;display:block}
+  .brand a:hover h1{color:var(--navy)}
+  .brand a:focus-visible{outline:2px solid var(--navy);outline-offset:4px;border-radius:4px}
   .brand .sub{
     font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.18em;
     text-transform:uppercase;color:var(--ink-soft);margin-top:6px;
@@ -480,43 +483,33 @@
     details.match-panel[open] .match-inner{display:block}
   }
 
-  /* ===================== main nav (single toolkit menu) ===================== */
-  .hero{margin:8px 0 20px}
+  /* ===================== main nav (single tab bar) ===================== */
+  .hero{margin:16px 0 12px}
   .hero-lede{
-    font-family:'Newsreader',serif;font-size:1.35rem;line-height:1.35;
-    color:var(--ink);max-width:820px;
+    font-family:'Newsreader',serif;font-size:1.2rem;line-height:1.4;
+    color:var(--ink-soft);max-width:820px;
   }
   .nav-main{
-    display:flex;gap:8px;flex-wrap:wrap;
-    margin:0 0 30px;padding:8px;
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    display:flex;gap:0;flex-wrap:wrap;
+    margin:0 0 28px;border-bottom:2px solid var(--ink);
   }
   .nav-main button{
-    flex:1 1 155px;min-width:0;border:1px solid transparent;border-radius:6px;
-    background:transparent;cursor:pointer;text-align:left;
-    font-family:inherit;color:inherit;padding:12px 14px;
-    display:flex;align-items:flex-start;gap:11px;
-    transition:background .15s,border-color .15s,box-shadow .15s;
+    flex:0 1 auto;border:0;border-radius:5px 5px 0 0;
+    background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.84rem;font-weight:500;
+    color:var(--ink-soft);padding:11px 16px;
+    display:inline-flex;align-items:center;gap:7px;
+    position:relative;top:2px;
+    transition:background .15s,color .15s;
+    white-space:nowrap;
   }
-  .nav-main button:hover{background:var(--paper-2);border-color:var(--line-soft)}
-  .nav-main button.on{
-    background:var(--navy);border-color:var(--navy);color:#fff;
-    box-shadow:0 2px 6px rgba(31,59,84,.15);
-  }
-  .nav-main .nav-ico{font-size:1.25rem;line-height:1;flex:none;opacity:.85;margin-top:1px}
+  .nav-main button:hover{color:var(--ink);background:var(--paper-2)}
+  .nav-main button.on{background:var(--navy);color:#fff}
+  .nav-main .nav-ico{font-size:1rem;line-height:1;opacity:.8}
   .nav-main button.on .nav-ico{opacity:1}
-  .nav-main .nav-text{min-width:0;display:flex;flex-direction:column;gap:3px}
-  .nav-main .nav-label{
-    font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:.88rem;line-height:1.25;
-  }
-  .nav-main .nav-hint{
-    font-size:.72rem;line-height:1.35;color:var(--ink-faint);
-  }
-  .nav-main button.on .nav-hint{color:rgba(255,255,255,.72)}
   @media(max-width:760px){
-    .nav-main{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px}
-    .nav-main button{flex:0 0 auto;min-width:148px;padding:10px 12px}
-    .nav-main .nav-hint{display:none}
+    .nav-main{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .nav-main button{flex:0 0 auto;font-size:.8rem;padding:10px 13px}
   }
 
   /* tab panels */
@@ -729,8 +722,10 @@
 
   <header>
     <div class="brand">
-      <h1>VisaDash</h1>
-      <div class="sub">Immigration Toolkit</div>
+      <a href="/" id="homeLink" title="Back to home">
+        <h1>VisaDash</h1>
+        <div class="sub">Immigration Toolkit</div>
+      </a>
     </div>
   </header>
 
@@ -741,38 +736,23 @@
   <nav class="nav-main no-print" id="tabnav" aria-label="Toolkit sections">
     <button type="button" data-tab="compare" class="on">
       <span class="nav-ico" aria-hidden="true">&#128196;</span>
-      <span class="nav-text">
-        <span class="nav-label">DS-160 Compare</span>
-        <span class="nav-hint">Diff two filings or passports</span>
-      </span>
+      <span>DS-160 Compare</span>
     </button>
     <button type="button" data-tab="guides">
       <span class="nav-ico" aria-hidden="true">&#128221;</span>
-      <span class="nav-text">
-        <span class="nav-label">Form Guides</span>
-        <span class="nav-hint">DS-160, I-129, I-140 &amp; more</span>
-      </span>
+      <span>Form Guides</span>
     </button>
     <button type="button" data-tab="bulletin">
       <span class="nav-ico" aria-hidden="true">&#128197;</span>
-      <span class="nav-text">
-        <span class="nav-label">Visa Bulletin</span>
-        <span class="nav-hint">Cutoff dates &amp; 3-month trend</span>
-      </span>
+      <span>Visa Bulletin</span>
     </button>
     <button type="button" data-tab="processing">
       <span class="nav-ico" aria-hidden="true">&#9203;</span>
-      <span class="nav-text">
-        <span class="nav-label">Processing Times</span>
-        <span class="nav-hint">USCIS wait by form &amp; center</span>
-      </span>
+      <span>Processing Times</span>
     </button>
     <button type="button" data-tab="wages">
       <span class="nav-ico" aria-hidden="true">&#128176;</span>
-      <span class="nav-text">
-        <span class="nav-label">Wages &amp; Sponsors</span>
-        <span class="nav-hint">Prevailing wage &amp; H-1B grades</span>
-      </span>
+      <span>Wages &amp; Sponsors</span>
     </button>
   </nav>
 
@@ -2027,6 +2007,19 @@ function downloadReport(node) {
     const b=e.target.closest("button[data-tab]"); if(!b) return;
     showTab(b.dataset.tab,true);
   });
+  const homeLink=qs("#homeLink");
+  if(homeLink){
+    homeLink.addEventListener("click",e=>{
+      e.preventDefault();
+      if(location.hash==="#demo" && typeof showDemoReport==="function"){
+        $("#results").classList.remove("show");
+        $("#results").innerHTML="";
+      }
+      showTab("compare",false);
+      history.replaceState(null,"","/");
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  }
   window.addEventListener("hashchange",()=>{
     showTab(location.hash.slice(1).replace(/^demo$/,"compare"),false);
     if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
