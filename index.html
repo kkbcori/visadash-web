@@ -92,6 +92,16 @@
     font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.13em;
     text-transform:uppercase;color:var(--ink-faint);
   }
+  .compare-steps{
+    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.06em;
+    color:var(--ink-faint);
+  }
+  .compare-steps span{
+    padding:6px 11px;border:1px solid var(--line-soft);border-radius:5px;
+    background:var(--panel);
+  }
+  .compare-steps span.on{border-color:var(--navy);color:var(--navy);background:#eef2f4}
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
   .seg button{
     border:0;background:transparent;cursor:pointer;
@@ -283,6 +293,169 @@
   .diff .dl.add{background:var(--match-bg)}
   .diff.hidesame .dl.same{display:none}
 
+  /* ---- enhanced comparison results ---- */
+  .verdict{
+    border-radius:var(--radius);padding:22px 24px;margin-bottom:22px;
+    display:flex;gap:18px;align-items:flex-start;border:1px solid;
+  }
+  .verdict .v-ico{
+    font-size:1.85rem;line-height:1;flex:none;width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;border-radius:50%;
+    background:rgba(255,255,255,.55);
+  }
+  .verdict .v-body{flex:1;min-width:0}
+  .verdict .v-title{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.45rem;line-height:1.15;
+  }
+  .verdict .v-sub{font-size:.9rem;margin-top:7px;line-height:1.55;opacity:.92}
+  .verdict .v-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .verdict .v-chip{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;font-weight:500;
+    padding:4px 9px;border-radius:4px;background:rgba(255,255,255,.45);
+    border:1px solid rgba(0,0,0,.08);
+  }
+  .verdict.ok{background:var(--match-bg);border-color:#bcd6bf;color:#234a32}
+  .verdict.warn{background:var(--warn-bg);border-color:#ddca96;color:#5c4310}
+  .verdict.alert{background:var(--miss-bg);border-color:#d8b3ae;color:#6e241c}
+
+  .summary-v2{
+    display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);padding:18px 22px;margin-bottom:22px;
+  }
+  @media(max-width:640px){.summary-v2{grid-template-columns:1fr}}
+  .summary-stats{display:flex;gap:0;flex-wrap:wrap;flex:1}
+  .summary-stats .stat{
+    flex:1;min-width:100px;padding:4px 18px 4px 0;margin-right:18px;
+    border-right:1px solid var(--line-soft);
+  }
+  .summary-stats .stat:last-child{border-right:0;margin-right:0;padding-right:0}
+  .summary-stats .stat .num{font-family:'Newsreader',serif;font-size:1.85rem;font-weight:600;line-height:1}
+  .summary-stats .stat .cap{
+    font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:4px;
+  }
+  .summary-stats .stat.good .num{color:var(--match)}
+  .summary-stats .stat.bad .num{color:var(--miss)}
+  .consistency-ring{text-align:center;min-width:92px}
+  .consistency-ring svg{display:block;margin:0 auto}
+  .consistency-ring .pct{
+    font-family:'Newsreader',serif;font-size:1.35rem;font-weight:600;line-height:1;
+    margin-top:6px;
+  }
+  .consistency-ring .lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:3px;
+  }
+
+  .res-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    flex-wrap:wrap;margin-bottom:16px;
+  }
+  .res-filters{
+    display:inline-flex;border:1px solid var(--line);border-radius:6px;
+    overflow:hidden;background:var(--panel);
+  }
+  .res-filters button{
+    border:0;background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.8rem;font-weight:500;
+    padding:8px 14px;color:var(--ink-soft);border-right:1px solid var(--line-soft);
+    transition:background .15s,color .15s;
+  }
+  .res-filters button:last-child{border-right:0}
+  .res-filters button.on{background:var(--navy);color:#fff}
+  .res-filters button .ct{
+    font-family:'IBM Plex Mono',monospace;font-size:.72em;opacity:.75;margin-left:4px;
+  }
+  .view-toggle{font-size:.78rem;color:var(--ink-soft)}
+  .view-toggle label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+  .review-list{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 18px;margin-bottom:20px;
+  }
+  .review-list h4{
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px;
+  }
+  .review-list ul{margin:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+  .review-list li{
+    font-size:.82rem;padding:5px 11px;border-radius:5px;
+    background:var(--miss-bg);border:1px solid #d8b3ae;color:#7e2d25;
+  }
+
+  .field-group{margin-bottom:24px}
+  .field-group-title{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--ink-faint);
+    margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line-soft);
+  }
+  .field-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  @media(max-width:480px){.field-cards{grid-template-columns:1fr}}
+
+  .fcard{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;border-left:4px solid var(--line);
+  }
+  .fcard.issue{border-left-color:var(--miss);background:linear-gradient(90deg,var(--miss-bg) 0%,var(--panel) 18%)}
+  .fcard.match-card{border-left-color:var(--match)}
+  .fcard.info-card{border-left-color:var(--info)}
+  .fcard.warn-card{border-left-color:var(--warn)}
+  .fcard-head{
+    padding:11px 14px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  }
+  .fcard-head .fname{font-weight:600;font-size:.92rem;line-height:1.3}
+  .fcard-body{padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.fcard-body{grid-template-columns:1fr}}
+  .fcard-col{
+    background:var(--paper-2);border:1px solid var(--line-soft);border-radius:5px;padding:9px 11px;
+    min-width:0;
+  }
+  .fcard-col .flbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;
+  }
+  .fcard-col .fval{
+    font-family:'IBM Plex Mono',monospace;font-size:.82rem;word-break:break-word;line-height:1.45;
+  }
+  .fcard-col .fval.empty{color:var(--ink-faint);font-style:italic}
+  .fcard-col.prior{border-top:2px solid var(--miss)}
+  .fcard-col.current{border-top:2px solid var(--match)}
+  .fcard-note{
+    padding:0 14px 12px;font-size:.76rem;color:var(--ink-soft);line-height:1.45;
+  }
+  .fcard-arrow{
+    display:none;text-align:center;color:var(--ink-faint);font-size:1rem;padding:4px 0;
+  }
+  @media(max-width:520px){
+    .fcard-body{position:relative}
+    .fcard-arrow{display:block}
+  }
+
+  .val-old{background:rgba(168,57,47,.12);text-decoration:line-through;text-decoration-color:rgba(168,57,47,.5)}
+  .val-new{background:rgba(47,106,71,.14);padding:0 2px;border-radius:2px}
+
+  details.match-panel{
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);margin-bottom:24px;overflow:hidden;
+  }
+  details.match-panel>summary{
+    cursor:pointer;list-style:none;padding:14px 18px;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:.9rem;
+    display:flex;align-items:center;gap:10px;
+  }
+  details.match-panel>summary::-webkit-details-marker{display:none}
+  details.match-panel>summary:hover{background:var(--paper-2)}
+  details.match-panel>summary .cnt{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+    background:var(--match-bg);color:var(--match);padding:3px 8px;border-radius:4px;
+  }
+  details.match-panel .match-inner{padding:4px 18px 18px}
+
+  .cmp-table-wrap{display:none}
+  .cmp-table-wrap.show-table{display:block}
+  .field-cards-view.hide-cards{display:none}
+
   details.raw{margin-top:14px}
   details.raw summary{cursor:pointer;font-size:.82rem;color:var(--navy);font-weight:500}
 
@@ -300,6 +473,10 @@
     #results{display:block!important;margin-top:0}
     .wrap{max-width:100%;padding:0}
     .diff.hidesame .dl.same{display:flex}
+    .match-panel{border:0}
+    .match-panel>summary{display:none}
+    .match-panel .match-inner{padding:0}
+    details.match-panel[open] .match-inner{display:block}
   }
 
   /* ===================== nav tabs ===================== */
@@ -467,6 +644,64 @@
     font-size:.78rem;color:var(--ink-faint);line-height:1.7;
   }
   .tool-notes b{color:var(--ink-soft)}
+
+  /* ---- site hero & toolkit landing ---- */
+  .hero{margin:8px 0 28px}
+  .hero-lede{
+    font-family:'Newsreader',serif;font-size:1.35rem;line-height:1.35;
+    color:var(--ink);max-width:820px;margin-bottom:20px;
+  }
+  .hero-sub{font-size:.92rem;color:var(--ink-soft);max-width:720px;margin:-10px 0 22px}
+  .toolkit-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;
+  }
+  .tk-card{
+    text-align:left;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);padding:16px 17px;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s,transform .05s;
+    font-family:inherit;color:inherit;
+  }
+  .tk-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(31,59,84,.08)}
+  .tk-card:active{transform:translateY(1px)}
+  .tk-card.on{border-color:var(--navy);background:#eef2f4;box-shadow:inset 0 0 0 1px var(--navy)}
+  .tk-card .tk-ico{font-size:1.35rem;line-height:1;margin-bottom:8px;opacity:.75}
+  .tk-card .tk-name{font-family:'Newsreader',serif;font-weight:600;font-size:1.05rem;line-height:1.2}
+  .tk-card .tk-desc{font-size:.78rem;color:var(--ink-soft);margin-top:6px;line-height:1.45}
+
+  /* ---- severity tiers ---- */
+  .sev{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.6rem;
+    font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:4px;white-space:nowrap;flex:none;
+  }
+  .sev-critical{background:#5c1a14;color:#fff}
+  .sev-high{background:var(--miss);color:#fff}
+  .sev-medium{background:var(--warn);color:#fff}
+  .sev-low{background:var(--line);color:var(--ink-soft)}
+  .sev-info{background:var(--info-bg);color:var(--info);border:1px solid #c7d9e2}
+  .fcard.sev-border-critical{border-left-color:#5c1a14}
+  .fcard.sev-border-high{border-left-color:var(--miss)}
+  .fcard.sev-border-medium{border-left-color:var(--warn)}
+  .severity-summary{
+    display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;
+  }
+  .severity-summary .sev-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.8rem;padding:7px 12px;border-radius:6px;border:1px solid var(--line-soft);
+    background:var(--panel);
+  }
+  .severity-summary .sev-pill b{font-family:'Newsreader',serif;font-size:1.1rem}
+  .review-list li.sev-critical{border-color:#5c1a14;background:#f0ddd9;color:#5c1a14}
+  .review-list li.sev-high{border-color:#d8b3ae}
+  .review-list li.sev-medium{border-color:#ddca96;background:var(--warn-bg);color:#6c4d14}
+  table.cmp th.sev-col, table.cmp td.sev-col{white-space:nowrap;width:90px}
+
+  .demo-banner{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--info-bg);border:1px solid #c7d9e2;border-radius:var(--radius);
+    padding:12px 16px;margin-bottom:20px;font-size:.86rem;color:#2a4656;
+  }
+  .demo-banner b{color:var(--info)}
 </style>
 </head>
 <body>
@@ -480,6 +715,38 @@
     <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
   </header>
 
+  <section class="hero no-print" aria-label="Toolkit overview">
+    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times — without uploading anything.</p>
+    <p class="hero-sub">VisaDash runs entirely in your browser. Pick a tool below or use the tabs to jump between features.</p>
+    <div class="toolkit-grid" id="toolkit-grid">
+      <button type="button" class="tk-card on" data-tab="compare">
+        <div class="tk-ico">&#128196;</div>
+        <div class="tk-name">DS-160 Comparison</div>
+        <div class="tk-desc">Diff two DS-160 printouts or passports before a consular interview.</div>
+      </button>
+      <button type="button" class="tk-card" data-tab="guides">
+        <div class="tk-ico">&#128221;</div>
+        <div class="tk-name">Form Guides</div>
+        <div class="tk-desc">DS-160, I-129, I-140, I-485, I-130 &amp; N-400 field-by-field help.</div>
+      </button>
+      <button type="button" class="tk-card" data-tab="bulletin">
+        <div class="tk-ico">&#128197;</div>
+        <div class="tk-name">Visa Bulletin</div>
+        <div class="tk-desc">EB final-action dates and a quick &ldquo;am I current?&rdquo; check.</div>
+      </button>
+      <button type="button" class="tk-card" data-tab="processing">
+        <div class="tk-ico">&#9203;</div>
+        <div class="tk-name">Processing Times</div>
+        <div class="tk-desc">USCIS median wait by form and service center.</div>
+      </button>
+      <button type="button" class="tk-card" data-tab="wages">
+        <div class="tk-ico">&#128176;</div>
+        <div class="tk-name">Wages &amp; Sponsors</div>
+        <div class="tk-desc">Prevailing wage lookup and H-1B sponsor grades.</div>
+      </button>
+    </div>
+  </section>
+
   <nav class="tabs no-print" id="tabnav" aria-label="Sections">
     <button data-tab="compare" class="on">DS-160 Comparison Tool</button>
     <button data-tab="guides">Form-Filling Guides</button>
@@ -491,7 +758,7 @@
   <!-- ════════════════ TAB: DS-160 Comparison Tool ════════════════ -->
   <section class="tab active" id="tab-compare">
 
-  <p class="intro">Compare two versions of a client's document — an earlier DS&#8209;160 against a refile, an expiring passport against a renewal, or any supporting paperwork — and surface every discrepancy before it reaches a consular officer.</p>
+  <p class="intro">Upload two versions of the same document — a prior DS-160 against a refile, an expiring passport against a renewal — and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
 
   <div class="privacy no-print">
     <span>&#128274;</span>
@@ -499,6 +766,11 @@
   </div>
 
   <!-- mode -->
+  <div class="compare-steps no-print" aria-hidden="true">
+    <span class="on">1 · Prior version</span>
+    <span class="on">2 · Current version</span>
+    <span>3 · Review report</span>
+  </div>
   <div class="modebar no-print">
     <span class="lbl">Comparison&nbsp;type</span>
     <div class="seg" id="modeSeg">
@@ -558,6 +830,7 @@
 
   <div class="actions no-print">
     <button class="btn" id="runBtn">Compare documents</button>
+    <button class="btn ghost sm" id="demoBtn">View sample report</button>
     <button class="btn ghost sm" id="resetBtn">Clear all</button>
   </div>
 
@@ -1023,6 +1296,55 @@ const PASSPORT_FIELDS = [
   ["Personal number", "personalNumber", "either"]
 ];
 
+const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3, info: 4, none: 5 };
+const SEVERITY_LABEL = {
+  critical: "Critical", high: "High", medium: "Medium", low: "Low", info: "Info", none: ""
+};
+
+function ds160Severity(label, row) {
+  if (row.cls === "match") return "none";
+  const lc = label.toLowerCase();
+  const critical = ["surname", "given name", "date of birth", "sex", "nationality",
+    "national identification", "passport/travel document number", "passport number"];
+  const high = ["marital status", "other names", "city of birth", "state/province of birth",
+    "country/region of birth", "full name in native", "passport expiration", "passport issuance",
+    "country/authority that issued", "purpose of trip"];
+  const medium = ["email address", "primary phone", "intended date of arrival",
+    "u.s. social security", "u.s. taxpayer", "passport book number"];
+  if (critical.some(f => lc.includes(f))) return "critical";
+  if (high.some(f => lc.includes(f))) return "high";
+  if (medium.some(f => lc.includes(f))) return "medium";
+  return "low";
+}
+
+function passportSeverity(label, row) {
+  if (row.cls === "match") return "none";
+  if (row.status === "Updated") return "info";
+  if (row.status === "Discrepancy") {
+    if (["Surname", "Given names", "Date of birth", "Sex", "Nationality"].includes(label))
+      return "critical";
+    if (label === "Issuing country") return "high";
+    return "high";
+  }
+  if (row.status === "Unchanged") return "medium";
+  if (row.status === "A only" || row.status === "B only") return "low";
+  return "low";
+}
+
+function attachSeverity(rows, kind) {
+  for (const row of rows) {
+    row.severity = kind === "ds160" ? ds160Severity(row.label, row)
+      : kind === "passport" ? passportSeverity(row.label, row) : "none";
+  }
+}
+
+function sortBySeverity(rows) {
+  return [...rows].sort((a, b) => {
+    const d = (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9);
+    return d || a.label.localeCompare(b.label);
+  });
+}
+
 function comparePassport(a, b) {
   const pa = parseMRZ(a), pb = parseMRZ(b);
   if (!pa || !pb) return { error: "Could not locate a valid MRZ on " +
@@ -1046,6 +1368,7 @@ function comparePassport(a, b) {
     }
     rows.push({ label, av, bv, status, cls });
   }
+  attachSeverity(rows, "passport");
   return { kind: "passport", rows, pa, pb, discrepancies, consistent,
            diff: diffLines([pa.l1, pa.l2], [pb.l1, pb.l2]) };
 }
@@ -1065,6 +1388,7 @@ function compareDS160(a, b) {
     else { status = "B only"; cls = "warn"; discrepancies++; }
     rows.push({ label: k, av, bv, status, cls });
   }
+  attachSeverity(rows, "ds160");
   rows.sort((x, y) => x.label.localeCompare(y.label));
   return { kind: "ds160", rows, discrepancies, consistent,
            diff: diffLines(a.lines, b.lines) };
@@ -1079,7 +1403,59 @@ function compareGeneral(a, b) {
 
 /* ============ run ============ */
 $("#runBtn").addEventListener("click", run);
+$("#demoBtn").addEventListener("click", showDemoReport);
 $("#resetBtn").addEventListener("click", () => location.reload());
+
+function showDemoReport() {
+  $("#log").innerHTML = "";
+  $("#log").classList.remove("show");
+  const demo = buildDemoComparison();
+  renderResults(demo.result, demo.a, demo.b, "ds160", false, true);
+  const steps = $$(".compare-steps span");
+  if (steps[2]) steps[2].classList.add("on");
+  log("Loaded sample DS-160 comparison (demo data).", "ok");
+  $("#log").classList.add("show");
+}
+
+function buildDemoComparison() {
+  const rows = [
+    { label: "Surname", av: "SHARMA", bv: "SHARMA", status: "Match", cls: "match" },
+    { label: "Given Name", av: "PRIYA ANIL", bv: "PRIYA A", status: "Changed", cls: "miss" },
+    { label: "Date of Birth", av: "1988-01-01", bv: "1988-01-01", status: "Match", cls: "match" },
+    { label: "Sex", av: "FEMALE", bv: "FEMALE", status: "Match", cls: "match" },
+    { label: "Nationality", av: "INDIA", bv: "INDIA", status: "Match", cls: "match" },
+    { label: "Passport Number", av: "Z1234567", bv: "Z7654321", status: "Changed", cls: "miss" },
+    { label: "Passport Expiration Date", av: "2030-01-01", bv: "2034-01-01", status: "Changed", cls: "miss" },
+    { label: "Email Address", av: "priya.old@gmail.com", bv: "priya.sharma@work.com", status: "Changed", cls: "miss" },
+    { label: "Primary Phone Number", av: "+91 98765 43210", bv: "+1 415 555 0199", status: "Changed", cls: "miss" },
+    { label: "Purpose of Trip to the U.S.", av: "TEMP. BUSINESS OR PLEASURE VISITOR (B)", bv: "TEMP. BUSINESS OR PLEASURE VISITOR (B)", status: "Match", cls: "match" },
+    { label: "Marital Status", av: "SINGLE", bv: "MARRIED", status: "Changed", cls: "miss" },
+    { label: "Intended Date of Arrival", av: "2024-06-15", bv: "2026-09-10", status: "Changed", cls: "miss" }
+  ];
+  attachSeverity(rows, "ds160");
+  let discrepancies = 0, consistent = 0;
+  for (const r of rows) {
+    if (r.cls === "match") consistent++;
+    else discrepancies++;
+  }
+  const diff = [
+    { t: "same", x: "Surnames: SHARMA" },
+    { t: "del", x: "Given Names: PRIYA ANIL" },
+    { t: "add", x: "Given Names: PRIYA A" },
+    { t: "same", x: "Date of Birth: 01 JAN 1988" },
+    { t: "del", x: "Passport Number: Z1234567" },
+    { t: "add", x: "Passport Number: Z7654321" },
+    { t: "del", x: "Email Address: priya.old@gmail.com" },
+    { t: "add", x: "Email Address: priya.sharma@work.com" },
+    { t: "del", x: "Marital Status: SINGLE" },
+    { t: "add", x: "Marital Status: MARRIED" }
+  ];
+  return {
+    a: { kind: "ds160", source: "sample-ds160-prior.pdf" },
+    b: { kind: "ds160", source: "sample-ds160-current.pdf" },
+    result: { kind: "ds160", rows, discrepancies, consistent, diff, demo: true }
+  };
+}
 
 async function run() {
   const btn = $("#runBtn");
@@ -1105,7 +1481,12 @@ async function run() {
     else                          result = compareGeneral(a, b);
 
     if (result.error) { log("! " + result.error, "err"); renderError(result.error); }
-    else { renderResults(result, a, b, kind, typeMismatch && mode === "auto"); log("Done.", "ok"); }
+    else {
+      renderResults(result, a, b, kind, typeMismatch && mode === "auto");
+      const steps = $$(".compare-steps span");
+      if (steps[2]) steps[2].classList.add("on");
+      log("Done.", "ok");
+    }
   } catch (err) {
     log("! " + err.message, "err");
     renderError(err.message);
@@ -1119,6 +1500,158 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, c =>
     ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 }
+
+const DS_GROUPS = {
+  "Identity & biographics": [
+    "Surname", "Given Name", "Full Name in Native Alphabet", "Other Names Used",
+    "Sex", "Marital Status", "Date of Birth", "City of Birth",
+    "State/Province of Birth", "Country/Region of Birth",
+    "Country/Region of Origin (Nationality)", "Nationality", "National Identification Number"
+  ],
+  "Passport & travel documents": [
+    "Passport/Travel Document Number", "Passport Number", "Passport Book Number",
+    "Country/Authority that Issued Passport/Travel Document",
+    "Passport Issuance Date", "Passport Expiration Date"
+  ],
+  "Contact & trip details": [
+    "Purpose of Trip to the U.S.", "Intended Date of Arrival",
+    "Email Address", "Primary Phone Number"
+  ],
+  "U.S. identifiers": [
+    "U.S. Social Security Number", "U.S. Taxpayer ID Number"
+  ]
+};
+
+function dsGroup(label) {
+  const lc = label.toLowerCase();
+  for (const [group, fields] of Object.entries(DS_GROUPS)) {
+    if (fields.some(f => lc === f.toLowerCase() || lc.startsWith(f.toLowerCase().replace(/s$/, ""))))
+      return group;
+  }
+  return "Other fields";
+}
+
+function rowNeedsReview(row) {
+  return row.cls === "miss" || row.cls === "warn";
+}
+
+function rowHint(row, kind) {
+  if (row.severity === "critical")
+    return "Critical — identity or passport data changed. Officers cross-check these fields against your documents; reconcile before your interview.";
+  if (row.severity === "high")
+    return "High priority — biographic or travel-document detail changed. Verify the current filing matches your supporting documents.";
+  if (row.severity === "medium")
+    return "Medium — contact or arrival details changed. Less likely to derail a case, but should still match what you plan to say at interview.";
+  if (row.severity === "info")
+    return "Expected change — this field typically updates between document versions (e.g. new passport number on renewal).";
+  if (kind === "ds160") {
+    if (row.status === "Changed")
+      return "This answer differs between filings. Confirm which version is correct before your interview.";
+    if (row.status === "A only")
+      return "Present in the prior filing but missing from the current one — it may have been cleared or not extracted.";
+    if (row.status === "B only")
+      return "Only appears in the current filing — new information or a newly detected field.";
+  }
+  if (kind === "passport") {
+    if (row.status === "Discrepancy")
+      return "Identity data should stay the same across passport renewals. A mismatch may indicate an OCR error.";
+    if (row.status === "Updated")
+      return "Expected to change when a passport is renewed (new number or expiry).";
+    if (row.status === "Unchanged")
+      return "Passport number or expiry matched the prior version — unusual for a renewal; double-check.";
+  }
+  return "";
+}
+
+function fcardClass(row) {
+  if (row.cls === "miss") return "issue";
+  if (row.cls === "match") return "match-card";
+  if (row.cls === "warn") return "warn-card";
+  return "info-card";
+}
+
+function fcardSevBorder(row) {
+  if (!rowNeedsReview(row) || !row.severity) return "";
+  if (["critical", "high", "medium"].includes(row.severity))
+    return ` sev-border-${row.severity}`;
+  return "";
+}
+
+function severityBadge(row) {
+  if (!row.severity || row.severity === "none") return "";
+  return `<span class="sev sev-${row.severity}">${SEVERITY_LABEL[row.severity]}</span>`;
+}
+
+function renderSeveritySummary(rows) {
+  const tiers = ["critical", "high", "medium", "low"];
+  const counts = {};
+  for (const row of rows.filter(rowNeedsReview))
+    counts[row.severity] = (counts[row.severity] || 0) + 1;
+  const pills = tiers.filter(t => counts[t]).map(t =>
+    `<span class="sev-pill"><span class="sev sev-${t}">${SEVERITY_LABEL[t]}</span> <b>${counts[t]}</b></span>`);
+  if (!pills.length) return "";
+  return `<div class="severity-summary">${pills.join("")}</div>`;
+}
+
+function consistencySvg(pct) {
+  const r = 36, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+  const col = pct >= 90 ? "var(--match)" : pct >= 70 ? "var(--warn)" : "var(--miss)";
+  return `<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--line-soft)" stroke-width="7"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="${col}" stroke-width="7"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 42 42)"/>
+  </svg>`;
+}
+
+function renderFieldCard(row, kind) {
+  const hint = rowHint(row, kind);
+  const av = row.av || "", bv = row.bv || "";
+  const changed = av && bv && !normEq(av, bv);
+  const avHtml = changed
+    ? `<span class="val-old">${escapeHtml(av)}</span>`
+    : (av ? escapeHtml(av) : `<span class="empty">Not found</span>`);
+  const bvHtml = changed
+    ? `<span class="val-new">${escapeHtml(bv)}</span>`
+    : (bv ? escapeHtml(bv) : `<span class="empty">Not found</span>`);
+  return `<article class="fcard ${fcardClass(row)}${fcardSevBorder(row)}" data-review="${rowNeedsReview(row)?"1":"0"}" data-match="${row.cls==="match"?"1":"0"}" data-severity="${row.severity||"none"}">
+    <div class="fcard-head">
+      <span class="fname">${escapeHtml(row.label)}</span>
+      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        ${severityBadge(row)}
+        <span class="pill ${row.cls}">${row.status}</span>
+      </span>
+    </div>
+    <div class="fcard-body">
+      <div class="fcard-col prior">
+        <div class="flbl">Prior filing</div>
+        <div class="fval ${av?"":"empty"}">${avHtml}</div>
+      </div>
+      <div class="fcard-col current">
+        <div class="flbl">Current filing</div>
+        <div class="fval ${bv?"":"empty"}">${bvHtml}</div>
+      </div>
+    </div>
+    ${hint ? `<div class="fcard-note">${hint}</div>` : ""}
+  </article>`;
+}
+
+function renderGroupedCards(rows, kind) {
+  const groups = {};
+  for (const row of rows) {
+    const g = kind === "ds160" ? dsGroup(row.label) : "All fields";
+    (groups[g] ||= []).push(row);
+  }
+  const order = kind === "ds160"
+    ? [...Object.keys(DS_GROUPS), "Other fields"]
+    : ["All fields"];
+  return order.filter(g => groups[g]?.length).map(g => `
+    <div class="field-group" data-group>
+      <div class="field-group-title">${escapeHtml(g)}</div>
+      <div class="field-cards">${sortBySeverity(groups[g]).map(r => renderFieldCard(r, kind)).join("")}</div>
+    </div>`).join("");
+}
+
 function renderError(msg) {
   const r = $("#results");
   r.classList.add("show");
@@ -1132,41 +1665,88 @@ function diffHtml(diff) {
     `<div class="tx">${escapeHtml(d.x)}</div></div>`).join("");
 }
 
-function renderResults(res, a, b, kind, typeMismatch) {
+function renderResults(res, a, b, kind, typeMismatch, isDemo) {
   const r = $("#results");
-  const kindName = { passport:"Passport \u2194 Passport", ds160:"DS-160 \u2194 DS-160",
-                     general:"Document \u2194 Document" }[kind];
-  let html = `
+  const kindTag = { passport:"Passport ↔ Passport", ds160:"DS-160 ↔ DS-160",
+                    general:"Document ↔ Document" }[kind];
+
+  let html = "";
+  if (isDemo || res.demo) {
+    html += `<div class="demo-banner no-print"><span>&#9432;</span><span><b>Sample report</b> — fictional DS-160 data to preview the comparison UI. Upload your own Application PDFs for a real comparison; nothing is sent to any server.</span></div>`;
+  }
+
+  html += `
     <div class="res-head">
       <h2>Comparison report</h2>
-      <span class="doc-kind">${kindName}</span>
+      <span class="doc-kind">${kindTag}</span>
     </div>`;
 
   const total = res.consistent + res.discrepancies;
-  html += `<div class="summary">
-      <div class="cell"><div class="num">${total}</div><div class="cap">${kind==="general"?"Lines analysed":"Fields compared"}</div></div>
-      <div class="cell good"><div class="num">${res.consistent}</div><div class="cap">${kind==="general"?"Unchanged":"Consistent"}</div></div>
-      <div class="cell ${res.discrepancies?"flag":""}"><div class="num">${res.discrepancies}</div><div class="cap">${kind==="general"?"Differences":"Need review"}</div></div>
+  const pct = total ? Math.round((res.consistent / total) * 100) : 100;
+  const isFieldCompare = kind === "passport" || kind === "ds160";
+  const issueRows = sortBySeverity((res.rows || []).filter(rowNeedsReview));
+  const matchRows = (res.rows || []).filter(row => row.cls === "match");
+  const criticalCount = issueRows.filter(row => row.severity === "critical").length;
+
+  if (isFieldCompare) {
+    let vCls, vIco, vTitle, vSub;
+    if (res.discrepancies === 0) {
+      vCls = "ok"; vIco = "✓";
+      vTitle = "All clear — no issues flagged";
+      vSub = `Every compared field ${kind === "passport" ? "that should stay consistent " : ""}matches between your prior and current ${kind === "ds160" ? "DS-160" : "passport"}. Still skim the full text diff below for anything the field parser may have missed.`;
+    } else if (criticalCount > 0) {
+      vCls = "alert"; vIco = "⚑";
+      vTitle = `${criticalCount} critical + ${Math.max(0, res.discrepancies - criticalCount)} other difference${res.discrepancies > 1 ? "s" : ""}`;
+      vSub = "Critical items are identity or passport fields that consular officers verify against your documents. Resolve these first, then review remaining changes.";
+    } else if (res.discrepancies <= 2) {
+      vCls = "warn"; vIco = "!";
+      vTitle = `${res.discrepancies} item${res.discrepancies > 1 ? "s" : ""} to review`;
+      vSub = "A small number of differences were found. Walk through each one below and confirm the current filing reflects what you intend to tell the consular officer.";
+    } else {
+      vCls = "alert"; vIco = "⚑";
+      vTitle = `${res.discrepancies} differences need your attention`;
+      vSub = "Multiple fields don't match between versions. Inconsistencies between a prior DS-160 and a refile are a common interview question — resolve each item before submitting or attending your appointment.";
+    }
+    html += `<div class="verdict ${vCls}">
+      <div class="v-ico">${vIco}</div>
+      <div class="v-body">
+        <div class="v-title">${vTitle}</div>
+        <div class="v-sub">${vSub}</div>
+        ${issueRows.length ? `<div class="v-chips">${issueRows.slice(0, 6).map(row =>
+          `<span class="v-chip">${escapeHtml(row.label)}</span>`).join("")}${issueRows.length > 6 ? `<span class="v-chip">+${issueRows.length - 6} more</span>` : ""}</div>` : ""}
+      </div>
     </div>`;
+  } else {
+    html += `<div class="verdict ${res.discrepancies ? "warn" : "ok"}">
+      <div class="v-ico">${res.discrepancies ? "≈" : "✓"}</div>
+      <div class="v-body">
+        <div class="v-title">${res.discrepancies ? `${res.discrepancies} line${res.discrepancies > 1 ? "s" : ""} differ` : "Documents appear identical"}</div>
+        <div class="v-sub">Line-by-line text comparison of both documents. Use the diff view below to see exactly what changed.</div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="summary-v2">
+    <div class="summary-stats">
+      <div class="stat"><div class="num">${total}</div><div class="cap">${isFieldCompare ? "Fields compared" : "Lines analysed"}</div></div>
+      <div class="stat good"><div class="num">${res.consistent}</div><div class="cap">${isFieldCompare ? "Matching" : "Unchanged"}</div></div>
+      <div class="stat ${res.discrepancies ? "bad" : ""}"><div class="num">${res.discrepancies}</div><div class="cap">${isFieldCompare ? "To review" : "Different"}</div></div>
+    </div>
+    ${isFieldCompare ? `<div class="consistency-ring">${consistencySvg(pct)}<div class="pct">${pct}%</div><div class="lbl">Consistent</div></div>` : ""}
+  </div>`;
+
+  if (isFieldCompare && issueRows.length)
+    html += renderSeveritySummary(issueRows);
 
   if (typeMismatch) {
-    html += `<div class="alertbar note"><span>&#9888;</span><span>Side A and Side B appear to be <b>different document types</b> (${a.kind.toUpperCase()} vs ${b.kind.toUpperCase()}). Showing a general text comparison &mdash; pick a specific type above if that's wrong.</span></div>`;
+    html += `<div class="alertbar note"><span>&#9888;</span><span>These look like <b>different document types</b> (${a.kind.toUpperCase()} vs ${b.kind.toUpperCase()}). Showing a general text comparison — select DS-160 or Passport above if that's incorrect.</span></div>`;
   }
 
-  /* top alert */
-  if (kind === "passport" || kind === "ds160") {
-    if (res.discrepancies > 0)
-      html += `<div class="alertbar danger"><span>&#9873;</span><span><b>${res.discrepancies} item${res.discrepancies>1?"s":""} flagged for review.</b> Fields that should stay identical across versions do not match. Verify each against the source document.</span></div>`;
-    else
-      html += `<div class="alertbar safe"><span>&#10003;</span><span><b>No discrepancies found.</b> Every field that should be consistent matches between the two versions.</span></div>`;
-  }
-
-  /* passport MRZ validity */
   if (kind === "passport") {
     html += `<div class="block"><h3>MRZ integrity check</h3>
-      <div class="desc">ICAO 9303 check digits confirm the machine-readable zone was read correctly. A failed check usually means an OCR misread &mdash; re-paste the MRZ if so.</div>`;
-    for (const [side, p] of [["A", res.pa], ["B", res.pb]]) {
-      html += `<div style="margin-bottom:8px"><b style="font-size:.85rem">Side ${side}</b><div class="checks">`;
+      <div class="desc">ICAO check digits confirm the machine-readable zone was read correctly. A failed check usually means an OCR misread — re-paste the MRZ lines for best accuracy.</div>`;
+    for (const [side, p] of [["Prior", res.pa], ["Current", res.pb]]) {
+      html += `<div style="margin-bottom:8px"><b style="font-size:.85rem">${side} passport</b><div class="checks">`;
       for (const [name, ok] of Object.entries(p.checks))
         html += `<span class="chk ${ok?"pass":"fail"}">${ok?"\u2713":"\u2717"} ${name}</span>`;
       html += `</div></div>`;
@@ -1174,40 +1754,83 @@ function renderResults(res, a, b, kind, typeMismatch) {
     html += `</div>`;
   }
 
-  /* field table */
   if (res.rows && res.rows.length) {
     const title = kind === "passport" ? "Passport fields" : "DS-160 key fields";
     const desc = kind === "passport"
-      ? "Identity fields should be identical between an old and renewed passport; the passport number and expiry are expected to change."
-      : "Heuristically detected from the form text. Treat this as a shortlist &mdash; the full text diff below catches everything else.";
+      ? "Side-by-side view of identity and document data. Name and date of birth should match; passport number and expiry typically change on renewal."
+      : "Important answers extracted from both DS-160 printouts. Focus on items flagged for review first — the full text diff below catches everything else.";
+
+    if (issueRows.length) {
+      html += `<div class="review-list">
+        <h4>Quick review checklist — sorted by severity</h4>
+        <ul>${issueRows.map(row => `<li class="sev-${row.severity}">${severityBadge(row)} ${escapeHtml(row.label)} — ${escapeHtml(row.status)}</li>`).join("")}</ul>
+      </div>`;
+    }
+
     html += `<div class="block"><h3>${title}</h3><div class="desc">${desc}</div>
-      <table class="cmp"><thead><tr>
-        <th>Field</th><th>Side A &mdash; earlier</th><th>Side B &mdash; later</th><th>Status</th>
-      </tr></thead><tbody>`;
+      <div class="legend" style="margin-top:0;margin-bottom:14px">
+        <span><span class="sev sev-critical">Critical</span> identity / passport</span>
+        <span><span class="sev sev-high">High</span> biographics / travel docs</span>
+        <span><span class="sev sev-medium">Medium</span> contact / dates</span>
+        <span><span class="sev sev-low">Low</span> other</span>
+      </div>
+      <div class="res-toolbar no-print">
+        <div class="res-filters" id="resFilters">
+          <button type="button" data-filter="review" class="on">Needs review <span class="ct">(${issueRows.length})</span></button>
+          <button type="button" data-filter="match">Matches <span class="ct">(${matchRows.length})</span></button>
+          <button type="button" data-filter="all">All <span class="ct">(${res.rows.length})</span></button>
+        </div>
+        <div class="view-toggle">
+          <label><input type="checkbox" id="tableViewToggle"> Show table view</label>
+        </div>
+      </div>
+      <div class="field-cards-view" id="cardsView">`;
+
+    if (issueRows.length) {
+      html += renderGroupedCards(issueRows, kind);
+    } else {
+      html += `<p class="empty-note" style="margin-bottom:14px">No differences in detected fields — expand Matches below or check the full text diff.</p>`;
+    }
+
+    if (matchRows.length) {
+      html += `<details class="match-panel" ${issueRows.length ? "" : "open"}>
+        <summary><span class="cnt">${matchRows.length}</span> Consistent fields — click to expand</summary>
+        <div class="match-inner">${renderGroupedCards(matchRows, kind)}</div>
+      </details>`;
+    }
+
+    html += `</div>
+      <div class="cmp-table-wrap" id="cmpTableWrap">
+        <table class="cmp"><thead><tr>
+          <th>Severity</th><th>Field</th><th>Prior filing</th><th>Current filing</th><th>Status</th>
+        </tr></thead><tbody>`;
     for (const row of res.rows) {
       const rowCls = row.cls === "miss" ? "row-miss" : (row.cls === "match" ? "row-match" : "");
-      html += `<tr class="${rowCls}">
+      html += `<tr class="${rowCls}" data-review="${rowNeedsReview(row)?"1":"0"}" data-match="${row.cls==="match"?"1":"0"}">
+        <td class="sev-col">${severityBadge(row) || "—"}</td>
         <td class="field">${escapeHtml(row.label)}</td>
         <td class="val ${row.av?"":"empty"}">${escapeHtml(row.av || "—")}</td>
         <td class="val ${row.bv?"":"empty"}">${escapeHtml(row.bv || "—")}</td>
         <td><span class="pill ${row.cls}">${row.status}</span></td>
       </tr>`;
     }
-    html += `</tbody></table></div>`;
+    html += `</tbody></table></div></div>`;
   } else if (kind === "ds160") {
     html += `<div class="block"><h3>DS-160 key fields</h3>
-      <p class="empty-note">No standard DS-160 labels were detected &mdash; make sure you used the full Application printout PDF. The full text diff below still applies.</p></div>`;
+      <p class="empty-note">No standard DS-160 labels were detected — use the full <i>Application</i> printout PDF (not the one-page confirmation). The full text diff below still shows every line change.</p></div>`;
   }
 
-  /* diff */
-  html += `<div class="block"><h3>${kind==="passport"?"MRZ line-by-line":"Full text comparison"}</h3>
-    <div class="desc">Every line that differs between the two versions. Side A in red, Side B in green.</div>
+  const diffTitle = kind === "passport" ? "MRZ line comparison" : "Full text diff";
+  const diffDesc = kind === "passport"
+    ? "Raw machine-readable zone lines. Red = prior version, green = current."
+    : "Every line from both documents. Red lines were removed or changed; green lines were added or changed. This catches fields the summary may miss.";
+  html += `<div class="block"><h3>${diffTitle}</h3>
+    <div class="desc">${diffDesc}</div>
     <div class="diffctl no-print">
       <label><input type="checkbox" id="hideSame" checked> Show only differences</label>
     </div>
     <div class="diff hidesame" id="diffView">${diffHtml(res.diff)}</div></div>`;
 
-  /* actions */
   html += `<div class="actions no-print">
       <button class="btn sm" id="printBtn">Print / Save as PDF</button>
       <button class="btn ghost sm" id="dlBtn">Download report (HTML)</button>
@@ -1218,6 +1841,40 @@ function renderResults(res, a, b, kind, typeMismatch) {
 
   $("#hideSame").addEventListener("change", e =>
     $("#diffView").classList.toggle("hidesame", e.target.checked));
+
+  const applyFilter = (mode) => {
+    $$("#resFilters button").forEach(b => b.classList.toggle("on", b.dataset.filter === mode));
+    const show = el => {
+      if (mode === "all") return true;
+      if (mode === "review") return el.dataset.review === "1";
+      return el.dataset.match === "1";
+    };
+    $$("#cardsView .fcard").forEach(c => { c.style.display = show(c) ? "" : "none"; });
+    $$("#cardsView .field-group").forEach(g => {
+      const vis = [...g.querySelectorAll(".fcard")].some(c => c.style.display !== "none");
+      g.style.display = vis ? "" : "none";
+    });
+    $$("#cmpTableWrap tr[data-review]").forEach(tr => { tr.style.display = show(tr) ? "" : "none"; });
+    const mp = $(".match-panel");
+    if (mp) mp.open = mode === "all" || mode === "match";
+  };
+
+  const filters = $("#resFilters");
+  if (filters) {
+    filters.addEventListener("click", e => {
+      const b = e.target.closest("button[data-filter]");
+      if (b) applyFilter(b.dataset.filter);
+    });
+    applyFilter(issueRows.length ? "review" : "all");
+  }
+
+  const tableToggle = $("#tableViewToggle");
+  if (tableToggle) {
+    tableToggle.addEventListener("change", e => {
+      $("#cmpTableWrap").classList.toggle("show-table", e.target.checked);
+    });
+  }
+
   $("#printBtn").addEventListener("click", () => window.print());
   $("#dlBtn").addEventListener("click", () => downloadReport(r));
 
@@ -1231,16 +1888,16 @@ function downloadReport(node) {
   const css = document.querySelector("style").innerHTML;
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
   const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <title>Casefile report ${stamp}</title>
+    <title>VisaDash report ${stamp}</title>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>${css}</style></head>
-    <body><div class="wrap"><div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#8b8a7d;margin-bottom:14px">CASEFILE COMPARISON REPORT &middot; GENERATED ${stamp}</div>
+    <body><div class="wrap"><div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#8b8a7d;margin-bottom:14px">VISADASH COMPARISON REPORT &middot; GENERATED ${stamp}</div>
     ${clone.innerHTML}</div></body></html>`;
   const blob = new Blob([doc], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `casefile-report-${stamp.replace(/[: ]/g, "-")}.html`;
+  a.download = `visadash-report-${stamp.replace(/[: ]/g, "-")}.html`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1320,15 +1977,25 @@ function downloadReport(node) {
     if(!TABS.includes(name)) name="compare";
     qsa("#tabnav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===name));
     qsa(".tab").forEach(s=>s.classList.toggle("active",s.id==="tab-"+name));
+    qsa("#toolkit-grid .tk-card").forEach(c=>c.classList.toggle("on",c.dataset.tab===name));
     try{localStorage.setItem("vd_tab",name);}catch(e){}
-    if(push && location.hash!=="#"+name) history.replaceState(null,"","#"+name);
+    if(push && location.hash!=="#"+name && location.hash!=="#demo") history.replaceState(null,"","#"+name);
     window.scrollTo({top:0,behavior:"smooth"});
   }
   qs("#tabnav").addEventListener("click",e=>{
     const b=e.target.closest("button"); if(!b) return;
     showTab(b.dataset.tab,true);
   });
-  window.addEventListener("hashchange",()=>showTab(location.hash.slice(1),false));
+  qsa("#toolkit-grid .tk-card").forEach(card=>{
+    card.addEventListener("click",()=>{
+      qsa("#toolkit-grid .tk-card").forEach(c=>c.classList.toggle("on",c===card));
+      showTab(card.dataset.tab,true);
+    });
+  });
+  window.addEventListener("hashchange",()=>{
+    showTab(location.hash.slice(1).replace(/^demo$/,"compare"),false);
+    if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
+  });
 
   /* ---------------- Form guides ---------------- */
   function renderGuides(){
@@ -1506,8 +2173,10 @@ function downloadReport(node) {
   checkCurrent();
 
   let start = location.hash.slice(1);
+  if(start==="demo") start="compare";
   if(!TABS.includes(start)){ try{ start=localStorage.getItem("vd_tab"); }catch(e){} }
   if(TABS.includes(start) && start!=="compare") showTab(start,false);
+  if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
 })();
 </script>
 </body>

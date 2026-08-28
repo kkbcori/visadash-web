@@ -52,3 +52,4 @@ JS sanity: extract the hub `<script>` and `node --check`.
 - The comparator's exported report still self-labels "Casefile" / `casefile-report-*.html`
   (internal to the export). Left as-is; rebrand only if asked.
 - Brand is **VisaDash** (site) ; "DS-160 Comparison Tool" is the first tab's label.
+- **Comparison results UI (2026-08):** issue-first card layout with verdict hero, consistency ring, filter tabs (Needs review / Matches / All), DS-160 field grouping, collapsible matches panel, optional table view, **severity tiers** (Critical / High / Medium / Low), **sample report** button + `#demo` hash. Export filenames use `visadash-report-*`. Hero toolkit grid above tabs jumps to each tool.
