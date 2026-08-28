@@ -57,6 +57,19 @@ becomes a sticky (`top:0`) horizontal scroll bar in the old underlined-tab look,
 brand → nav → content. Same buttons throughout, so routing JS (`button[data-tab]`) is untouched.
 `.page`/`.content` carry `min-width:0` so the wide sponsor table can't blow out the grid.
 
+## KKB CoRi promo rail (2026-08)
+Right-hand **third column** advertising sibling apps: an auto-rotating one-by-one slider
+(`#promoRail` / `#promoTrack`, 6 slides — StatusVault, PassportSnap, Proteus, StowBuddy,
+Shadowline, Steady Tools; each = icon + name + short desc + CTA). It's a grid child of `.wrap`;
+the footer was pulled out of `.page` to become a full-width `grid-column:1/-1` row so the rail
+sits beside content and the footer spans under all columns. **Shown only at `min-width:1121px`**
+(where `.wrap` widens to 1300px + a 3rd `248px` column); hidden below that, so the 2-col rail /
+mobile layouts are unchanged. Slider is a **separate trailing `<script>`** (don't fold into the
+comparator/hub scripts): CSS transform track, builds dots, 4.2s interval, pauses on hover/focus
+and when the tab is hidden. Images are **local** (`promo/*.png`, logos downscaled with `sips` to
+~130px, ~128KB total) — deliberately not hot-linked from kkbcori.com, to keep the "nothing leaves
+your browser" promise. To add/remove an app: edit the `.promo-slide` list (dots auto-generate).
+
 ## Gotchas
 - **zsh** here does **not** word-split unquoted `$vars` — use explicit lists in shell loops.
 - The comparator's exported report still self-labels "Casefile" / `casefile-report-*.html`

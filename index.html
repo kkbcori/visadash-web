@@ -701,10 +701,54 @@
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
   .site-footer{
+    grid-column:1/-1;
     margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
     font-size:.78rem;color:var(--ink-faint);line-height:1.7;
   }
   .site-footer b{color:var(--ink-soft)}
+
+  /* ===================== KKB CoRi app promo rail (right column) ===================== */
+  .promo-rail{
+    display:none;                       /* shown only on wide screens (min-width:1121px) */
+    position:sticky;top:18px;align-self:start;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 14px 16px;
+  }
+  .promo-head{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;text-align:center;
+  }
+  .promo-viewport{overflow:hidden;border-radius:9px}
+  .promo-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+  .promo-slide{
+    flex:0 0 100%;min-width:0;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
+    padding:8px 6px 12px;color:inherit;text-decoration:none;
+  }
+  .promo-slide:hover{text-decoration:none}
+  .promo-img{
+    width:88px;height:88px;border-radius:20px;overflow:hidden;background:#fff;
+    box-shadow:0 6px 18px rgba(20,40,56,.16);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .promo-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .promo-name{font-family:'Newsreader',serif;font-weight:600;font-size:1.18rem;color:var(--ink);margin-top:3px}
+  .promo-desc{font-size:.82rem;line-height:1.45;color:var(--ink-soft);max-width:196px}
+  .promo-cta{
+    margin-top:5px;font-size:.77rem;font-weight:600;color:#fff;background:var(--navy);
+    padding:7px 15px;border-radius:20px;transition:background .15s;
+  }
+  .promo-slide:hover .promo-cta{background:var(--navy-deep)}
+  .promo-dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+  .promo-dots button{
+    width:7px;height:7px;padding:0;border:0;border-radius:50%;cursor:pointer;
+    background:var(--line);transition:background .2s,transform .2s;
+  }
+  .promo-dots button.on{background:var(--navy);transform:scale(1.3)}
+  @media(min-width:1121px){
+    .wrap{max-width:1300px;grid-template-columns:216px minmax(0,1fr) 248px}
+    .promo-rail{display:block}
+  }
   .tool-notes{
     margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
     font-size:.78rem;color:var(--ink-faint);line-height:1.7;
@@ -996,6 +1040,52 @@
   </section>
 
   </div><!-- /.content -->
+  </div><!-- /.page -->
+
+  <aside class="promo-rail" id="promoRail" aria-label="More apps from KKB CoRi">
+    <div class="promo-head">More from KKB CoRi</div>
+    <div class="promo-viewport">
+      <div class="promo-track" id="promoTrack">
+        <a class="promo-slide" href="https://statusvault.org" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/statusvault.png" alt="StatusVault app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">StatusVault</div>
+          <div class="promo-desc">Track visa &amp; immigration document expiry with smart alerts.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/passportsnap/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/passportsnap.png" alt="PassportSnap app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">PassportSnap</div>
+          <div class="promo-desc">AI passport &amp; visa photos that pass &mdash; in 2 minutes.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/proteus/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/proteus.png" alt="Proteus app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Proteus</div>
+          <div class="promo-desc">Every unit, one app &mdash; conversions, 165+ currencies &amp; AI.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/stowbuddy/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/stowbuddy.png" alt="StowBuddy app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">StowBuddy</div>
+          <div class="promo-desc">Snap a photo; on-device AI files every item in your home.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/shadowline/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/shadowline.png" alt="Shadowline app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Shadowline</div>
+          <div class="promo-desc">Every city on one 24-hour dial. World clocks &amp; meeting planner.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/steadytools/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/steadytools.png" alt="Steady Tools app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Steady Tools</div>
+          <div class="promo-desc">Calm, focused tools for ADHD &amp; neurodivergent minds.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+      </div>
+    </div>
+    <div class="promo-dots" id="promoDots" role="tablist" aria-label="Choose app"></div>
+  </aside>
 
   <footer class="site-footer">
     <b>VisaDash is not legal advice and is not affiliated with USCIS, the Department of State, or the Department of Labor.</b>
@@ -1004,7 +1094,6 @@
     Bulletin, processing-time, wage and sponsor figures are periodic snapshots &mdash; always confirm against the official sources before you rely on them.
   </footer>
 
-  </div><!-- /.page -->
 </div>
 
 <script>
@@ -2326,6 +2415,40 @@ function downloadReport(node) {
   if(!TABS.includes(start)){ try{ start=localStorage.getItem("vd_tab"); }catch(e){} }
   if(TABS.includes(start) && start!=="compare") showTab(start,false);
   if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
+})();
+</script>
+
+<!-- KKB CoRi app promo rail: auto-rotating one-by-one slider -->
+<script>
+(function(){
+  var track=document.getElementById('promoTrack');
+  var dotsWrap=document.getElementById('promoDots');
+  var rail=document.getElementById('promoRail');
+  if(!track||!dotsWrap||!rail) return;
+  var slides=track.children, n=slides.length, i=0, timer=null, DELAY=4200;
+  for(var k=0;k<n;k++){
+    var b=document.createElement('button');
+    b.type='button'; b.setAttribute('role','tab');
+    var nm=slides[k].querySelector('.promo-name');
+    b.setAttribute('aria-label', nm?nm.textContent:('App '+(k+1)));
+    (function(idx){ b.addEventListener('click',function(){ go(idx); reset(); }); })(k);
+    dotsWrap.appendChild(b);
+  }
+  var dots=dotsWrap.children;
+  function go(idx){
+    i=(idx+n)%n;
+    track.style.transform='translateX(-'+(i*100)+'%)';
+    for(var d=0;d<n;d++){ dots[d].classList.toggle('on', d===i); }
+  }
+  function start(){ if(!timer) timer=setInterval(function(){ go(i+1); }, DELAY); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  function reset(){ stop(); start(); }
+  rail.addEventListener('mouseenter', stop);
+  rail.addEventListener('mouseleave', start);
+  rail.addEventListener('focusin', stop);
+  rail.addEventListener('focusout', start);
+  document.addEventListener('visibilitychange', function(){ document.hidden?stop():start(); });
+  go(0); start();
 })();
 </script>
 </body>
