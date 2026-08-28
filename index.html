@@ -47,12 +47,17 @@
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1180px;margin:0 auto;padding:34px 28px 80px}
+  .wrap{
+    max-width:1180px;margin:0 auto;padding:34px 28px 80px;
+    display:grid;grid-template-columns:216px minmax(0,1fr);
+    column-gap:40px;align-items:start;
+  }
 
   /* ---- header ---- */
   header{
+    grid-column:1/-1;
     border-bottom:2px solid var(--ink);
-    padding-bottom:18px;margin-bottom:8px;
+    padding-bottom:18px;margin-bottom:22px;
     display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;
   }
   .brand h1{
@@ -483,33 +488,58 @@
     details.match-panel[open] .match-inner{display:block}
   }
 
-  /* ===================== main nav (single tab bar) ===================== */
-  .hero{margin:16px 0 12px}
+  /* ===================== main nav (left-side vertical rail) ===================== */
+  .hero{margin:0 0 12px}
   .hero-lede{
     font-family:'Newsreader',serif;font-size:1.2rem;line-height:1.4;
     color:var(--ink-soft);max-width:820px;
   }
+  /* right-hand column holds hero + tools + footer; nav is the left rail */
+  .page{min-width:0}
+  .content{min-width:0}
   .nav-main{
-    display:flex;gap:0;flex-wrap:wrap;
-    margin:0 0 28px;border-bottom:2px solid var(--ink);
+    display:flex;flex-direction:column;gap:2px;
+    position:sticky;top:18px;
+    padding:8px;margin:0;
+    background:var(--panel);
+    border:1px solid var(--line);border-radius:11px;
+  }
+  .nav-main .nav-label{
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);
+    padding:7px 12px 9px;
   }
   .nav-main button{
-    flex:0 1 auto;border:0;border-radius:5px 5px 0 0;
+    width:100%;border:0;border-radius:7px;
     background:transparent;cursor:pointer;
-    font-family:'IBM Plex Sans',sans-serif;font-size:.84rem;font-weight:500;
-    color:var(--ink-soft);padding:11px 16px;
-    display:inline-flex;align-items:center;gap:7px;
-    position:relative;top:2px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.87rem;font-weight:500;
+    color:var(--ink-soft);padding:11px 12px;
+    display:flex;align-items:center;gap:11px;text-align:left;
     transition:background .15s,color .15s;
-    white-space:nowrap;
   }
   .nav-main button:hover{color:var(--ink);background:var(--paper-2)}
-  .nav-main button.on{background:var(--navy);color:#fff}
-  .nav-main .nav-ico{font-size:1rem;line-height:1;opacity:.8}
+  .nav-main button.on{background:var(--navy);color:#fff;font-weight:600}
+  .nav-main .nav-ico{
+    font-size:1.05rem;line-height:1;opacity:.75;
+    flex:0 0 auto;width:20px;text-align:center;
+  }
   .nav-main button.on .nav-ico{opacity:1}
+  /* collapse to a horizontal scroll bar on narrow screens */
   @media(max-width:760px){
-    .nav-main{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .nav-main button{flex:0 0 auto;font-size:.8rem;padding:10px 13px}
+    .wrap{grid-template-columns:1fr;column-gap:0}
+    .nav-main{
+      flex-direction:row;gap:0;padding:0;
+      position:sticky;top:0;z-index:20;
+      margin:0 0 22px;background:var(--paper);
+      border:0;border-bottom:2px solid var(--ink);border-radius:0;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
+    }
+    .nav-main .nav-label{display:none}
+    .nav-main button{
+      flex:0 0 auto;width:auto;
+      border-radius:6px 6px 0 0;position:relative;top:2px;
+      font-size:.8rem;padding:10px 13px;white-space:nowrap;
+    }
   }
 
   /* tab panels */
@@ -729,11 +759,8 @@
     </div>
   </header>
 
-  <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times.</p>
-  </section>
-
   <nav class="nav-main no-print" id="tabnav" aria-label="Toolkit sections">
+    <span class="nav-label" aria-hidden="true">Toolkit</span>
     <button type="button" data-tab="compare" class="on">
       <span class="nav-ico" aria-hidden="true">&#128196;</span>
       <span>DS-160 Compare</span>
@@ -755,6 +782,14 @@
       <span>Wages &amp; Sponsors</span>
     </button>
   </nav>
+
+  <div class="page">
+
+  <section class="hero no-print" aria-label="Introduction">
+    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times.</p>
+  </section>
+
+  <div class="content">
 
   <!-- ════════════════ TAB: DS-160 Comparison Tool ════════════════ -->
   <section class="tab active" id="tab-compare">
@@ -960,6 +995,8 @@
     </div>
   </section>
 
+  </div><!-- /.content -->
+
   <footer class="site-footer">
     <b>VisaDash is not legal advice and is not affiliated with USCIS, the Department of State, or the Department of Labor.</b>
     It is a free educational toolkit &mdash; the comparison tool, guides, and lookups help you spot issues and understand the process, for a human to verify.
@@ -967,6 +1004,7 @@
     Bulletin, processing-time, wage and sponsor figures are periodic snapshots &mdash; always confirm against the official sources before you rely on them.
   </footer>
 
+  </div><!-- /.page -->
 </div>
 
 <script>

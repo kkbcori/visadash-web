@@ -47,6 +47,16 @@ for t in compare guides bulletin processing wages; do
 ```
 JS sanity: extract the hub `<script>` and `node --check`.
 
+## Main menu (2026-08)
+The toolkit menu is a **left-side vertical rail**, not the old horizontal tab bar. **`.wrap`
+itself is the grid** (`216px | minmax(0,1fr)`, `align-items:start`): `<header>` spans both
+columns (`grid-column:1/-1`) as a full-width bar; the `#tabnav` `.nav-main` rail is column 1;
+`.page` (hero + `.content` tabs + footer) is column 2. `.nav-main` is `position:sticky; top:18px`,
+vertical, with a "Toolkit" `.nav-label`. **Below 760px `.wrap` collapses to one column** — nav
+becomes a sticky (`top:0`) horizontal scroll bar in the old underlined-tab look, stacking
+brand → nav → content. Same buttons throughout, so routing JS (`button[data-tab]`) is untouched.
+`.page`/`.content` carry `min-width:0` so the wide sponsor table can't blow out the grid.
+
 ## Gotchas
 - **zsh** here does **not** word-split unquoted `$vars` — use explicit lists in shell loops.
 - The comparator's exported report still self-labels "Casefile" / `casefile-report-*.html`
