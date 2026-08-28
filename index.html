@@ -71,6 +71,7 @@
     text-align:center;line-height:1.45;background:rgba(255,255,255,.4);
   }
   .stamp .lock{font-size:.9rem;display:block;margin-bottom:2px}
+  .compare-trust{display:flex;justify-content:flex-end;margin:0 0 16px}
 
   .intro{
     margin:20px 0 26px;font-family:'Newsreader',serif;font-size:1.12rem;
@@ -735,14 +736,13 @@
   <header>
     <div class="brand">
       <h1>VisaDash</h1>
-      <div class="sub">Immigration Toolkit · On-device</div>
+      <div class="sub">Immigration Toolkit</div>
     </div>
-    <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
   </header>
 
   <section class="hero no-print" aria-label="Toolkit overview">
-    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times — without uploading anything.</p>
-    <p class="hero-sub">VisaDash runs entirely in your browser. Pick a tool below or use the tabs to jump between features.</p>
+    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times.</p>
+    <p class="hero-sub">Pick a tool below or use the tabs to jump between features.</p>
     <div class="toolkit-grid" id="toolkit-grid">
       <button type="button" class="tk-card on" data-tab="compare">
         <div class="tk-ico">&#128196;</div>
@@ -782,6 +782,10 @@
 
   <!-- ════════════════ TAB: DS-160 Comparison Tool ════════════════ -->
   <section class="tab active" id="tab-compare">
+
+  <div class="compare-trust no-print">
+    <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
+  </div>
 
   <p class="intro">Upload two versions of the same document — a prior DS-160 against a refile, an expiring passport against a renewal — and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
 
