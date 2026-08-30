@@ -2,9 +2,12 @@
 // from src/content/guides.mjs; everything else is declared here.
 import { SITE, NAV } from "./layout.mjs";
 
-const OCR_HEAD = `<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+const OCR_LIBS = `<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>`;
+const OCR_HEAD = `${OCR_LIBS}
 <script type="module">import * as E from "/engine/doctypes.mjs"; window.VDEngine = E; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
+const AUDIT_HEAD = `${OCR_LIBS}
+<script type="module">import * as E from "/engine/doctypes.mjs"; import * as A from "/engine/audit.mjs"; window.VDEngine = E; window.VDAudit = A; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
 
 const softwareApp = (name, desc, url) => ({
   "@context": "https://schema.org",
@@ -146,7 +149,7 @@ ${slot("B", "Later version", "current filing")}
     ogTitle: "DS-160 Audit — On-Device Consistency Check",
     ogDescription: "Cross-check a DS-160 against your supporting documents, entirely in your browser.",
     hero: "Cross-check a filled DS-160 against your supporting documents and get a findings report by severity.",
-    headExtra: OCR_HEAD,
+    headExtra: AUDIT_HEAD,
     scripts: ["/js/audit.js"],
     jsonld: [softwareApp("DS-160 Audit", "On-device cross-check of a DS-160 against supporting documents.", SITE.origin + "/ds-160-audit")],
     bodyHtml: `

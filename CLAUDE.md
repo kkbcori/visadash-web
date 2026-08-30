@@ -56,6 +56,19 @@ still use the original rich renderer** — the engine implements+tests them too,
 is deferred to avoid regressing the Task-1 results UI. `npm run build` inlines the engine as a
 global into `visadash-offline.html` (module imports can't resolve from `file://`).
 
+## DS-160 audit (Task 3, 2026-08)
+`src/engine/audit.mjs` — pure, tested (`test/audit.test.mjs`, 13 tests). `runAudit(docs,{now})`
+validates ONE DS-160 against supporting docs via a data-driven `RULES` array
+(`{id,severity,requires,evaluate(ctx)}`). Severities **blocker / warning / info** only; it
+**never** implies the form is ready ("N blockers, M warnings — review each…"). Name matching
+reports exact / normalized / mismatch as distinct outcomes; passport-number O/0 & I/1 confusions
+are called out; **two <0.5-confidence reads downgrade to info, never a blocker**. Rules cover
+DS-160 ↔ passport / I-797 / I-20 / I-94 and DS-160 internal consistency; skipped rules (missing
+doc) are reported. `src/js/audit.js` is the real UI: on-device pdf.js→tesseract extraction,
+builds typed docs via `window.VDEngine`, runs `window.VDAudit`, renders findings by severity
+with source snippets + a client-side "download report". Audit page head (`AUDIT_HEAD` in
+pages.mjs) imports both engines as modules; build inlines both into `visadash-offline.html`.
+
 ## Updating the data (snapshots, still embedded in the tool JS)
 Data remains **hard-coded as consts inside each tool's `src/js/*.js`** (keeps single-file/offline
 promise), with `*_FETCHED`/`*_SOURCE` freshness strings. To refresh: edit the const + the

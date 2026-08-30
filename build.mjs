@@ -160,12 +160,15 @@ function buildSingleFile(pages) {
     return `  <section class="tab${i===0?" active":""}" id="tab-${t.id}">\n${body}\n  </section>`;
   }).join("\n");
 
-  // Inline the ESM engine as a global for the offline file (module imports can't
-  // resolve from file://). Strip `export ` and expose the public API on window.
-  const engineSrc = read(path.join(SRC, "engine", "doctypes.mjs"))
+  // Inline the ESM engines as globals for the offline file (module imports can't
+  // resolve from file://). Strip `export ` + the internal import, expose on window.
+  const engineSrc = read(path.join(SRC, "engine", "doctypes.mjs")).replace(/^export\s+/gm, "");
+  const auditSrc = read(path.join(SRC, "engine", "audit.mjs"))
+    .replace(/^import[^\n]*\n/m, "")     // drop `import ... from "./doctypes.mjs"` (symbols already in scope)
     .replace(/^export\s+/gm, "");
-  const engineGlobal = `(function(){\n${engineSrc}\n`
-    + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n})();`;
+  const engineGlobal = `(function(){\n${engineSrc}\n${auditSrc}\n`
+    + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n`
+    + `window.VDAudit={runAudit,nameOutcome,parseVisaFoil,parseI94,RULES};\n})();`;
 
   const scriptFiles = ["comparator","audit","bulletin","processing","wages","sponsors"];
   const inlineJs = engineGlobal + "\n;\n" + scriptFiles.map(f => resolveInline(`/js/${f}.js`)).join("\n;\n");
