@@ -3,27 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages</title>
-<meta name="description" content="A free, 100% on-device immigration toolkit: compare & audit DS-160s and passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.">
+<title>I-129 Guide — Petition for a Nonimmigrant Worker | VisaDash</title>
+<meta name="description" content="Plain-language guide to the I-129 (Petition for a Nonimmigrant Worker): what it is for, who files it, the fields that trip people up, common mistakes, and the documents to have ready.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://visadash.org/">
+<link rel="canonical" href="https://visadash.org/form-guides/i-129">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="VisaDash">
-<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta property="og:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
-<meta property="og:url" content="https://visadash.org/">
+<meta property="og:title" content="I-129 — Petition for a Nonimmigrant Worker">
+<meta property="og:description" content="What the I-129 is for, who files it, and the mistakes to avoid.">
+<meta property="og:url" content="https://visadash.org/form-guides/i-129">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta name="twitter:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
+<meta name="twitter:title" content="I-129 — Petition for a Nonimmigrant Worker">
+<meta name="twitter:description" content="What the I-129 is for, who files it, and the mistakes to avoid.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"VisaDash","url":"https://visadash.org/","description":"Free on-device U.S. immigration toolkit."}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VisaDash","description":"Free on-device U.S. immigration toolkit.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Who files the I-129?","acceptedAnswer":{"@type":"Answer","text":"The U.S. employer files it to classify a worker in a nonimmigrant category such as H-1B, L-1, O-1 or TN. The worker is the beneficiary, not the filer."}},{"@type":"Question","name":"Does the I-129 require an LCA?","acceptedAnswer":{"@type":"Answer","text":"The H-1B version does — you need a certified Labor Condition Application (ETA-9035) first, and the job title, SOC code and worksite on the petition must match it."}},{"@type":"Question","name":"What triggers an I-129 wage RFE?","acceptedAnswer":{"@type":"Answer","text":"An offered wage below the prevailing wage for the occupation, area and level. Verify the offer against the prevailing wage before filing."}}]}</script>
 </head>
 <body>
 <div class="wrap">
@@ -72,53 +71,26 @@
   <div class="page">
 
   <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Compare and audit visa documents, track priority dates, and check processing times &mdash; entirely in your browser.</p>
+    <p class="hero-lede">Petition for a Nonimmigrant Worker</p>
   </section>
 
   <div class="content">
 
-  <div class="privacy no-print" style="margin-top:0">
-    <span>&#128274;</span>
-    <span><b>Nothing leaves this machine.</b> Every tool below runs entirely in your browser &mdash; no file is uploaded, no document text is sent anywhere, and nothing is stored on a server. You can even <a href="/visadash-offline.html" download>download the whole toolkit as a single offline file</a> and run it with no internet.</span>
-  </div>
-
-  <div class="hub-grid">
-    <a class="hub-card" href="/ds-160-compare">
-      <span class="hub-ico" aria-hidden="true">&#128196;</span>
-      <span class="hub-title">DS-160 Compare</span>
-    </a>
-    <a class="hub-card" href="/ds-160-audit">
-      <span class="hub-ico" aria-hidden="true">&#129534;</span>
-      <span class="hub-title">DS-160 Audit</span>
-    </a>
-    <a class="hub-card" href="/form-guides">
-      <span class="hub-ico" aria-hidden="true">&#128221;</span>
-      <span class="hub-title">Form Guides</span>
-    </a>
-    <a class="hub-card" href="/visa-bulletin">
-      <span class="hub-ico" aria-hidden="true">&#128197;</span>
-      <span class="hub-title">Visa Bulletin</span>
-    </a>
-    <a class="hub-card" href="/processing-times">
-      <span class="hub-ico" aria-hidden="true">&#9203;</span>
-      <span class="hub-title">Processing Times</span>
-    </a>
-    <a class="hub-card" href="/prevailing-wage">
-      <span class="hub-ico" aria-hidden="true">&#128176;</span>
-      <span class="hub-title">Prevailing Wage</span>
-    </a>
-    <a class="hub-card" href="/h1b-sponsors">
-      <span class="hub-ico" aria-hidden="true">&#127970;</span>
-      <span class="hub-title">H-1B Sponsors</span>
-    </a>
-  </div>
-
-  <div class="tool-notes no-print" style="margin-top:26px">
-    <b>What VisaDash is &mdash; and isn't.</b><br>
-    &bull; It is a free educational toolkit to help you <i>spot</i> issues before they reach a consular officer or adjudicator.<br>
-    &bull; It is <b>not legal advice</b> and is not affiliated with USCIS, the Department of State, or the Department of Labor.<br>
-    &bull; Every output is something for a human to verify against the official instructions on <i>uscis.gov</i> and <i>travel.state.gov</i>.
-  </div>
+  <nav class="crumbs"><a href="/form-guides">Form Guides</a> &rsaquo; I-129</nav>
+  <h2 style="margin:0 0 4px">I-129 &mdash; Petition for a Nonimmigrant Worker</h2>
+  <p class="who" style="color:var(--ink-faint);font-size:.85rem;margin:0 0 14px">Typically filed by: U.S. employers</p>
+<article class="guide">
+  <p>Employer-filed petition to classify a worker in H-1B, L-1, O-1, TN and similar categories. The H-1B version requires a certified LCA first.</p>
+  <h3>Key fields to get right</h3>
+  <ul><li>Job title, SOC code and worksite must match the certified LCA exactly.</li><li>Offered wage must be at or above the prevailing wage for that SOC, area and level.</li><li>Beneficiary's name and dates of birth must match the passport and prior I-94s.</li></ul>
+  <h3>Common mistakes</h3>
+  <ul><li class="warn">Filing before the LCA is certified, or with an LCA wage level below prevailing.</li><li class="warn">Worksite address on the petition not matching the LCA.</li><li class="warn">Specialty-occupation argument that doesn't tie the degree to the duties.</li></ul>
+  <h3>Documents to have ready</h3>
+  <ul><li class="ok">Certified LCA (ETA-9035)</li><li class="ok">Beneficiary's degree/credential evaluation</li><li class="ok">Detailed job description &amp; itinerary</li><li class="ok">Company financials / ability to pay</li></ul>
+  <div class="tip"><b>Tip.</b> Check the offer against the <b>Prevailing Wage</b> tool before filing — a wage below the prevailing level is the most common avoidable RFE.</div>
+  <h3>Frequently asked</h3>
+  <div class="faq"><details><summary>Who files the I-129?</summary><p>The U.S. employer files it to classify a worker in a nonimmigrant category such as H-1B, L-1, O-1 or TN. The worker is the beneficiary, not the filer.</p></details><details><summary>Does the I-129 require an LCA?</summary><p>The H-1B version does — you need a certified Labor Condition Application (ETA-9035) first, and the job title, SOC code and worksite on the petition must match it.</p></details><details><summary>What triggers an I-129 wage RFE?</summary><p>An offered wage below the prevailing wage for the occupation, area and level. Verify the offer against the prevailing wage before filing.</p></details></div>
+</article>
   </div><!-- /.content -->
   </div><!-- /.page -->
 
@@ -176,7 +148,6 @@
 
 </div>
 <script defer src="/js/nav.js"></script>
-<script defer src="/js/hashredirect.js"></script>
 <script defer src="/js/promo.js"></script>
 </body>
 </html>

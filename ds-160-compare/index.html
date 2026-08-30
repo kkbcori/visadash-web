@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages</title>
-<meta name="description" content="A free, 100% on-device immigration toolkit: compare & audit DS-160s and passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.">
+<title>DS-160 & Passport Compare — On-Device A/B Document Diff | VisaDash</title>
+<meta name="description" content="Compare two versions of a DS-160 or passport side by side and get a field-by-field report of every difference before it reaches a consular officer. Runs entirely in your browser — nothing is uploaded.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://visadash.org/">
+<link rel="canonical" href="https://visadash.org/ds-160-compare">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="VisaDash">
-<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta property="og:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
-<meta property="og:url" content="https://visadash.org/">
+<meta property="og:title" content="DS-160 & Passport Compare — On-Device Document Diff">
+<meta property="og:description" content="Field-by-field A/B comparison of DS-160s and passports, entirely on-device.">
+<meta property="og:url" content="https://visadash.org/ds-160-compare">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta name="twitter:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
+<meta name="twitter:title" content="DS-160 & Passport Compare — On-Device Document Diff">
+<meta name="twitter:description" content="Field-by-field A/B comparison of DS-160s and passports, entirely on-device.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <link rel="stylesheet" href="/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"VisaDash","url":"https://visadash.org/","description":"Free on-device U.S. immigration toolkit."}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VisaDash","description":"Free on-device U.S. immigration toolkit.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DS-160 & Passport Compare","description":"On-device A/B comparison of DS-160s and passports.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/ds-160-compare","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
 </head>
 <body>
 <div class="wrap">
@@ -39,7 +39,7 @@
 
   <nav class="nav-main no-print" id="tabnav" aria-label="Toolkit sections">
     <span class="nav-label" aria-hidden="true">Toolkit</span>
-    <a href="/ds-160-compare" data-path="/ds-160-compare">
+    <a href="/ds-160-compare" data-path="/ds-160-compare" class="on" aria-current="page">
       <span class="nav-ico" aria-hidden="true">&#128196;</span>
       <span>DS-160 Compare</span>
     </a>
@@ -72,52 +72,98 @@
   <div class="page">
 
   <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Compare and audit visa documents, track priority dates, and check processing times &mdash; entirely in your browser.</p>
+    <p class="hero-lede">Upload two versions of the same document and get a clear, field-by-field report of every difference.</p>
   </section>
 
   <div class="content">
 
-  <div class="privacy no-print" style="margin-top:0">
+  <div class="compare-trust no-print">
+    <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
+  </div>
+
+  <p class="intro">Upload two versions of the same document &mdash; a prior DS-160 against a refile, an expiring passport against a renewal &mdash; and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
+
+  <div class="privacy no-print">
     <span>&#128274;</span>
-    <span><b>Nothing leaves this machine.</b> Every tool below runs entirely in your browser &mdash; no file is uploaded, no document text is sent anywhere, and nothing is stored on a server. You can even <a href="/visadash-offline.html" download>download the whole toolkit as a single offline file</a> and run it with no internet.</span>
+    <span><b>Nothing leaves this machine.</b> All text extraction, OCR and comparison run inside your browser. No file is uploaded to any server. Keep this HTML file locally and you can run it fully offline (the OCR engine downloads once on first use, then caches).</span>
   </div>
 
-  <div class="hub-grid">
-    <a class="hub-card" href="/ds-160-compare">
-      <span class="hub-ico" aria-hidden="true">&#128196;</span>
-      <span class="hub-title">DS-160 Compare</span>
-    </a>
-    <a class="hub-card" href="/ds-160-audit">
-      <span class="hub-ico" aria-hidden="true">&#129534;</span>
-      <span class="hub-title">DS-160 Audit</span>
-    </a>
-    <a class="hub-card" href="/form-guides">
-      <span class="hub-ico" aria-hidden="true">&#128221;</span>
-      <span class="hub-title">Form Guides</span>
-    </a>
-    <a class="hub-card" href="/visa-bulletin">
-      <span class="hub-ico" aria-hidden="true">&#128197;</span>
-      <span class="hub-title">Visa Bulletin</span>
-    </a>
-    <a class="hub-card" href="/processing-times">
-      <span class="hub-ico" aria-hidden="true">&#9203;</span>
-      <span class="hub-title">Processing Times</span>
-    </a>
-    <a class="hub-card" href="/prevailing-wage">
-      <span class="hub-ico" aria-hidden="true">&#128176;</span>
-      <span class="hub-title">Prevailing Wage</span>
-    </a>
-    <a class="hub-card" href="/h1b-sponsors">
-      <span class="hub-ico" aria-hidden="true">&#127970;</span>
-      <span class="hub-title">H-1B Sponsors</span>
-    </a>
+  <div class="compare-steps no-print" aria-hidden="true">
+    <span class="on">1 · Prior version</span>
+    <span class="on">2 · Current version</span>
+    <span>3 · Review report</span>
+  </div>
+  <div class="modebar no-print">
+    <span class="lbl">Comparison&nbsp;type</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="auto" class="on">Auto-detect</button>
+      <button data-m="ds160">DS-160</button>
+      <button data-m="passport">Passport</button>
+      <button data-m="general">Other docs</button>
+    </div>
   </div>
 
-  <div class="tool-notes no-print" style="margin-top:26px">
-    <b>What VisaDash is &mdash; and isn't.</b><br>
-    &bull; It is a free educational toolkit to help you <i>spot</i> issues before they reach a consular officer or adjudicator.<br>
-    &bull; It is <b>not legal advice</b> and is not affiliated with USCIS, the Department of State, or the Department of Labor.<br>
-    &bull; Every output is something for a human to verify against the official instructions on <i>uscis.gov</i> and <i>travel.state.gov</i>.
+  <div class="slots no-print">
+      <div class="slot">
+        <div class="slot-head">
+          <span class="slot-tag">A</span>
+          <h3>Earlier version</h3>
+          <span class="when">prior filing</span>
+        </div>
+        <div class="slot-body" data-slot="A">
+          <div class="drop" tabindex="0">
+            <div class="ico">&#128228;</div>
+            <p>Drop files here, or click to browse</p>
+            <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+          </div>
+          <input type="file" multiple accept=".pdf,image/*">
+          <div class="filelist"></div>
+          <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+          <div class="mrzbox">
+            <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+            <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z1234567&lt;8IND8801019F3001012&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <div class="slot-head">
+          <span class="slot-tag">B</span>
+          <h3>Later version</h3>
+          <span class="when">current filing</span>
+        </div>
+        <div class="slot-body" data-slot="B">
+          <div class="drop" tabindex="0">
+            <div class="ico">&#128228;</div>
+            <p>Drop files here, or click to browse</p>
+            <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+          </div>
+          <input type="file" multiple accept=".pdf,image/*">
+          <div class="filelist"></div>
+          <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+          <div class="mrzbox">
+            <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+            <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z1234567&lt;8IND8801019F3001012&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04"></textarea>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <div class="actions no-print">
+    <button class="btn" id="runBtn">Compare documents</button>
+    <button class="btn ghost sm" id="demoBtn">View sample report</button>
+    <button class="btn ghost sm" id="resetBtn">Clear all</button>
+  </div>
+
+  <div id="log" class="no-print"></div>
+
+  <section id="results"></section>
+
+  <div class="tool-notes no-print">
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
+    &bull; <b>Passports:</b> a sharp, flat photo of the photo page works, but pasting the two MRZ lines is faster and 100% reliable &mdash; the tool validates them against ICAO check digits.<br>
+    &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
   </div>
   </div><!-- /.content -->
   </div><!-- /.page -->
@@ -176,7 +222,7 @@
 
 </div>
 <script defer src="/js/nav.js"></script>
-<script defer src="/js/hashredirect.js"></script>
+<script defer src="/js/comparator.js"></script>
 <script defer src="/js/promo.js"></script>
 </body>
 </html>

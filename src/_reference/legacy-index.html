@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisaDash — Immigration Toolkit: DS-160 Comparison, Visa Bulletin, Processing Times & Wages</title>
+<meta name="description" content="A free, on-device immigration toolkit: compare DS-160s & passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Runs entirely in your browser — nothing uploaded.">
+<meta name="theme-color" content="#1f3b54">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<!-- Replace visadash.org with your live domain after deploy -->
+<link rel="canonical" href="https://visadash.org/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VisaDash">
+<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
+<meta property="og:description" content="Compare DS-160s & passports, form-filling guides, Visa Bulletin tracker, USCIS processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
+<meta property="og:url" content="https://visadash.org/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
+<meta name="twitter:description" content="DS-160 comparison, form guides, Visa Bulletin, processing times & prevailing wages. 100% on-device — nothing is uploaded.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<style>
+  :root{
+    --paper:#f3f0e8; --paper-2:#ece8db; --panel:#fbfaf5;
+    --ink:#20211d; --ink-soft:#5d5c52; --ink-faint:#8b8a7d;
+    --line:#ccc6b3; --line-soft:#ddd8c8;
+    --navy:#1f3b54; --navy-deep:#142838;
+    --match:#2f6a47; --match-bg:#e4efe5;
+    --miss:#a8392f; --miss-bg:#f6e1de;
+    --warn:#876018; --warn-bg:#f2e8cd;
+    --info:#2a5670; --info-bg:#e1ebf0;
+    --radius:7px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(31,59,84,.045), transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(136,96,24,.05), transparent 42%);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1180px;margin:0 auto;padding:34px 28px 80px;
+    display:grid;grid-template-columns:216px minmax(0,1fr);
+    column-gap:40px;align-items:start;
+  }
+
+  /* ---- header ---- */
+  header{
+    grid-column:1/-1;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px;margin-bottom:22px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  }
+  .brand h1{
+    font-family:'Newsreader',serif;font-weight:600;font-size:2.55rem;
+    letter-spacing:-.015em;line-height:1.02;
+  }
+  .brand a{text-decoration:none;color:inherit;display:block}
+  .brand a:hover h1{color:var(--navy)}
+  .brand a:focus-visible{outline:2px solid var(--navy);outline-offset:4px;border-radius:4px}
+  .brand .sub{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-soft);margin-top:6px;
+  }
+  .stamp{
+    border:1.5px solid var(--navy);color:var(--navy);
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;font-weight:600;
+    letter-spacing:.13em;text-transform:uppercase;
+    padding:9px 13px;border-radius:5px;transform:rotate(-3deg);
+    text-align:center;line-height:1.45;background:rgba(255,255,255,.4);
+  }
+  .stamp .lock{font-size:.9rem;display:block;margin-bottom:2px}
+  .compare-trust{display:flex;justify-content:flex-end;margin:0 0 16px}
+
+  .intro{
+    margin:20px 0 26px;font-family:'Newsreader',serif;font-size:1.12rem;
+    color:var(--ink-soft);max-width:760px;
+  }
+  .privacy{
+    display:flex;gap:11px;align-items:flex-start;
+    background:var(--match-bg);border:1px solid #bcd6bf;border-radius:var(--radius);
+    padding:12px 15px;margin-bottom:30px;font-size:.86rem;color:#2c4e38;
+  }
+  .privacy b{color:var(--match)}
+
+  /* ---- mode bar ---- */
+  .modebar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .modebar .lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  .compare-steps{
+    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.06em;
+    color:var(--ink-faint);
+  }
+  .compare-steps span{
+    padding:6px 11px;border:1px solid var(--line-soft);border-radius:5px;
+    background:var(--panel);
+  }
+  .compare-steps span.on{border-color:var(--navy);color:var(--navy);background:#eef2f4}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+  .seg button{
+    border:0;background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.82rem;font-weight:500;
+    padding:7px 14px;color:var(--ink-soft);border-right:1px solid var(--line-soft);
+  }
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--navy);color:#fff}
+
+  /* ---- slots ---- */
+  .slots{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:8px}
+  @media(max-width:760px){.slots{grid-template-columns:1fr}}
+  .slot{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  .slot-head{
+    padding:12px 16px;border-bottom:1px solid var(--line-soft);
+    display:flex;align-items:baseline;gap:9px;background:var(--paper-2);
+  }
+  .slot-tag{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.78rem;
+    background:var(--navy);color:#fff;width:22px;height:22px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .slot-head h3{font-family:'Newsreader',serif;font-weight:600;font-size:1.18rem}
+  .slot-head .when{font-size:.78rem;color:var(--ink-faint);margin-left:auto;font-style:italic;font-family:'Newsreader',serif}
+  .slot-body{padding:16px}
+
+  .drop{
+    border:1.5px dashed var(--line);border-radius:6px;
+    padding:26px 16px;text-align:center;cursor:pointer;
+    transition:border-color .15s,background .15s;
+  }
+  .drop:hover,.drop.over{border-color:var(--navy);background:#f1f4f6}
+  .drop .ico{font-size:1.5rem;opacity:.55}
+  .drop p{font-size:.88rem;margin-top:6px}
+  .drop .hint{font-size:.74rem;color:var(--ink-faint);margin-top:3px}
+  input[type=file]{display:none}
+
+  .filelist{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+  .fileitem{
+    display:flex;align-items:center;gap:9px;font-size:.82rem;
+    background:var(--paper-2);border:1px solid var(--line-soft);
+    border-radius:5px;padding:6px 10px;
+  }
+  .fileitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fileitem .sz{color:var(--ink-faint);font-size:.74rem;font-family:'IBM Plex Mono',monospace}
+  .fileitem .x{cursor:pointer;color:var(--miss);font-weight:600;padding:0 4px}
+
+  .mrztoggle{
+    margin-top:12px;font-size:.78rem;color:var(--navy);cursor:pointer;
+    text-decoration:underline;text-underline-offset:2px;
+  }
+  .mrzbox{display:none;margin-top:10px}
+  .mrzbox.show{display:block}
+  .mrzbox label{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  textarea.mrz{
+    width:100%;margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:.8rem;
+    border:1px solid var(--line);border-radius:5px;padding:9px;resize:vertical;
+    min-height:62px;background:#fff;color:var(--ink);letter-spacing:.04em;
+  }
+  textarea.mrz:focus{outline:2px solid var(--navy);outline-offset:-1px}
+
+  /* ---- action ---- */
+  .actions{display:flex;align-items:center;gap:16px;margin:24px 0 4px;flex-wrap:wrap}
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:.92rem;
+    border:0;border-radius:6px;cursor:pointer;padding:12px 26px;
+    background:var(--navy);color:#fff;letter-spacing:.01em;
+    transition:background .15s,transform .05s;
+  }
+  .btn:hover{background:var(--navy-deep)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{background:var(--ink-faint);cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+  .btn.ghost:hover{background:#eef2f4}
+  .btn.sm{padding:8px 16px;font-size:.82rem}
+
+  /* ---- log ---- */
+  #log{
+    margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:.78rem;
+    color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line-soft);
+    border-radius:6px;padding:12px 14px;max-height:170px;overflow:auto;display:none;
+  }
+  #log.show{display:block}
+  #log .ln{padding:1px 0}
+  #log .err{color:var(--miss)}
+  #log .ok{color:var(--match)}
+
+  /* ---- results ---- */
+  #results{margin-top:34px;display:none}
+  #results.show{display:block}
+  .res-head{
+    border-top:2px solid var(--ink);padding-top:20px;margin-bottom:18px;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  .res-head h2{font-family:'Newsreader',serif;font-weight:600;font-size:1.7rem}
+  .doc-kind{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;
+    text-transform:uppercase;background:var(--navy);color:#fff;
+    padding:4px 9px;border-radius:4px;
+  }
+  .summary{
+    display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:24px;
+  }
+  .summary .cell{
+    flex:1;min-width:130px;padding:15px 18px;border-right:1px solid var(--line-soft);
+    background:var(--panel);
+  }
+  .summary .cell:last-child{border-right:0}
+  .summary .num{font-family:'Newsreader',serif;font-size:2rem;font-weight:600;line-height:1}
+  .summary .cap{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:5px;
+  }
+  .summary .cell.flag{background:var(--miss-bg)}
+  .summary .cell.flag .num{color:var(--miss)}
+  .summary .cell.good .num{color:var(--match)}
+
+  .alertbar{
+    padding:12px 16px;border-radius:var(--radius);margin-bottom:22px;
+    font-size:.88rem;display:flex;gap:10px;align-items:flex-start;
+  }
+  .alertbar.danger{background:var(--miss-bg);border:1px solid #d8b3ae;color:#7e2d25}
+  .alertbar.safe{background:var(--match-bg);border:1px solid #bcd6bf;color:#2c4e38}
+  .alertbar.note{background:var(--warn-bg);border:1px solid #ddca96;color:#6c4d14}
+
+  .block{margin-bottom:30px}
+  .block h3{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.28rem;margin-bottom:4px;
+  }
+  .block .desc{font-size:.84rem;color:var(--ink-soft);margin-bottom:13px}
+
+  table.cmp{width:100%;border-collapse:collapse;font-size:.87rem}
+  table.cmp th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-weight:500;
+    font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-faint);padding:7px 12px;border-bottom:1.5px solid var(--ink);
+  }
+  table.cmp td{
+    padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top;
+  }
+  table.cmp td.field{font-weight:500;width:24%}
+  table.cmp td.val{font-family:'IBM Plex Mono',monospace;font-size:.82rem;width:28%;word-break:break-word}
+  table.cmp td.val.empty{color:var(--ink-faint)}
+  table.cmp tr.row-miss td{background:var(--miss-bg)}
+  table.cmp tr.row-match td{background:var(--match-bg)}
+  .pill{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.66rem;
+    font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 8px;border-radius:4px;white-space:nowrap;
+  }
+  .pill.match{background:var(--match);color:#fff}
+  .pill.miss{background:var(--miss);color:#fff}
+  .pill.warn{background:var(--warn);color:#fff}
+  .pill.info{background:var(--info);color:#fff}
+
+  .checks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chk{
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;padding:5px 9px;
+    border-radius:4px;border:1px solid;
+  }
+  .chk.pass{background:var(--match-bg);border-color:#bcd6bf;color:var(--match)}
+  .chk.fail{background:var(--miss-bg);border-color:#d8b3ae;color:var(--miss)}
+
+  .diffctl{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .diffctl label{font-size:.8rem;color:var(--ink-soft);display:flex;gap:6px;align-items:center;cursor:pointer}
+  .diff{
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    font-family:'IBM Plex Mono',monospace;font-size:.78rem;
+  }
+  .diff .dl{display:flex;padding:2px 0;border-bottom:1px solid #f0ecde}
+  .diff .dl:last-child{border-bottom:0}
+  .diff .gut{
+    width:30px;flex:none;text-align:center;color:#fff;font-weight:600;
+    user-select:none;
+  }
+  .diff .dl .tx{padding:1px 11px;white-space:pre-wrap;word-break:break-word;flex:1}
+  .diff .dl.same .gut{background:var(--line)}
+  .diff .dl.same .tx{color:var(--ink-soft)}
+  .diff .dl.del .gut{background:var(--miss)}
+  .diff .dl.del{background:var(--miss-bg)}
+  .diff .dl.add .gut{background:var(--match)}
+  .diff .dl.add{background:var(--match-bg)}
+  .diff.hidesame .dl.same{display:none}
+
+  /* ---- enhanced comparison results ---- */
+  .verdict{
+    border-radius:var(--radius);padding:22px 24px;margin-bottom:22px;
+    display:flex;gap:18px;align-items:flex-start;border:1px solid;
+  }
+  .verdict .v-ico{
+    font-size:1.85rem;line-height:1;flex:none;width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;border-radius:50%;
+    background:rgba(255,255,255,.55);
+  }
+  .verdict .v-body{flex:1;min-width:0}
+  .verdict .v-title{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.45rem;line-height:1.15;
+  }
+  .verdict .v-sub{font-size:.9rem;margin-top:7px;line-height:1.55;opacity:.92}
+  .verdict .v-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .verdict .v-chip{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;font-weight:500;
+    padding:4px 9px;border-radius:4px;background:rgba(255,255,255,.45);
+    border:1px solid rgba(0,0,0,.08);
+  }
+  .verdict.ok{background:var(--match-bg);border-color:#bcd6bf;color:#234a32}
+  .verdict.warn{background:var(--warn-bg);border-color:#ddca96;color:#5c4310}
+  .verdict.alert{background:var(--miss-bg);border-color:#d8b3ae;color:#6e241c}
+
+  .summary-v2{
+    display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);padding:18px 22px;margin-bottom:22px;
+  }
+  @media(max-width:640px){.summary-v2{grid-template-columns:1fr}}
+  .summary-stats{display:flex;gap:0;flex-wrap:wrap;flex:1}
+  .summary-stats .stat{
+    flex:1;min-width:100px;padding:4px 18px 4px 0;margin-right:18px;
+    border-right:1px solid var(--line-soft);
+  }
+  .summary-stats .stat:last-child{border-right:0;margin-right:0;padding-right:0}
+  .summary-stats .stat .num{font-family:'Newsreader',serif;font-size:1.85rem;font-weight:600;line-height:1}
+  .summary-stats .stat .cap{
+    font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:4px;
+  }
+  .summary-stats .stat.good .num{color:var(--match)}
+  .summary-stats .stat.bad .num{color:var(--miss)}
+  .consistency-ring{text-align:center;min-width:92px}
+  .consistency-ring svg{display:block;margin:0 auto}
+  .consistency-ring .pct{
+    font-family:'Newsreader',serif;font-size:1.35rem;font-weight:600;line-height:1;
+    margin-top:6px;
+  }
+  .consistency-ring .lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:3px;
+  }
+
+  .res-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    flex-wrap:wrap;margin-bottom:16px;
+  }
+  .res-filters{
+    display:inline-flex;border:1px solid var(--line);border-radius:6px;
+    overflow:hidden;background:var(--panel);
+  }
+  .res-filters button{
+    border:0;background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.8rem;font-weight:500;
+    padding:8px 14px;color:var(--ink-soft);border-right:1px solid var(--line-soft);
+    transition:background .15s,color .15s;
+  }
+  .res-filters button:last-child{border-right:0}
+  .res-filters button.on{background:var(--navy);color:#fff}
+  .res-filters button .ct{
+    font-family:'IBM Plex Mono',monospace;font-size:.72em;opacity:.75;margin-left:4px;
+  }
+  .view-toggle{font-size:.78rem;color:var(--ink-soft)}
+  .view-toggle label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+  .review-list{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 18px;margin-bottom:20px;
+  }
+  .review-list h4{
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px;
+  }
+  .review-list ul{margin:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+  .review-list li{
+    font-size:.82rem;padding:5px 11px;border-radius:5px;
+    background:var(--miss-bg);border:1px solid #d8b3ae;color:#7e2d25;
+  }
+
+  .field-group{margin-bottom:24px}
+  .field-group-title{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--ink-faint);
+    margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line-soft);
+  }
+  .field-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  @media(max-width:480px){.field-cards{grid-template-columns:1fr}}
+
+  .fcard{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;border-left:4px solid var(--line);
+  }
+  .fcard.issue{border-left-color:var(--miss);background:linear-gradient(90deg,var(--miss-bg) 0%,var(--panel) 18%)}
+  .fcard.match-card{border-left-color:var(--match)}
+  .fcard.info-card{border-left-color:var(--info)}
+  .fcard.warn-card{border-left-color:var(--warn)}
+  .fcard-head{
+    padding:11px 14px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  }
+  .fcard-head .fname{font-weight:600;font-size:.92rem;line-height:1.3}
+  .fcard-body{padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.fcard-body{grid-template-columns:1fr}}
+  .fcard-col{
+    background:var(--paper-2);border:1px solid var(--line-soft);border-radius:5px;padding:9px 11px;
+    min-width:0;
+  }
+  .fcard-col .flbl{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;
+  }
+  .fcard-col .fval{
+    font-family:'IBM Plex Mono',monospace;font-size:.82rem;word-break:break-word;line-height:1.45;
+  }
+  .fcard-col .fval.empty{color:var(--ink-faint);font-style:italic}
+  .fcard-col.prior{border-top:2px solid var(--miss)}
+  .fcard-col.current{border-top:2px solid var(--match)}
+  .fcard-note{
+    padding:0 14px 12px;font-size:.76rem;color:var(--ink-soft);line-height:1.45;
+  }
+  .fcard-arrow{
+    display:none;text-align:center;color:var(--ink-faint);font-size:1rem;padding:4px 0;
+  }
+  @media(max-width:520px){
+    .fcard-body{position:relative}
+    .fcard-arrow{display:block}
+  }
+
+  .val-old{background:rgba(168,57,47,.12);text-decoration:line-through;text-decoration-color:rgba(168,57,47,.5)}
+  .val-new{background:rgba(47,106,71,.14);padding:0 2px;border-radius:2px}
+
+  details.match-panel{
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);margin-bottom:24px;overflow:hidden;
+  }
+  details.match-panel>summary{
+    cursor:pointer;list-style:none;padding:14px 18px;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:.9rem;
+    display:flex;align-items:center;gap:10px;
+  }
+  details.match-panel>summary::-webkit-details-marker{display:none}
+  details.match-panel>summary:hover{background:var(--paper-2)}
+  details.match-panel>summary .cnt{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+    background:var(--match-bg);color:var(--match);padding:3px 8px;border-radius:4px;
+  }
+  details.match-panel .match-inner{padding:4px 18px 18px}
+
+  .cmp-table-wrap{display:none}
+  .cmp-table-wrap.show-table{display:block}
+  .field-cards-view.hide-cards{display:none}
+
+  details.raw{margin-top:14px}
+  details.raw summary{cursor:pointer;font-size:.82rem;color:var(--navy);font-weight:500}
+
+  footer{
+    margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  footer b{color:var(--ink-soft)}
+
+  .empty-note{font-size:.84rem;color:var(--ink-faint);font-style:italic;font-family:'Newsreader',serif}
+
+  @media print{
+    body{background:#fff}
+    .no-print{display:none!important}
+    #results{display:block!important;margin-top:0}
+    .wrap{max-width:100%;padding:0}
+    .diff.hidesame .dl.same{display:flex}
+    .match-panel{border:0}
+    .match-panel>summary{display:none}
+    .match-panel .match-inner{padding:0}
+    details.match-panel[open] .match-inner{display:block}
+  }
+
+  /* ===================== main nav (left-side vertical rail) ===================== */
+  .hero{margin:0 0 12px}
+  .hero-lede{
+    font-family:'Newsreader',serif;font-size:1.2rem;line-height:1.4;
+    color:var(--ink-soft);max-width:820px;
+  }
+  /* right-hand column holds hero + tools + footer; nav is the left rail */
+  .page{min-width:0}
+  .content{min-width:0}
+  .nav-main{
+    display:flex;flex-direction:column;gap:2px;
+    position:sticky;top:18px;
+    padding:8px;margin:0;
+    background:var(--panel);
+    border:1px solid var(--line);border-radius:11px;
+  }
+  .nav-main .nav-label{
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);
+    padding:7px 12px 9px;
+  }
+  .nav-main button{
+    width:100%;border:0;border-radius:7px;
+    background:transparent;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.87rem;font-weight:500;
+    color:var(--ink-soft);padding:11px 12px;
+    display:flex;align-items:center;gap:11px;text-align:left;
+    transition:background .15s,color .15s;
+  }
+  .nav-main button:hover{color:var(--ink);background:var(--paper-2)}
+  .nav-main button.on{background:var(--navy);color:#fff;font-weight:600}
+  .nav-main .nav-ico{
+    font-size:1.05rem;line-height:1;opacity:.75;
+    flex:0 0 auto;width:20px;text-align:center;
+  }
+  .nav-main button.on .nav-ico{opacity:1}
+  /* collapse to a horizontal scroll bar on narrow screens */
+  @media(max-width:760px){
+    .wrap{grid-template-columns:1fr;column-gap:0}
+    .nav-main{
+      flex-direction:row;gap:0;padding:0;
+      position:sticky;top:0;z-index:20;
+      margin:0 0 22px;background:var(--paper);
+      border:0;border-bottom:2px solid var(--ink);border-radius:0;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
+    }
+    .nav-main .nav-label{display:none}
+    .nav-main button{
+      flex:0 0 auto;width:auto;
+      border-radius:6px 6px 0 0;position:relative;top:2px;
+      font-size:.8rem;padding:10px 13px;white-space:nowrap;
+    }
+  }
+
+  /* tab panels */
+  .tab{display:none}
+  .tab.active{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* shared tab chrome */
+  .tab-lede{
+    font-family:'Newsreader',serif;font-size:1.12rem;color:var(--ink-soft);
+    max-width:780px;margin:0 0 8px;
+  }
+  .freshness{
+    display:inline-flex;gap:8px;align-items:center;
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.06em;
+    color:var(--ink-faint);background:var(--info-bg);border:1px solid #c7d9e2;
+    padding:6px 11px;border-radius:5px;margin:14px 0 24px;
+  }
+  .freshness .dot{width:7px;height:7px;border-radius:50%;background:var(--info);flex:none}
+
+  .secTitle{
+    font-family:'Newsreader',serif;font-weight:600;font-size:1.4rem;
+    margin:30px 0 4px;padding-top:18px;border-top:1px solid var(--line);
+  }
+  .secTitle:first-of-type{border-top:0;padding-top:0;margin-top:18px}
+  .secSub{font-size:.85rem;color:var(--ink-soft);margin-bottom:16px;max-width:760px}
+
+  /* controls (selects / inputs) */
+  .ctrls{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+  .ctrl{display:flex;flex-direction:column;gap:5px}
+  .ctrl label{
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  .ctrl select,.ctrl input{
+    font-family:'IBM Plex Sans',sans-serif;font-size:.88rem;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:9px 11px;min-width:170px;
+  }
+  .ctrl select:focus,.ctrl input:focus{outline:2px solid var(--navy);outline-offset:-1px}
+
+  /* generic data table */
+  table.dt{width:100%;border-collapse:collapse;font-size:.86rem;margin:6px 0 4px}
+  table.dt th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-weight:500;
+    font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);padding:9px 12px;border-bottom:1.5px solid var(--ink);
+    white-space:nowrap;cursor:default;
+  }
+  table.dt th.sortable{cursor:pointer;user-select:none}
+  table.dt th.sortable:hover{color:var(--ink)}
+  table.dt th .arr{opacity:.5;font-size:.8em}
+  table.dt td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.dt tr:hover td{background:var(--paper-2)}
+  table.dt th.num, table.dt td.num{
+    font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap;
+  }
+  table.dt.vb-current th:first-child,
+  table.dt.vb-current td:first-child{text-align:left}
+  table.dt.vb-current th:not(:first-child),
+  table.dt.vb-current td:not(:first-child){text-align:right}
+  table.dt.vb-current td:not(:first-child) .grade{margin-left:auto;display:inline-flex}
+  table.dt.vb-compare{table-layout:fixed;width:100%;min-width:640px}
+  table.dt.vb-compare th:first-child,
+  table.dt.vb-compare td:first-child,
+  table.dt.vb-compare th:nth-child(2),
+  table.dt.vb-compare td:nth-child(2){text-align:left}
+  table.dt.vb-compare th.num,
+  table.dt.vb-compare td.num{text-align:right;min-width:108px}
+  table.dt.vb-compare th:last-child,
+  table.dt.vb-compare td.mov{text-align:left;min-width:120px}
+  table.dt.vb-compare td.num .grade{display:inline-flex;margin-left:auto}
+  table.dt td.cell-advance{background:var(--match-bg);color:var(--match)}
+  table.dt td.cell-retro{background:var(--miss-bg);color:var(--miss)}
+  table.dt td.cell-warn{background:var(--warn-bg);color:var(--warn)}
+  table.dt td.cell-u{font-weight:600;color:var(--miss)}
+  table.dt td.mov{font-size:.82rem;white-space:nowrap}
+  table.dt td.mov.good{color:var(--match);font-weight:500}
+  table.dt td.mov.bad{color:var(--miss);font-weight:500}
+  table.dt td.mov.neutral{color:var(--ink-soft)}
+  .tbl-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto;background:var(--panel)}
+  .tbl-wrap table.dt{margin:0}
+  .tbl-wrap table.dt tr:last-child td{border-bottom:0}
+
+  /* grade / status badges */
+  .grade{
+    display:inline-flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.78rem;
+    min-width:34px;padding:3px 7px;border-radius:5px;
+  }
+  .grade.A{background:var(--match-bg);color:var(--match);border:1px solid #bcd6bf}
+  .grade.B{background:var(--info-bg);color:var(--info);border:1px solid #c7d9e2}
+  .grade.C{background:var(--warn-bg);color:var(--warn);border:1px solid #ddca96}
+  .grade.D{background:var(--miss-bg);color:var(--miss);border:1px solid #d8b3ae}
+  .tag{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.62rem;
+    font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 7px;border-radius:4px;margin-left:5px;
+    background:var(--paper-2);color:var(--ink-soft);border:1px solid var(--line-soft);
+  }
+  .tag.warn{background:var(--warn-bg);color:var(--warn);border-color:#ddca96}
+
+  /* result callout (used by mini-tools) */
+  .callout{
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);
+    padding:16px 18px;margin-top:8px;
+  }
+  .callout.danger{background:var(--miss-bg);border-color:#d8b3ae}
+  .callout.safe{background:var(--match-bg);border-color:#bcd6bf}
+  .callout.note{background:var(--warn-bg);border-color:#ddca96}
+  .callout .big{font-family:'Newsreader',serif;font-size:1.5rem;font-weight:600;line-height:1.1}
+  .callout .lbl{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+  .callout .sub{font-size:.85rem;color:var(--ink-soft);margin-top:7px}
+
+  /* card grid */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:6px 0}
+  .mini{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:15px 16px;
+  }
+  .mini .k{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .mini .v{font-family:'Newsreader',serif;font-size:1.7rem;font-weight:600;line-height:1.1;margin-top:4px}
+  .mini .v.good{color:var(--match)} .mini .v.bad{color:var(--miss)} .mini .v.warn{color:var(--warn)}
+  .mini .n{font-size:.8rem;color:var(--ink-soft);margin-top:5px}
+
+  /* accordion (form guides) */
+  .acc{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;background:var(--panel)}
+  .acc>summary{
+    cursor:pointer;list-style:none;padding:15px 18px;
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  .acc>summary::-webkit-details-marker{display:none}
+  .acc>summary:hover{background:var(--paper-2)}
+  .acc>summary .form-code{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.82rem;
+    background:var(--navy);color:#fff;padding:4px 9px;border-radius:4px;flex:none;
+  }
+  .acc>summary .form-name{font-family:'Newsreader',serif;font-weight:600;font-size:1.15rem}
+  .acc>summary .form-for{font-size:.8rem;color:var(--ink-faint);font-style:italic;font-family:'Newsreader',serif;margin-left:auto}
+  .acc[open]>summary{border-bottom:1px solid var(--line-soft);background:var(--paper-2)}
+  .acc .body{padding:4px 20px 20px}
+  .acc .body h4{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);margin:18px 0 8px;
+  }
+  .acc .body p{font-size:.9rem;margin-bottom:8px}
+  .acc .body ul{margin:0 0 8px 2px;list-style:none}
+  .acc .body li{font-size:.88rem;padding:4px 0 4px 22px;position:relative;line-height:1.5}
+  .acc .body li::before{content:"›";position:absolute;left:6px;color:var(--navy);font-weight:600}
+  .acc .body li.warn::before{content:"!";color:var(--miss)}
+  .acc .body li.ok::before{content:"✓";color:var(--match)}
+  .acc .body .tip{
+    background:var(--info-bg);border:1px solid #c7d9e2;border-radius:6px;
+    padding:11px 14px;font-size:.85rem;color:#2a4656;margin:10px 0;
+  }
+  .acc .body .tip b{color:var(--info)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);margin:14px 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .site-footer{
+    grid-column:1/-1;
+    margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  .site-footer b{color:var(--ink-soft)}
+
+  /* ===================== KKB CoRi app promo rail (right column) ===================== */
+  .promo-rail{
+    display:none;                       /* shown only on wide screens (min-width:1121px) */
+    position:sticky;top:18px;align-self:start;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 14px 16px;
+  }
+  .promo-head{
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;text-align:center;
+  }
+  .promo-viewport{overflow:hidden;border-radius:9px}
+  .promo-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+  .promo-slide{
+    flex:0 0 100%;min-width:0;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
+    padding:8px 6px 12px;color:inherit;text-decoration:none;
+  }
+  .promo-slide:hover{text-decoration:none}
+  .promo-img{
+    width:88px;height:88px;border-radius:20px;overflow:hidden;background:#fff;
+    box-shadow:0 6px 18px rgba(20,40,56,.16);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .promo-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .promo-name{font-family:'Newsreader',serif;font-weight:600;font-size:1.18rem;color:var(--ink);margin-top:3px}
+  .promo-desc{font-size:.82rem;line-height:1.45;color:var(--ink-soft);max-width:196px}
+  .promo-cta{
+    margin-top:5px;font-size:.77rem;font-weight:600;color:#fff;background:var(--navy);
+    padding:7px 15px;border-radius:20px;transition:background .15s;
+  }
+  .promo-slide:hover .promo-cta{background:var(--navy-deep)}
+  .promo-dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+  .promo-dots button{
+    width:7px;height:7px;padding:0;border:0;border-radius:50%;cursor:pointer;
+    background:var(--line);transition:background .2s,transform .2s;
+  }
+  .promo-dots button.on{background:var(--navy);transform:scale(1.3)}
+  @media(min-width:1121px){
+    .wrap{max-width:1300px;grid-template-columns:216px minmax(0,1fr) 248px}
+    .promo-rail{display:block}
+  }
+  .tool-notes{
+    margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.78rem;color:var(--ink-faint);line-height:1.7;
+  }
+  .tool-notes b{color:var(--ink-soft)}
+
+  /* ---- severity tiers ---- */
+  .sev{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.6rem;
+    font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:4px;white-space:nowrap;flex:none;
+  }
+  .sev-critical{background:#5c1a14;color:#fff}
+  .sev-high{background:var(--miss);color:#fff}
+  .sev-medium{background:var(--warn);color:#fff}
+  .sev-low{background:var(--line);color:var(--ink-soft)}
+  .sev-info{background:var(--info-bg);color:var(--info);border:1px solid #c7d9e2}
+  .fcard.sev-border-critical{border-left-color:#5c1a14}
+  .fcard.sev-border-high{border-left-color:var(--miss)}
+  .fcard.sev-border-medium{border-left-color:var(--warn)}
+  .severity-summary{
+    display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;
+  }
+  .severity-summary .sev-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.8rem;padding:7px 12px;border-radius:6px;border:1px solid var(--line-soft);
+    background:var(--panel);
+  }
+  .severity-summary .sev-pill b{font-family:'Newsreader',serif;font-size:1.1rem}
+  .review-list li.sev-critical{border-color:#5c1a14;background:#f0ddd9;color:#5c1a14}
+  .review-list li.sev-high{border-color:#d8b3ae}
+  .review-list li.sev-medium{border-color:#ddca96;background:var(--warn-bg);color:#6c4d14}
+  table.cmp th.sev-col, table.cmp td.sev-col{white-space:nowrap;width:90px}
+
+  .demo-banner{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--info-bg);border:1px solid #c7d9e2;border-radius:var(--radius);
+    padding:12px 16px;margin-bottom:20px;font-size:.86rem;color:#2a4656;
+  }
+  .demo-banner b{color:var(--info)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <a href="/" id="homeLink" title="Back to home">
+        <h1>VisaDash</h1>
+        <div class="sub">Immigration Toolkit</div>
+      </a>
+    </div>
+  </header>
+
+  <nav class="nav-main no-print" id="tabnav" aria-label="Toolkit sections">
+    <span class="nav-label" aria-hidden="true">Toolkit</span>
+    <button type="button" data-tab="compare" class="on">
+      <span class="nav-ico" aria-hidden="true">&#128196;</span>
+      <span>DS-160 Compare</span>
+    </button>
+    <button type="button" data-tab="guides">
+      <span class="nav-ico" aria-hidden="true">&#128221;</span>
+      <span>Form Guides</span>
+    </button>
+    <button type="button" data-tab="bulletin">
+      <span class="nav-ico" aria-hidden="true">&#128197;</span>
+      <span>Visa Bulletin</span>
+    </button>
+    <button type="button" data-tab="processing">
+      <span class="nav-ico" aria-hidden="true">&#9203;</span>
+      <span>Processing Times</span>
+    </button>
+    <button type="button" data-tab="wages">
+      <span class="nav-ico" aria-hidden="true">&#128176;</span>
+      <span>Wages &amp; Sponsors</span>
+    </button>
+  </nav>
+
+  <div class="page">
+
+  <section class="hero no-print" aria-label="Introduction">
+    <p class="hero-lede">Compare visa documents, track priority dates, and check processing times.</p>
+  </section>
+
+  <div class="content">
+
+  <!-- ════════════════ TAB: DS-160 Comparison Tool ════════════════ -->
+  <section class="tab active" id="tab-compare">
+
+  <div class="compare-trust no-print">
+    <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
+  </div>
+
+  <p class="intro">Upload two versions of the same document — a prior DS-160 against a refile, an expiring passport against a renewal — and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
+
+  <div class="privacy no-print">
+    <span>&#128274;</span>
+    <span><b>Nothing leaves this machine.</b> All text extraction, OCR and comparison run inside your browser. No file is uploaded to any server. Keep this HTML file locally and you can run it fully offline (the OCR engine downloads once on first use, then caches).</span>
+  </div>
+
+  <!-- mode -->
+  <div class="compare-steps no-print" aria-hidden="true">
+    <span class="on">1 · Prior version</span>
+    <span class="on">2 · Current version</span>
+    <span>3 · Review report</span>
+  </div>
+  <div class="modebar no-print">
+    <span class="lbl">Comparison&nbsp;type</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="auto" class="on">Auto-detect</button>
+      <button data-m="ds160">DS-160</button>
+      <button data-m="passport">Passport</button>
+      <button data-m="general">Other docs</button>
+    </div>
+  </div>
+
+  <!-- slots -->
+  <div class="slots no-print">
+    <div class="slot">
+      <div class="slot-head">
+        <span class="slot-tag">A</span>
+        <h3>Earlier version</h3>
+        <span class="when">prior filing</span>
+      </div>
+      <div class="slot-body" data-slot="A">
+        <div class="drop" tabindex="0">
+          <div class="ico">&#128228;</div>
+          <p>Drop files here, or click to browse</p>
+          <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+        </div>
+        <input type="file" multiple accept=".pdf,image/*">
+        <div class="filelist"></div>
+        <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+        <div class="mrzbox">
+          <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+          <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z1234567&lt;8IND8801019F3001012&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="slot">
+      <div class="slot-head">
+        <span class="slot-tag">B</span>
+        <h3>Later version</h3>
+        <span class="when">current filing</span>
+      </div>
+      <div class="slot-body" data-slot="B">
+        <div class="drop" tabindex="0">
+          <div class="ico">&#128228;</div>
+          <p>Drop files here, or click to browse</p>
+          <div class="hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+        </div>
+        <input type="file" multiple accept=".pdf,image/*">
+        <div class="filelist"></div>
+        <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
+        <div class="mrzbox">
+          <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
+          <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z7654321&lt;2IND8801019F3401015&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;08"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions no-print">
+    <button class="btn" id="runBtn">Compare documents</button>
+    <button class="btn ghost sm" id="demoBtn">View sample report</button>
+    <button class="btn ghost sm" id="resetBtn">Clear all</button>
+  </div>
+
+  <div id="log" class="no-print"></div>
+
+  <!-- results -->
+  <section id="results"></section>
+
+  <div class="tool-notes no-print">
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
+    &bull; <b>Passports:</b> a sharp, flat photo of the photo page works, but pasting the two MRZ lines is faster and 100% reliable &mdash; the tool validates them against ICAO check digits.<br>
+    &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
+  </div>
+
+  </section><!-- /tab-compare -->
+
+  <!-- ════════════════ TAB: Form-Filling Guides ════════════════ -->
+  <section class="tab" id="tab-guides">
+    <p class="tab-lede">Field-by-field help for the forms that come up most in U.S. immigration &mdash; what each form is for, who files it, the answers that trip people up, and the documents to have ready before you start.</p>
+    <div class="freshness"><span class="dot"></span> Educational guidance &middot; always confirm against the official instructions on uscis.gov &amp; travel.state.gov</div>
+    <div id="guides-list"></div>
+  </section>
+
+  <!-- ════════════════ TAB: Visa Bulletin ════════════════ -->
+  <section class="tab" id="tab-bulletin">
+    <p class="tab-lede">Employment-based Final Action Dates from the most recent Visa Bulletin, plus a quick check of whether your priority date is current.</p>
+    <div class="freshness" id="bulletin-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Final Action Dates &mdash; Employment-Based (latest)</h3>
+    <p class="secSub">&ldquo;C&rdquo; means current (no backlog). A date means only priority dates <i>earlier</i> than it can receive a visa number. <b>U</b> = unavailable this month.</p>
+    <div class="tbl-wrap"><table class="dt vb-current" id="vb-table"></table></div>
+
+    <h3 class="secTitle">3-month comparison</h3>
+    <p class="secSub">Final Action Dates for June, July, and August 2026 side by side — green cells advanced, red cells retrogressed or became unavailable.</p>
+    <div class="tbl-wrap"><table class="dt vb-compare" id="vb-compare" aria-label="Three month visa bulletin comparison"></table></div>
+    <div id="vb-movement"></div>
+
+    <h3 class="secTitle">Am I current?</h3>
+    <p class="secSub">Enter your category, country of chargeability and priority date to see if a green-card number is available this month.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="vb-cat">Category</label>
+        <select id="vb-cat"><option>EB1</option><option selected>EB2</option><option>EB3</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="vb-country">Country of chargeability</label>
+        <select id="vb-country"><option>All</option><option selected>India</option><option>China</option><option>Mexico</option><option>Philippines</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="vb-pd">Priority date</label>
+        <input type="date" id="vb-pd" value="2014-06-01">
+      </div>
+    </div>
+    <div id="vb-result"></div>
+  </section>
+
+  <!-- ════════════════ TAB: Processing Times ════════════════ -->
+  <section class="tab" id="tab-processing">
+    <p class="tab-lede">Typical USCIS processing times by form and service center &mdash; median, plus the 75th and 90th percentile so you can see the long tail, not just the average.</p>
+    <div class="freshness" id="pt-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Estimate my wait</h3>
+    <p class="secSub">Pick a form and the service center on your receipt notice (the three-letter prefix on your receipt number).</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="pt-form">Form</label>
+        <select id="pt-form"></select>
+      </div>
+      <div class="ctrl">
+        <label for="pt-center">Service center</label>
+        <select id="pt-center"></select>
+      </div>
+    </div>
+    <div id="pt-result"></div>
+
+    <h3 class="secTitle">All processing times</h3>
+    <div class="tbl-wrap"><table class="dt" id="pt-table"></table></div>
+  </section>
+
+  <!-- ════════════════ TAB: Wages & Sponsors ════════════════ -->
+  <section class="tab" id="tab-wages">
+    <p class="tab-lede">Two checks that decide a lot of H-1B and PERM cases: is the offered salary at or above the prevailing wage, and is the sponsoring employer a strong, low-risk filer?</p>
+    <div class="freshness" id="wg-fresh"><span class="dot"></span></div>
+
+    <h3 class="secTitle">Prevailing-wage check</h3>
+    <p class="secSub">Look up the DOL prevailing wage for an occupation, state and wage level, then compare it to a salary offer.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="wg-soc">Occupation (SOC)</label>
+        <select id="wg-soc"></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-state">Worksite state</label>
+        <select id="wg-state"></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-level">Wage level</label>
+        <select id="wg-level"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select>
+      </div>
+      <div class="ctrl">
+        <label for="wg-offer">Offered salary (optional)</label>
+        <input type="number" id="wg-offer" placeholder="e.g. 120000" min="0" step="1000">
+      </div>
+    </div>
+    <div id="wg-result"></div>
+
+    <h3 class="secTitle">H-1B sponsor grades</h3>
+    <p class="secSub">Top sponsors by petition volume, with approval rate and risk flags. Click a column to sort.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="emp-search">Filter employer</label>
+        <input type="text" id="emp-search" placeholder="Type a company name…">
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="dt" id="emp-table"></table></div>
+    <div class="legend">
+      <span><span class="grade A" style="min-width:auto">A</span> 92%+ approvals</span>
+      <span><span class="grade B" style="min-width:auto">B</span> 84–92%</span>
+      <span><span class="grade C" style="min-width:auto">C</span> &lt;84%</span>
+      <span><span class="tag warn">Dependent</span> H-1B-dependent employer (extra attestations)</span>
+    </div>
+  </section>
+
+  </div><!-- /.content -->
+  </div><!-- /.page -->
+
+  <aside class="promo-rail" id="promoRail" aria-label="More apps from KKB CoRi">
+    <div class="promo-head">More from KKB CoRi</div>
+    <div class="promo-viewport">
+      <div class="promo-track" id="promoTrack">
+        <a class="promo-slide" href="https://statusvault.org" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/statusvault.png" alt="StatusVault app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">StatusVault</div>
+          <div class="promo-desc">Track visa &amp; immigration document expiry with smart alerts.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/passportsnap/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/passportsnap.png" alt="PassportSnap app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">PassportSnap</div>
+          <div class="promo-desc">AI passport &amp; visa photos that pass &mdash; in 2 minutes.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/proteus/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/proteus.png" alt="Proteus app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Proteus</div>
+          <div class="promo-desc">Every unit, one app &mdash; conversions, 165+ currencies &amp; AI.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/stowbuddy/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/stowbuddy.png" alt="StowBuddy app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">StowBuddy</div>
+          <div class="promo-desc">Snap a photo; on-device AI files every item in your home.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/shadowline/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/shadowline.png" alt="Shadowline app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Shadowline</div>
+          <div class="promo-desc">Every city on one 24-hour dial. World clocks &amp; meeting planner.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+        <a class="promo-slide" href="https://www.kkbcori.com/steadytools/" target="_blank" rel="noopener">
+          <div class="promo-img"><img src="promo/steadytools.png" alt="Steady Tools app icon" width="88" height="88" loading="lazy"></div>
+          <div class="promo-name">Steady Tools</div>
+          <div class="promo-desc">Calm, focused tools for ADHD &amp; neurodivergent minds.</div>
+          <span class="promo-cta">Get the app &rarr;</span>
+        </a>
+      </div>
+    </div>
+    <div class="promo-dots" id="promoDots" role="tablist" aria-label="Choose app"></div>
+  </aside>
+
+  <footer class="site-footer">
+    <b>VisaDash is not legal advice and is not affiliated with USCIS, the Department of State, or the Department of Labor.</b>
+    It is a free educational toolkit &mdash; the comparison tool, guides, and lookups help you spot issues and understand the process, for a human to verify.
+    Everything runs in your browser: no file is uploaded, nothing is stored on a server (the OCR engine downloads once, then caches for offline use).
+    Bulletin, processing-time, wage and sponsor figures are periodic snapshots &mdash; always confirm against the official sources before you rely on them.
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+/* ============ state ============ */
+const slots = {
+  A: { files: [], mrzShown: false },
+  B: { files: [], mrzShown: false }
+};
+let mode = "auto";
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* ============ slot UI ============ */
+$$(".slot-body").forEach(body => {
+  const key   = body.dataset.slot;
+  const drop  = body.querySelector(".drop");
+  const input = body.querySelector("input[type=file]");
+  const toggle= body.querySelector(".mrztoggle");
+  const mrzbox= body.querySelector(".mrzbox");
+
+  drop.addEventListener("click", () => input.click());
+  drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") input.click(); });
+  ["dragover","dragenter"].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => addFiles(key, e.dataTransfer.files));
+  input.addEventListener("change", e => { addFiles(key, e.target.files); input.value = ""; });
+
+  toggle.addEventListener("click", () => {
+    slots[key].mrzShown = !slots[key].mrzShown;
+    mrzbox.classList.toggle("show", slots[key].mrzShown);
+    toggle.innerHTML = (slots[key].mrzShown ? "&#9652;" : "&#9662;") +
+      " or paste the passport MRZ instead";
+  });
+});
+
+function addFiles(key, fileList) {
+  for (const f of fileList) slots[key].files.push(f);
+  renderFiles(key);
+}
+function renderFiles(key) {
+  const list = $(`.slot-body[data-slot=${key}] .filelist`);
+  list.innerHTML = "";
+  slots[key].files.forEach((f, i) => {
+    const row = document.createElement("div");
+    row.className = "fileitem";
+    row.innerHTML =
+      `<span>&#128196;</span>
+       <span class="nm">${escapeHtml(f.name)}</span>
+       <span class="sz">${(f.size/1024).toFixed(0)} KB</span>
+       <span class="x" title="Remove">&times;</span>`;
+    row.querySelector(".x").addEventListener("click", () => {
+      slots[key].files.splice(i, 1); renderFiles(key);
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ============ mode toggle ============ */
+$("#modeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("#modeSeg button").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+  mode = b.dataset.m;
+});
+
+/* ============ logging ============ */
+function log(msg, cls = "") {
+  const box = $("#log");
+  box.classList.add("show");
+  const ln = document.createElement("div");
+  ln.className = "ln " + cls;
+  ln.textContent = msg;
+  box.appendChild(ln);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ============ extraction ============ */
+function getMrz(key) {
+  const ta = $(`.slot-body[data-slot=${key}] textarea.mrz`);
+  return ta ? ta.value.trim() : "";
+}
+
+async function readPdf(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let lines = [], rawChars = 0;
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    rawChars += tc.items.reduce((s, it) => s + it.str.length, 0);
+    lines = lines.concat(itemsToLines(tc.items));
+  }
+  return { pdf, lines, rawChars };
+}
+function itemsToLines(items) {
+  const its = items
+    .filter(it => it.str.trim().length)
+    .map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5] }))
+    .sort((a, b) => (b.y - a.y) || (a.x - b.x));
+  const lines = []; let cur = [], curY = null;
+  for (const it of its) {
+    if (curY === null || Math.abs(it.y - curY) <= 3) { cur.push(it); if (curY === null) curY = it.y; }
+    else { lines.push(cur); cur = [it]; curY = it.y; }
+  }
+  if (cur.length) lines.push(cur);
+  return lines.map(ln =>
+    ln.sort((a, b) => a.x - b.x).map(i => i.s).join(" ").replace(/\s+/g, " ").trim());
+}
+async function ocrPdf(pdf, key, maxPages = 8) {
+  let text = "";
+  const n = Math.min(pdf.numPages, maxPages);
+  for (let p = 1; p <= n; p++) {
+    const page = await pdf.getPage(p);
+    const vp = page.getViewport({ scale: 2 });
+    const c = document.createElement("canvas");
+    c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+    const r = await Tesseract.recognize(c, "eng", { logger: ocrLogger(key, p) });
+    text += "\n" + r.data.text;
+  }
+  if (pdf.numPages > maxPages) log(`  (OCR limited to first ${maxPages} pages)`, "");
+  return text;
+}
+function ocrLogger(key, page) {
+  let last = -1;
+  return m => {
+    if (m.status === "recognizing text") {
+      const pct = Math.round(m.progress * 100);
+      if (pct >= last + 25) { last = pct; log(`  [${key}] OCR${page?" p"+page:""} ${pct}%`); }
+    }
+  };
+}
+
+async function buildSide(key) {
+  const mrz = getMrz(key);
+  if (mrz) {
+    log(`[${key}] using pasted MRZ`, "ok");
+    return { kind: "passport", source: "pasted MRZ",
+             text: mrz, lines: mrz.split(/\n/).map(s => s.trim()).filter(Boolean) };
+  }
+  if (!slots[key].files.length) throw new Error(`No files or MRZ provided for side ${key}.`);
+
+  let lines = [], text = "";
+  for (const file of slots[key].files) {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    const isImg = /^image\//.test(file.type) || /\.(png|jpe?g|webp|bmp|gif|tiff?)$/i.test(file.name);
+    log(`[${key}] reading ${file.name}…`);
+    try {
+      if (isPdf) {
+        const { pdf, lines: L, rawChars } = await readPdf(file);
+        if (rawChars < 30 * pdf.numPages) {
+          log(`  scanned PDF detected — running OCR…`);
+          const t = await ocrPdf(pdf, key);
+          lines = lines.concat(t.split(/\n/).map(s => s.trim()).filter(Boolean));
+          text += "\n" + t;
+        } else {
+          lines = lines.concat(L);
+          text += "\n" + L.join("\n");
+        }
+      } else if (isImg) {
+        log(`  image — running OCR…`);
+        const r = await Tesseract.recognize(file, "eng", { logger: ocrLogger(key) });
+        const t = r.data.text;
+        lines = lines.concat(t.split(/\n/).map(s => s.trim()).filter(Boolean));
+        text += "\n" + t;
+      } else {
+        const t = await file.text();
+        lines = lines.concat(t.split(/\n/));
+        text += "\n" + t;
+      }
+    } catch (err) {
+      log(`  ! failed on ${file.name}: ${err.message}`, "err");
+      throw err;
+    }
+  }
+  return { kind: detectKind(text), source: slots[key].files.map(f => f.name).join(", "),
+           text, lines };
+}
+
+function detectKind(text) {
+  const up = text.toUpperCase();
+  if (/DS[-\s]?160/.test(up) || /NONIMMIGRANT VISA APPLICATION/.test(up)) return "ds160";
+  if (findMRZ(text)) return "passport";
+  return "general";
+}
+
+/* ============ MRZ (ICAO 9303 TD3) ============ */
+function findMRZ(text) {
+  const cand = text.split(/\n/)
+    .map(l => l.replace(/\s+/g, "").toUpperCase())
+    .filter(l => /^[A-Z0-9<]{28,}$/.test(l) && l.includes("<"));
+  for (let i = 0; i < cand.length - 1; i++)
+    if (/^P[A-Z0-9<]/.test(cand[i])) return [pad44(cand[i]), pad44(cand[i + 1])];
+  if (cand.length >= 2) return [pad44(cand[cand.length - 2]), pad44(cand[cand.length - 1])];
+  return null;
+}
+function pad44(l) {
+  l = l.replace(/\s+/g, "").toUpperCase();
+  return (l + "<".repeat(44)).slice(0, 44);
+}
+function checkDigit(str) {
+  const w = [7, 3, 1]; let s = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i]; let v = 0;
+    if (c >= "0" && c <= "9") v = +c;
+    else if (c >= "A" && c <= "Z") v = c.charCodeAt(0) - 55;
+    s += v * w[i % 3];
+  }
+  return s % 10;
+}
+function ckOk(field, actual) {
+  return /[0-9]/.test(actual) && +actual === checkDigit(field);
+}
+function fmtDate(raw, kind) {
+  if (!/^\d{6}$/.test(raw)) return raw || "—";
+  const yy = +raw.slice(0, 2), mm = raw.slice(2, 4), dd = raw.slice(4, 6);
+  let year;
+  if (kind === "exp") year = 2000 + yy;
+  else { const cut = new Date().getFullYear() % 100; year = yy <= cut ? 2000 + yy : 1900 + yy; }
+  return `${year}-${mm}-${dd}`;
+}
+function parseMRZ(side) {
+  const lines = side.lines.filter(Boolean);
+  let l1, l2;
+  if (side.source === "pasted MRZ" && lines.length >= 2) {
+    l1 = pad44(lines[0]); l2 = pad44(lines[1]);
+  } else {
+    const m = findMRZ(side.text);
+    if (!m) return null;
+    [l1, l2] = m;
+  }
+  const nameParts = l1.slice(5, 44).split("<<");
+  const surname = (nameParts[0] || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const given   = (nameParts.slice(1).join(" ") || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const f = {
+    l1, l2,
+    docType: l1.slice(0, 2).replace(/</g, "").trim() || "P",
+    issuer:  l1.slice(2, 5).replace(/</g, "").trim(),
+    surname, given,
+    docNumber: l2.slice(0, 9).replace(/</g, "").trim(),
+    nationality: l2.slice(10, 13).replace(/</g, "").trim(),
+    dob: fmtDate(l2.slice(13, 19), "dob"),
+    sex: (l2.slice(20, 21).replace(/</g, "X") || "X"),
+    expiry: fmtDate(l2.slice(21, 27), "exp"),
+    personalNumber: l2.slice(28, 42).replace(/</g, "").trim()
+  };
+  f.checks = {
+    "Passport number": ckOk(l2.slice(0, 9), l2[9]),
+    "Date of birth":   ckOk(l2.slice(13, 19), l2[19]),
+    "Expiry date":     ckOk(l2.slice(21, 27), l2[27]),
+    "Composite":       ckOk(l2.slice(0,10)+l2.slice(13,20)+l2.slice(21,28)+l2.slice(28,43), l2[43])
+  };
+  return f;
+}
+
+/* ============ line diff (LCS) ============ */
+function normLine(s) { return s.replace(/\s+/g, " ").trim(); }
+function diffLines(aRaw, bRaw) {
+  const a = aRaw.map(normLine).filter(Boolean);
+  const b = bRaw.map(normLine).filter(Boolean);
+  const cap = 3500;
+  const A = a.slice(0, cap), B = b.slice(0, cap);
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = A[i] === B[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (A[i] === B[j]) { out.push({ t: "same", x: A[i] }); i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]) { out.push({ t: "del", x: A[i] }); i++; }
+    else { out.push({ t: "add", x: B[j] }); j++; }
+  }
+  while (i < n) out.push({ t: "del", x: A[i++] });
+  while (j < m) out.push({ t: "add", x: B[j++] });
+  return out;
+}
+
+/* ============ field extractors ============ */
+const DS_LABELS = [
+  "Surnames", "Surname", "Given Names", "Full Name in Native Alphabet",
+  "Other Names Used", "Sex", "Marital Status", "Date of Birth",
+  "City of Birth", "State/Province of Birth", "Country/Region of Birth",
+  "Country/Region of Origin (Nationality)", "Nationality",
+  "National Identification Number", "U.S. Social Security Number",
+  "U.S. Taxpayer ID Number", "Passport/Travel Document Number",
+  "Passport Number", "Passport Book Number",
+  "Country/Authority that Issued Passport/Travel Document",
+  "Passport Issuance Date", "Passport Expiration Date",
+  "Purpose of Trip to the U.S.", "Intended Date of Arrival",
+  "Email Address", "Primary Phone Number"
+];
+function parseDS160(lines) {
+  const L = lines.map(normLine).filter(Boolean);
+  const found = {};
+  for (const label of DS_LABELS) {
+    const lc = label.toLowerCase();
+    for (let i = 0; i < L.length; i++) {
+      const idx = L[i].toLowerCase().indexOf(lc);
+      if (idx === -1) continue;
+      let val = L[i].slice(idx + label.length).replace(/^[\s:.\-]+/, "").trim();
+      if (!val && i + 1 < L.length) val = L[i + 1].trim();
+      const key = label.replace(/s$/, "");
+      if (!found[key] && val) found[key] = val;
+      break;
+    }
+  }
+  return found;
+}
+
+/* ============ comparison ============ */
+function normEq(a, b) {
+  const k = s => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return k(a) === k(b) && k(a) !== "";
+}
+
+const PASSPORT_FIELDS = [
+  ["Document type",   "docType",        "same"],
+  ["Issuing country", "issuer",         "same"],
+  ["Surname",         "surname",        "same"],
+  ["Given names",     "given",          "same"],
+  ["Date of birth",   "dob",            "same"],
+  ["Sex",             "sex",            "same"],
+  ["Nationality",     "nationality",    "same"],
+  ["Passport number", "docNumber",      "differ"],
+  ["Expiry date",     "expiry",         "differ"],
+  ["Personal number", "personalNumber", "either"]
+];
+
+const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3, info: 4, none: 5 };
+const SEVERITY_LABEL = {
+  critical: "Critical", high: "High", medium: "Medium", low: "Low", info: "Info", none: ""
+};
+
+function ds160Severity(label, row) {
+  if (row.cls === "match") return "none";
+  const lc = label.toLowerCase();
+  const critical = ["surname", "given name", "date of birth", "sex", "nationality",
+    "national identification", "passport/travel document number", "passport number"];
+  const high = ["marital status", "other names", "city of birth", "state/province of birth",
+    "country/region of birth", "full name in native", "passport expiration", "passport issuance",
+    "country/authority that issued", "purpose of trip"];
+  const medium = ["email address", "primary phone", "intended date of arrival",
+    "u.s. social security", "u.s. taxpayer", "passport book number"];
+  if (critical.some(f => lc.includes(f))) return "critical";
+  if (high.some(f => lc.includes(f))) return "high";
+  if (medium.some(f => lc.includes(f))) return "medium";
+  return "low";
+}
+
+function passportSeverity(label, row) {
+  if (row.cls === "match") return "none";
+  if (row.status === "Updated") return "info";
+  if (row.status === "Discrepancy") {
+    if (["Surname", "Given names", "Date of birth", "Sex", "Nationality"].includes(label))
+      return "critical";
+    if (label === "Issuing country") return "high";
+    return "high";
+  }
+  if (row.status === "Unchanged") return "medium";
+  if (row.status === "A only" || row.status === "B only") return "low";
+  return "low";
+}
+
+function attachSeverity(rows, kind) {
+  for (const row of rows) {
+    row.severity = kind === "ds160" ? ds160Severity(row.label, row)
+      : kind === "passport" ? passportSeverity(row.label, row) : "none";
+  }
+}
+
+function sortBySeverity(rows) {
+  return [...rows].sort((a, b) => {
+    const d = (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9);
+    return d || a.label.localeCompare(b.label);
+  });
+}
+
+function comparePassport(a, b) {
+  const pa = parseMRZ(a), pb = parseMRZ(b);
+  if (!pa || !pb) return { error: "Could not locate a valid MRZ on " +
+    (!pa ? "side A" : "side B") + ". Upload a clearer passport image or paste the MRZ lines." };
+  const rows = [];
+  let discrepancies = 0, consistent = 0;
+  for (const [label, key, expect] of PASSPORT_FIELDS) {
+    const av = pa[key] || "", bv = pb[key] || "";
+    if (!av && !bv) continue;
+    const eq = normEq(av, bv);
+    let status, cls;
+    if (expect === "same") {
+      if (eq) { status = "Match"; cls = "match"; consistent++; }
+      else    { status = "Discrepancy"; cls = "miss"; discrepancies++; }
+    } else if (expect === "differ") {
+      if (eq) { status = "Unchanged"; cls = "warn"; }
+      else    { status = "Updated"; cls = "info"; }
+    } else {
+      if (eq) { status = "Match"; cls = "match"; }
+      else    { status = "Changed"; cls = "info"; }
+    }
+    rows.push({ label, av, bv, status, cls });
+  }
+  attachSeverity(rows, "passport");
+  return { kind: "passport", rows, pa, pb, discrepancies, consistent,
+           diff: diffLines([pa.l1, pa.l2], [pb.l1, pb.l2]) };
+}
+
+function compareDS160(a, b) {
+  const fa = parseDS160(a.lines), fb = parseDS160(b.lines);
+  const keys = [...new Set([...Object.keys(fa), ...Object.keys(fb)])];
+  const rows = [];
+  let discrepancies = 0, consistent = 0;
+  for (const k of keys) {
+    const av = fa[k] || "", bv = fb[k] || "";
+    let status, cls;
+    if (av && bv) {
+      if (normEq(av, bv)) { status = "Match"; cls = "match"; consistent++; }
+      else { status = "Changed"; cls = "miss"; discrepancies++; }
+    } else if (av) { status = "A only"; cls = "warn"; discrepancies++; }
+    else { status = "B only"; cls = "warn"; discrepancies++; }
+    rows.push({ label: k, av, bv, status, cls });
+  }
+  attachSeverity(rows, "ds160");
+  rows.sort((x, y) => x.label.localeCompare(y.label));
+  return { kind: "ds160", rows, discrepancies, consistent,
+           diff: diffLines(a.lines, b.lines) };
+}
+
+function compareGeneral(a, b) {
+  const diff = diffLines(a.lines, b.lines);
+  const changes = diff.filter(d => d.t !== "same").length;
+  const sameCount = diff.filter(d => d.t === "same").length;
+  return { kind: "general", diff, discrepancies: changes, consistent: sameCount, rows: [] };
+}
+
+/* ============ run ============ */
+$("#runBtn").addEventListener("click", run);
+$("#demoBtn").addEventListener("click", showDemoReport);
+$("#resetBtn").addEventListener("click", () => location.reload());
+
+function showDemoReport() {
+  $("#log").innerHTML = "";
+  $("#log").classList.remove("show");
+  const demo = buildDemoComparison();
+  renderResults(demo.result, demo.a, demo.b, "ds160", false, true);
+  const steps = $$(".compare-steps span");
+  if (steps[2]) steps[2].classList.add("on");
+  log("Loaded sample DS-160 comparison (demo data).", "ok");
+  $("#log").classList.add("show");
+}
+
+function buildDemoComparison() {
+  const rows = [
+    { label: "Surname", av: "SHARMA", bv: "SHARMA", status: "Match", cls: "match" },
+    { label: "Given Name", av: "PRIYA ANIL", bv: "PRIYA A", status: "Changed", cls: "miss" },
+    { label: "Date of Birth", av: "1988-01-01", bv: "1988-01-01", status: "Match", cls: "match" },
+    { label: "Sex", av: "FEMALE", bv: "FEMALE", status: "Match", cls: "match" },
+    { label: "Nationality", av: "INDIA", bv: "INDIA", status: "Match", cls: "match" },
+    { label: "Passport Number", av: "Z1234567", bv: "Z7654321", status: "Changed", cls: "miss" },
+    { label: "Passport Expiration Date", av: "2030-01-01", bv: "2034-01-01", status: "Changed", cls: "miss" },
+    { label: "Email Address", av: "priya.old@gmail.com", bv: "priya.sharma@work.com", status: "Changed", cls: "miss" },
+    { label: "Primary Phone Number", av: "+91 98765 43210", bv: "+1 415 555 0199", status: "Changed", cls: "miss" },
+    { label: "Purpose of Trip to the U.S.", av: "TEMP. BUSINESS OR PLEASURE VISITOR (B)", bv: "TEMP. BUSINESS OR PLEASURE VISITOR (B)", status: "Match", cls: "match" },
+    { label: "Marital Status", av: "SINGLE", bv: "MARRIED", status: "Changed", cls: "miss" },
+    { label: "Intended Date of Arrival", av: "2024-06-15", bv: "2026-09-10", status: "Changed", cls: "miss" }
+  ];
+  attachSeverity(rows, "ds160");
+  let discrepancies = 0, consistent = 0;
+  for (const r of rows) {
+    if (r.cls === "match") consistent++;
+    else discrepancies++;
+  }
+  const diff = [
+    { t: "same", x: "Surnames: SHARMA" },
+    { t: "del", x: "Given Names: PRIYA ANIL" },
+    { t: "add", x: "Given Names: PRIYA A" },
+    { t: "same", x: "Date of Birth: 01 JAN 1988" },
+    { t: "del", x: "Passport Number: Z1234567" },
+    { t: "add", x: "Passport Number: Z7654321" },
+    { t: "del", x: "Email Address: priya.old@gmail.com" },
+    { t: "add", x: "Email Address: priya.sharma@work.com" },
+    { t: "del", x: "Marital Status: SINGLE" },
+    { t: "add", x: "Marital Status: MARRIED" }
+  ];
+  return {
+    a: { kind: "ds160", source: "sample-ds160-prior.pdf" },
+    b: { kind: "ds160", source: "sample-ds160-current.pdf" },
+    result: { kind: "ds160", rows, discrepancies, consistent, diff, demo: true }
+  };
+}
+
+async function run() {
+  const btn = $("#runBtn");
+  $("#log").innerHTML = ""; $("#log").classList.add("show");
+  $("#results").classList.remove("show");
+  btn.disabled = true; btn.textContent = "Working…";
+  try {
+    if (!window.pdfjsLib) throw new Error("PDF engine failed to load — check your internet connection and reload.");
+    log("Starting comparison…");
+    const a = await buildSide("A");
+    const b = await buildSide("B");
+    log(`Side A detected as: ${a.kind.toUpperCase()}`, "ok");
+    log(`Side B detected as: ${b.kind.toUpperCase()}`, "ok");
+
+    let kind = mode;
+    if (mode === "auto") {
+      kind = (a.kind === b.kind) ? a.kind : "general";
+    }
+    let result, typeMismatch = (a.kind !== b.kind);
+
+    if (kind === "passport")      result = comparePassport(a, b);
+    else if (kind === "ds160")    result = compareDS160(a, b);
+    else                          result = compareGeneral(a, b);
+
+    if (result.error) { log("! " + result.error, "err"); renderError(result.error); }
+    else {
+      renderResults(result, a, b, kind, typeMismatch && mode === "auto");
+      const steps = $$(".compare-steps span");
+      if (steps[2]) steps[2].classList.add("on");
+      log("Done.", "ok");
+    }
+  } catch (err) {
+    log("! " + err.message, "err");
+    renderError(err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Compare documents";
+  }
+}
+
+/* ============ render ============ */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+}
+
+const DS_GROUPS = {
+  "Identity & biographics": [
+    "Surname", "Given Name", "Full Name in Native Alphabet", "Other Names Used",
+    "Sex", "Marital Status", "Date of Birth", "City of Birth",
+    "State/Province of Birth", "Country/Region of Birth",
+    "Country/Region of Origin (Nationality)", "Nationality", "National Identification Number"
+  ],
+  "Passport & travel documents": [
+    "Passport/Travel Document Number", "Passport Number", "Passport Book Number",
+    "Country/Authority that Issued Passport/Travel Document",
+    "Passport Issuance Date", "Passport Expiration Date"
+  ],
+  "Contact & trip details": [
+    "Purpose of Trip to the U.S.", "Intended Date of Arrival",
+    "Email Address", "Primary Phone Number"
+  ],
+  "U.S. identifiers": [
+    "U.S. Social Security Number", "U.S. Taxpayer ID Number"
+  ]
+};
+
+function dsGroup(label) {
+  const lc = label.toLowerCase();
+  for (const [group, fields] of Object.entries(DS_GROUPS)) {
+    if (fields.some(f => lc === f.toLowerCase() || lc.startsWith(f.toLowerCase().replace(/s$/, ""))))
+      return group;
+  }
+  return "Other fields";
+}
+
+function rowNeedsReview(row) {
+  return row.cls === "miss" || row.cls === "warn";
+}
+
+function rowHint(row, kind) {
+  if (row.severity === "critical")
+    return "Critical — identity or passport data changed. Officers cross-check these fields against your documents; reconcile before your interview.";
+  if (row.severity === "high")
+    return "High priority — biographic or travel-document detail changed. Verify the current filing matches your supporting documents.";
+  if (row.severity === "medium")
+    return "Medium — contact or arrival details changed. Less likely to derail a case, but should still match what you plan to say at interview.";
+  if (row.severity === "info")
+    return "Expected change — this field typically updates between document versions (e.g. new passport number on renewal).";
+  if (kind === "ds160") {
+    if (row.status === "Changed")
+      return "This answer differs between filings. Confirm which version is correct before your interview.";
+    if (row.status === "A only")
+      return "Present in the prior filing but missing from the current one — it may have been cleared or not extracted.";
+    if (row.status === "B only")
+      return "Only appears in the current filing — new information or a newly detected field.";
+  }
+  if (kind === "passport") {
+    if (row.status === "Discrepancy")
+      return "Identity data should stay the same across passport renewals. A mismatch may indicate an OCR error.";
+    if (row.status === "Updated")
+      return "Expected to change when a passport is renewed (new number or expiry).";
+    if (row.status === "Unchanged")
+      return "Passport number or expiry matched the prior version — unusual for a renewal; double-check.";
+  }
+  return "";
+}
+
+function fcardClass(row) {
+  if (row.cls === "miss") return "issue";
+  if (row.cls === "match") return "match-card";
+  if (row.cls === "warn") return "warn-card";
+  return "info-card";
+}
+
+function fcardSevBorder(row) {
+  if (!rowNeedsReview(row) || !row.severity) return "";
+  if (["critical", "high", "medium"].includes(row.severity))
+    return ` sev-border-${row.severity}`;
+  return "";
+}
+
+function severityBadge(row) {
+  if (!row.severity || row.severity === "none") return "";
+  return `<span class="sev sev-${row.severity}">${SEVERITY_LABEL[row.severity]}</span>`;
+}
+
+function renderSeveritySummary(rows) {
+  const tiers = ["critical", "high", "medium", "low"];
+  const counts = {};
+  for (const row of rows.filter(rowNeedsReview))
+    counts[row.severity] = (counts[row.severity] || 0) + 1;
+  const pills = tiers.filter(t => counts[t]).map(t =>
+    `<span class="sev-pill"><span class="sev sev-${t}">${SEVERITY_LABEL[t]}</span> <b>${counts[t]}</b></span>`);
+  if (!pills.length) return "";
+  return `<div class="severity-summary">${pills.join("")}</div>`;
+}
+
+function consistencySvg(pct) {
+  const r = 36, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+  const col = pct >= 90 ? "var(--match)" : pct >= 70 ? "var(--warn)" : "var(--miss)";
+  return `<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--line-soft)" stroke-width="7"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="${col}" stroke-width="7"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 42 42)"/>
+  </svg>`;
+}
+
+function renderFieldCard(row, kind) {
+  const hint = rowHint(row, kind);
+  const av = row.av || "", bv = row.bv || "";
+  const changed = av && bv && !normEq(av, bv);
+  const avHtml = changed
+    ? `<span class="val-old">${escapeHtml(av)}</span>`
+    : (av ? escapeHtml(av) : `<span class="empty">Not found</span>`);
+  const bvHtml = changed
+    ? `<span class="val-new">${escapeHtml(bv)}</span>`
+    : (bv ? escapeHtml(bv) : `<span class="empty">Not found</span>`);
+  return `<article class="fcard ${fcardClass(row)}${fcardSevBorder(row)}" data-review="${rowNeedsReview(row)?"1":"0"}" data-match="${row.cls==="match"?"1":"0"}" data-severity="${row.severity||"none"}">
+    <div class="fcard-head">
+      <span class="fname">${escapeHtml(row.label)}</span>
+      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        ${severityBadge(row)}
+        <span class="pill ${row.cls}">${row.status}</span>
+      </span>
+    </div>
+    <div class="fcard-body">
+      <div class="fcard-col prior">
+        <div class="flbl">Prior filing</div>
+        <div class="fval ${av?"":"empty"}">${avHtml}</div>
+      </div>
+      <div class="fcard-col current">
+        <div class="flbl">Current filing</div>
+        <div class="fval ${bv?"":"empty"}">${bvHtml}</div>
+      </div>
+    </div>
+    ${hint ? `<div class="fcard-note">${hint}</div>` : ""}
+  </article>`;
+}
+
+function renderGroupedCards(rows, kind) {
+  const groups = {};
+  for (const row of rows) {
+    const g = kind === "ds160" ? dsGroup(row.label) : "All fields";
+    (groups[g] ||= []).push(row);
+  }
+  const order = kind === "ds160"
+    ? [...Object.keys(DS_GROUPS), "Other fields"]
+    : ["All fields"];
+  return order.filter(g => groups[g]?.length).map(g => `
+    <div class="field-group" data-group>
+      <div class="field-group-title">${escapeHtml(g)}</div>
+      <div class="field-cards">${sortBySeverity(groups[g]).map(r => renderFieldCard(r, kind)).join("")}</div>
+    </div>`).join("");
+}
+
+function renderError(msg) {
+  const r = $("#results");
+  r.classList.add("show");
+  r.innerHTML = `<div class="alertbar danger"><span>&#9888;</span><span>${escapeHtml(msg)}</span></div>`;
+}
+
+function diffHtml(diff) {
+  const sym = { same: " ", del: "\u2212", add: "+" };
+  return diff.map(d =>
+    `<div class="dl ${d.t}"><div class="gut">${sym[d.t]}</div>` +
+    `<div class="tx">${escapeHtml(d.x)}</div></div>`).join("");
+}
+
+function renderResults(res, a, b, kind, typeMismatch, isDemo) {
+  const r = $("#results");
+  const kindTag = { passport:"Passport ↔ Passport", ds160:"DS-160 ↔ DS-160",
+                    general:"Document ↔ Document" }[kind];
+
+  let html = "";
+  if (isDemo || res.demo) {
+    html += `<div class="demo-banner no-print"><span>&#9432;</span><span><b>Sample report</b> — fictional DS-160 data to preview the comparison UI. Upload your own Application PDFs for a real comparison; nothing is sent to any server.</span></div>`;
+  }
+
+  html += `
+    <div class="res-head">
+      <h2>Comparison report</h2>
+      <span class="doc-kind">${kindTag}</span>
+    </div>`;
+
+  const total = res.consistent + res.discrepancies;
+  const pct = total ? Math.round((res.consistent / total) * 100) : 100;
+  const isFieldCompare = kind === "passport" || kind === "ds160";
+  const issueRows = sortBySeverity((res.rows || []).filter(rowNeedsReview));
+  const matchRows = (res.rows || []).filter(row => row.cls === "match");
+  const criticalCount = issueRows.filter(row => row.severity === "critical").length;
+
+  if (isFieldCompare) {
+    let vCls, vIco, vTitle, vSub;
+    if (res.discrepancies === 0) {
+      vCls = "ok"; vIco = "✓";
+      vTitle = "All clear — no issues flagged";
+      vSub = `Every compared field ${kind === "passport" ? "that should stay consistent " : ""}matches between your prior and current ${kind === "ds160" ? "DS-160" : "passport"}. Still skim the full text diff below for anything the field parser may have missed.`;
+    } else if (criticalCount > 0) {
+      vCls = "alert"; vIco = "⚑";
+      vTitle = `${criticalCount} critical + ${Math.max(0, res.discrepancies - criticalCount)} other difference${res.discrepancies > 1 ? "s" : ""}`;
+      vSub = "Critical items are identity or passport fields that consular officers verify against your documents. Resolve these first, then review remaining changes.";
+    } else if (res.discrepancies <= 2) {
+      vCls = "warn"; vIco = "!";
+      vTitle = `${res.discrepancies} item${res.discrepancies > 1 ? "s" : ""} to review`;
+      vSub = "A small number of differences were found. Walk through each one below and confirm the current filing reflects what you intend to tell the consular officer.";
+    } else {
+      vCls = "alert"; vIco = "⚑";
+      vTitle = `${res.discrepancies} differences need your attention`;
+      vSub = "Multiple fields don't match between versions. Inconsistencies between a prior DS-160 and a refile are a common interview question — resolve each item before submitting or attending your appointment.";
+    }
+    html += `<div class="verdict ${vCls}">
+      <div class="v-ico">${vIco}</div>
+      <div class="v-body">
+        <div class="v-title">${vTitle}</div>
+        <div class="v-sub">${vSub}</div>
+        ${issueRows.length ? `<div class="v-chips">${issueRows.slice(0, 6).map(row =>
+          `<span class="v-chip">${escapeHtml(row.label)}</span>`).join("")}${issueRows.length > 6 ? `<span class="v-chip">+${issueRows.length - 6} more</span>` : ""}</div>` : ""}
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="verdict ${res.discrepancies ? "warn" : "ok"}">
+      <div class="v-ico">${res.discrepancies ? "≈" : "✓"}</div>
+      <div class="v-body">
+        <div class="v-title">${res.discrepancies ? `${res.discrepancies} line${res.discrepancies > 1 ? "s" : ""} differ` : "Documents appear identical"}</div>
+        <div class="v-sub">Line-by-line text comparison of both documents. Use the diff view below to see exactly what changed.</div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="summary-v2">
+    <div class="summary-stats">
+      <div class="stat"><div class="num">${total}</div><div class="cap">${isFieldCompare ? "Fields compared" : "Lines analysed"}</div></div>
+      <div class="stat good"><div class="num">${res.consistent}</div><div class="cap">${isFieldCompare ? "Matching" : "Unchanged"}</div></div>
+      <div class="stat ${res.discrepancies ? "bad" : ""}"><div class="num">${res.discrepancies}</div><div class="cap">${isFieldCompare ? "To review" : "Different"}</div></div>
+    </div>
+    ${isFieldCompare ? `<div class="consistency-ring">${consistencySvg(pct)}<div class="pct">${pct}%</div><div class="lbl">Consistent</div></div>` : ""}
+  </div>`;
+
+  if (isFieldCompare && issueRows.length)
+    html += renderSeveritySummary(issueRows);
+
+  if (typeMismatch) {
+    html += `<div class="alertbar note"><span>&#9888;</span><span>These look like <b>different document types</b> (${a.kind.toUpperCase()} vs ${b.kind.toUpperCase()}). Showing a general text comparison — select DS-160 or Passport above if that's incorrect.</span></div>`;
+  }
+
+  if (kind === "passport") {
+    html += `<div class="block"><h3>MRZ integrity check</h3>
+      <div class="desc">ICAO check digits confirm the machine-readable zone was read correctly. A failed check usually means an OCR misread — re-paste the MRZ lines for best accuracy.</div>`;
+    for (const [side, p] of [["Prior", res.pa], ["Current", res.pb]]) {
+      html += `<div style="margin-bottom:8px"><b style="font-size:.85rem">${side} passport</b><div class="checks">`;
+      for (const [name, ok] of Object.entries(p.checks))
+        html += `<span class="chk ${ok?"pass":"fail"}">${ok?"\u2713":"\u2717"} ${name}</span>`;
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (res.rows && res.rows.length) {
+    const title = kind === "passport" ? "Passport fields" : "DS-160 key fields";
+    const desc = kind === "passport"
+      ? "Side-by-side view of identity and document data. Name and date of birth should match; passport number and expiry typically change on renewal."
+      : "Important answers extracted from both DS-160 printouts. Focus on items flagged for review first — the full text diff below catches everything else.";
+
+    if (issueRows.length) {
+      html += `<div class="review-list">
+        <h4>Quick review checklist — sorted by severity</h4>
+        <ul>${issueRows.map(row => `<li class="sev-${row.severity}">${severityBadge(row)} ${escapeHtml(row.label)} — ${escapeHtml(row.status)}</li>`).join("")}</ul>
+      </div>`;
+    }
+
+    html += `<div class="block"><h3>${title}</h3><div class="desc">${desc}</div>
+      <div class="legend" style="margin-top:0;margin-bottom:14px">
+        <span><span class="sev sev-critical">Critical</span> identity / passport</span>
+        <span><span class="sev sev-high">High</span> biographics / travel docs</span>
+        <span><span class="sev sev-medium">Medium</span> contact / dates</span>
+        <span><span class="sev sev-low">Low</span> other</span>
+      </div>
+      <div class="res-toolbar no-print">
+        <div class="res-filters" id="resFilters">
+          <button type="button" data-filter="review" class="on">Needs review <span class="ct">(${issueRows.length})</span></button>
+          <button type="button" data-filter="match">Matches <span class="ct">(${matchRows.length})</span></button>
+          <button type="button" data-filter="all">All <span class="ct">(${res.rows.length})</span></button>
+        </div>
+        <div class="view-toggle">
+          <label><input type="checkbox" id="tableViewToggle"> Show table view</label>
+        </div>
+      </div>
+      <div class="field-cards-view" id="cardsView">`;
+
+    if (issueRows.length) {
+      html += renderGroupedCards(issueRows, kind);
+    } else {
+      html += `<p class="empty-note" style="margin-bottom:14px">No differences in detected fields — expand Matches below or check the full text diff.</p>`;
+    }
+
+    if (matchRows.length) {
+      html += `<details class="match-panel" ${issueRows.length ? "" : "open"}>
+        <summary><span class="cnt">${matchRows.length}</span> Consistent fields — click to expand</summary>
+        <div class="match-inner">${renderGroupedCards(matchRows, kind)}</div>
+      </details>`;
+    }
+
+    html += `</div>
+      <div class="cmp-table-wrap" id="cmpTableWrap">
+        <table class="cmp"><thead><tr>
+          <th>Severity</th><th>Field</th><th>Prior filing</th><th>Current filing</th><th>Status</th>
+        </tr></thead><tbody>`;
+    for (const row of res.rows) {
+      const rowCls = row.cls === "miss" ? "row-miss" : (row.cls === "match" ? "row-match" : "");
+      html += `<tr class="${rowCls}" data-review="${rowNeedsReview(row)?"1":"0"}" data-match="${row.cls==="match"?"1":"0"}">
+        <td class="sev-col">${severityBadge(row) || "—"}</td>
+        <td class="field">${escapeHtml(row.label)}</td>
+        <td class="val ${row.av?"":"empty"}">${escapeHtml(row.av || "—")}</td>
+        <td class="val ${row.bv?"":"empty"}">${escapeHtml(row.bv || "—")}</td>
+        <td><span class="pill ${row.cls}">${row.status}</span></td>
+      </tr>`;
+    }
+    html += `</tbody></table></div></div>`;
+  } else if (kind === "ds160") {
+    html += `<div class="block"><h3>DS-160 key fields</h3>
+      <p class="empty-note">No standard DS-160 labels were detected — use the full <i>Application</i> printout PDF (not the one-page confirmation). The full text diff below still shows every line change.</p></div>`;
+  }
+
+  const diffTitle = kind === "passport" ? "MRZ line comparison" : "Full text diff";
+  const diffDesc = kind === "passport"
+    ? "Raw machine-readable zone lines. Red = prior version, green = current."
+    : "Every line from both documents. Red lines were removed or changed; green lines were added or changed. This catches fields the summary may miss.";
+  html += `<div class="block"><h3>${diffTitle}</h3>
+    <div class="desc">${diffDesc}</div>
+    <div class="diffctl no-print">
+      <label><input type="checkbox" id="hideSame" checked> Show only differences</label>
+    </div>
+    <div class="diff hidesame" id="diffView">${diffHtml(res.diff)}</div></div>`;
+
+  html += `<div class="actions no-print">
+      <button class="btn sm" id="printBtn">Print / Save as PDF</button>
+      <button class="btn ghost sm" id="dlBtn">Download report (HTML)</button>
+    </div>`;
+
+  r.innerHTML = html;
+  r.classList.add("show");
+
+  $("#hideSame").addEventListener("change", e =>
+    $("#diffView").classList.toggle("hidesame", e.target.checked));
+
+  const applyFilter = (mode) => {
+    $$("#resFilters button").forEach(b => b.classList.toggle("on", b.dataset.filter === mode));
+    const show = el => {
+      if (mode === "all") return true;
+      if (mode === "review") return el.dataset.review === "1";
+      return el.dataset.match === "1";
+    };
+    $$("#cardsView .fcard").forEach(c => { c.style.display = show(c) ? "" : "none"; });
+    $$("#cardsView .field-group").forEach(g => {
+      const vis = [...g.querySelectorAll(".fcard")].some(c => c.style.display !== "none");
+      g.style.display = vis ? "" : "none";
+    });
+    $$("#cmpTableWrap tr[data-review]").forEach(tr => { tr.style.display = show(tr) ? "" : "none"; });
+    const mp = $(".match-panel");
+    if (mp) mp.open = mode === "all" || mode === "match";
+  };
+
+  const filters = $("#resFilters");
+  if (filters) {
+    filters.addEventListener("click", e => {
+      const b = e.target.closest("button[data-filter]");
+      if (b) applyFilter(b.dataset.filter);
+    });
+    applyFilter(issueRows.length ? "review" : "all");
+  }
+
+  const tableToggle = $("#tableViewToggle");
+  if (tableToggle) {
+    tableToggle.addEventListener("change", e => {
+      $("#cmpTableWrap").classList.toggle("show-table", e.target.checked);
+    });
+  }
+
+  $("#printBtn").addEventListener("click", () => window.print());
+  $("#dlBtn").addEventListener("click", () => downloadReport(r));
+
+  r.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function downloadReport(node) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  clone.querySelectorAll(".diff").forEach(n => n.classList.remove("hidesame"));
+  const css = document.querySelector("style").innerHTML;
+  const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>VisaDash report ${stamp}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>${css}</style></head>
+    <body><div class="wrap"><div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#8b8a7d;margin-bottom:14px">VISADASH COMPARISON REPORT &middot; GENERATED ${stamp}</div>
+    ${clone.innerHTML}</div></body></html>`;
+  const blob = new Blob([doc], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `visadash-report-${stamp.replace(/[: ]/g, "-")}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+<!-- ════════════════ VisaDash hub: tabs + data tools ════════════════ -->
+<script>
+"use strict";
+(function(){
+  const qs  = (s,r=document)=>r.querySelector(s);
+  const qsa = (s,r=document)=>[...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const money = n => "$"+Math.round(n).toLocaleString("en-US");
+
+  /* ---------------- embedded data (periodic snapshots, on-device) ---------------- */
+  const VB_MONTHS = [
+    { label:"June 2026", eb:{
+      EB1:{All:"C",China:"2023-04-01",India:"2022-12-15",Mexico:"C",Philippines:"C"},
+      EB2:{All:"C",China:"2021-09-01",India:"2013-09-01",Mexico:"C",Philippines:"C"},
+      EB3:{All:"2024-06-01",China:"2021-08-01",India:"2013-12-15",Mexico:"2024-06-01",Philippines:"2023-08-01"}
+    }},
+    { label:"July 2026", eb:{
+      EB1:{All:"C",China:"2023-06-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
+      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
+      EB3:{All:"2024-08-01",China:"2021-12-22",India:"2014-01-01",Mexico:"2024-08-01",Philippines:"2023-08-01"}
+    }},
+    { label:"August 2026", eb:{
+      EB1:{All:"C",China:"2023-07-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
+      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
+      EB3:{All:"2024-09-01",China:"2022-01-01",India:"2014-01-01",Mexico:"2024-09-01",Philippines:"2023-08-01"}
+    }}
+  ];
+  const BULLETIN = {
+    month:"August 2026", fetched:"2026-08-28", source:"travel.state.gov",
+    months: VB_MONTHS,
+    eb: VB_MONTHS[2].eb
+  };
+  const PT_FETCHED="2026-03-18", PT_SOURCE="egov.uscis.gov/processing-times";
+  const PROCESSING = {"I-129_WAC":{form:"I-129",center:"WAC",median_months:4.2,p75_months:6.1,p90_months:8.4,recent_approvals:847},"I-129_LIN":{form:"I-129",center:"LIN",median_months:3.8,p75_months:5.6,p90_months:7.2,recent_approvals:1203},"I-129_VSC":{form:"I-129",center:"VSC",median_months:4.6,p75_months:6.4,p90_months:8.9,recent_approvals:621},"I-129_EAC":{form:"I-129",center:"EAC",median_months:3.2,p75_months:4.8,p90_months:6.5,recent_approvals:982},"I-140_WAC":{form:"I-140",center:"WAC",median_months:6.2,p75_months:9.1,p90_months:14.3,recent_approvals:412},"I-140_VSC":{form:"I-140",center:"VSC",median_months:5.8,p75_months:8.4,p90_months:12.1,recent_approvals:389},"I-765_NBC":{form:"I-765",center:"NBC",median_months:3.1,p75_months:4.2,p90_months:5.8,recent_approvals:2841},"I-485_NBC":{form:"I-485",center:"NBC",median_months:18.4,p75_months:24.2,p90_months:36.1,recent_approvals:1204}};
+  const FORM_LABEL = {"I-129":"I-129 — Nonimmigrant worker (H-1B/L/O/etc.)","I-140":"I-140 — Immigrant petition (EB green card)","I-485":"I-485 — Adjustment of status","I-765":"I-765 — Employment authorization (EAD)"};
+  const CENTER_LABEL = {WAC:"WAC — California (CSC)",LIN:"LIN — Nebraska (NSC)",VSC:"VSC — Vermont (VSC)",EAC:"EAC — Vermont (EAC)",NBC:"NBC — National Benefits Center"};
+
+  const WG_FETCHED="2026-03-18", WG_SOURCE="DOL OFLC LCA Disclosure Data FY2025 Q4";
+  const SOC_TITLES={"15-1252":"Software Developers & Engineers","15-1211":"Computer Systems Analysts","15-2051":"Data Scientists"};
+  const WAGES=[{soc:"15-1252",state:"TX",level:"I",wage:78540},{soc:"15-1252",state:"TX",level:"II",wage:98000},{soc:"15-1252",state:"TX",level:"III",wage:112847},{soc:"15-1252",state:"TX",level:"IV",wage:138290},{soc:"15-1252",state:"CA",level:"I",wage:112000},{soc:"15-1252",state:"CA",level:"II",wage:142000},{soc:"15-1252",state:"CA",level:"III",wage:172500},{soc:"15-1252",state:"CA",level:"IV",wage:215000},{soc:"15-1252",state:"NY",level:"I",wage:98000},{soc:"15-1252",state:"NY",level:"II",wage:122000},{soc:"15-1252",state:"NY",level:"III",wage:148000},{soc:"15-1252",state:"NY",level:"IV",wage:182000},{soc:"15-1252",state:"WA",level:"I",wage:105000},{soc:"15-1252",state:"WA",level:"II",wage:130000},{soc:"15-1252",state:"WA",level:"III",wage:158000},{soc:"15-1252",state:"WA",level:"IV",wage:195000},{soc:"15-1211",state:"TX",level:"I",wage:72100},{soc:"15-1211",state:"TX",level:"II",wage:89400},{soc:"15-1211",state:"TX",level:"III",wage:104200},{soc:"15-1211",state:"TX",level:"IV",wage:126800},{soc:"15-2051",state:"TX",level:"I",wage:82000},{soc:"15-2051",state:"TX",level:"II",wage:104000},{soc:"15-2051",state:"TX",level:"III",wage:124000},{soc:"15-2051",state:"TX",level:"IV",wage:152000}];
+  const EMPLOYERS=[{name:"AMAZON.COM SERVICES LLC",total:13670,rate:88.4,grade:"B",state:"WA",dep:false},{name:"INFOSYS LIMITED",total:12480,rate:85.2,grade:"B",state:"TX",dep:true},{name:"TATA CONSULTANCY SERVICES",total:11500,rate:84.0,grade:"B",state:"NJ",dep:true},{name:"GOOGLE LLC",total:10842,rate:97.8,grade:"A",state:"CA",dep:false},{name:"COGNIZANT TECHNOLOGY SOLUTIONS",total:9840,rate:83.1,grade:"B",state:"NJ",dep:true},{name:"MICROSOFT CORPORATION",total:9410,rate:96.2,grade:"A",state:"WA",dep:false},{name:"WIPRO LIMITED",total:9320,rate:82.4,grade:"B-",state:"CA",dep:true},{name:"META PLATFORMS INC",total:7900,rate:96.0,grade:"A",state:"CA",dep:false},{name:"HCL AMERICA INC",total:7290,rate:83.8,grade:"B",state:"TX",dep:true},{name:"APPLE INC",total:7040,rate:96.5,grade:"A+",state:"CA",dep:false},{name:"ERNST & YOUNG LLP",total:6400,rate:88.1,grade:"B+",state:"NY",dep:false},{name:"DELOITTE CONSULTING LLP",total:6380,rate:88.5,grade:"B+",state:"NY",dep:false},{name:"DELL TECHNOLOGIES INC",total:4970,rate:93.2,grade:"A-",state:"TX",dep:false},{name:"JPMORGAN CHASE BANK",total:4640,rate:93.1,grade:"A-",state:"NY",dep:false},{name:"SALESFORCE INC",total:3824,rate:94.8,grade:"A",state:"CA",dep:false}];
+
+  const GUIDES=[
+    {code:"DS-160",name:"Online Nonimmigrant Visa Application",who:"Visa applicants abroad",
+     purpose:"The form every nonimmigrant visa applicant completes online before a U.S. consular interview (H-1B, F-1, B-1/B-2, etc.). Generates the barcode confirmation page you bring to the interview.",
+     fields:["Use your name <b>exactly</b> as printed in your passport — same spelling, same order.","List <b>every</b> country you've visited in the last five years, and all prior U.S. visits and visas.","Travel/contact, work and education history must line up with your résumé and prior filings.","Social-media handles are required — list the accounts you actually use."],
+     mistakes:["Misspelling your name or transposing given/surname vs. the passport.","Leaving the SEVIS/petition receipt number blank or mistyped for petition-based visas.","Forgetting a short trip or a previously refused visa — both are asked and are checkable."],
+     docs:["Passport (valid 6+ months)","Petition receipt (I-797) or SEVIS I-20/DS-2019 if applicable","Travel dates & U.S. point-of-contact","Employment and education history"],
+     tip:"Print the full <i>Application</i> PDF from the review screen, not just the one-page confirmation. Run two versions through the <b>DS-160 Comparison Tool</b> tab to catch any drift between a prior filing and a refile."},
+    {code:"I-129",name:"Petition for a Nonimmigrant Worker",who:"U.S. employers",
+     purpose:"Employer-filed petition to classify a worker in H-1B, L-1, O-1, TN and similar categories. The H-1B version requires a certified LCA first.",
+     fields:["Job title, SOC code and worksite must match the certified LCA exactly.","Offered wage must be at or above the prevailing wage for that SOC, area and level.","Beneficiary's name and dates of birth must match the passport and prior I-94s."],
+     mistakes:["Filing before the LCA is certified, or with an LCA wage level below prevailing.","Worksite address on the petition not matching the LCA.","Specialty-occupation argument that doesn't tie the degree to the duties."],
+     docs:["Certified LCA (ETA-9035)","Beneficiary's degree/credential evaluation","Detailed job description & itinerary","Company financials / ability to pay"],
+     tip:"Check the offer against the <b>Wages &amp; Sponsors</b> tab before filing — a wage below the prevailing level is the most common avoidable RFE."},
+    {code:"I-140",name:"Immigrant Petition for Alien Worker",who:"Employers (EB-1/2/3)",
+     purpose:"Establishes the employment-based green-card category (EB-1/2/3). For PERM-based cases it follows a certified labor certification and sets your priority date.",
+     fields:["Priority date = PERM filing date (or I-140 receipt for categories without PERM). Track it on the <b>Visa Bulletin</b> tab.","Job requirements must match the PERM exactly.","Ability-to-pay evidence must cover from the priority date forward."],
+     mistakes:["Education/experience that doesn't meet the PERM minimum requirements.","Switching the offered position or worksite from the PERM without explanation."],
+     docs:["Approved PERM (ETA-9089) where required","Degrees, transcripts, experience letters","Employer's tax returns / audited financials"],
+     tip:"Your priority date controls everything downstream — note it the day the I-140 is filed and watch it against the bulletin."},
+    {code:"I-485",name:"Application to Register Permanent Residence",who:"Applicants in the U.S.",
+     purpose:"Adjusts status to lawful permanent resident without leaving the U.S. Can only be filed when a visa number is available for your category and priority date.",
+     fields:["Confirm your priority date is current on the bulletin's <i>Dates for Filing</i> chart before filing.","Address and immigration history must be complete and consistent across all I-485 sections.","Medical exam (I-693) should be signed and sealed by a civil surgeon."],
+     mistakes:["Filing when the category is retrogressed and no number is available.","Gaps or inconsistencies in the 5-year address/employment history.","Letting underlying nonimmigrant status lapse before AOS is filed (non-214(b) cases)."],
+     docs:["I-797 approval for the underlying I-140/I-130","Sealed I-693 medical exam","Birth certificate + certified translation","Two passport photos, I-94, EAD/AP if applicable"],
+     tip:"You can usually file I-765 (EAD) and I-131 (Advance Parole) together with the I-485 — bundle them to get a work/travel document while you wait."},
+    {code:"I-130",name:"Petition for Alien Relative",who:"U.S. citizens / residents",
+     purpose:"Establishes a qualifying family relationship (spouse, child, parent, sibling) so the relative can pursue a green card.",
+     fields:["Relationship evidence must be specific — marriage certificate, joint accounts, birth records.","Petitioner's status (USC vs. LPR) decides the category and the wait.","Beneficiary's biographic details must match their passport/birth certificate."],
+     mistakes:["Thin marriage evidence in bona-fides — one document instead of a pattern over time.","Mismatched names across the marriage certificate, passport and prior filings."],
+     docs:["Proof of petitioner's citizenship/residency","Marriage or birth certificates establishing the relationship","Bona-fide-relationship evidence (for spouses)"],
+     tip:"For spouse cases, build the bona-fides file from day one — joint lease, accounts, photos over time beat a last-minute stack."},
+    {code:"N-400",name:"Application for Naturalization",who:"Eligible green-card holders",
+     purpose:"Application to become a U.S. citizen, generally after 5 years as a permanent resident (3 if married to a U.S. citizen).",
+     fields:["Confirm continuous residence and physical-presence day counts before filing.","Disclose every trip outside the U.S. of 24 hours or more.","Answer the good-moral-character questions honestly — omissions are the real risk."],
+     mistakes:["A single trip of 6+ months that breaks continuous residence, filed too early.","Unpaid taxes, unreported arrests, or missed selective-service registration left undisclosed."],
+     docs:["Green card (both sides)","Travel history for the statutory period","Tax transcripts","Records for any citations/arrests, if any"],
+     tip:"Count your physical-presence days carefully — applying even a few weeks early on the residence requirement gets the case denied."}
+  ];
+
+  /* ---------------- tab routing ---------------- */
+  const TABS=["compare","guides","bulletin","processing","wages"];
+  function showTab(name,push){
+    if(!TABS.includes(name)) name="compare";
+    qsa("#tabnav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===name));
+    qsa(".tab").forEach(s=>s.classList.toggle("active",s.id==="tab-"+name));
+    try{localStorage.setItem("vd_tab",name);}catch(e){}
+    if(push && location.hash!=="#"+name && location.hash!=="#demo") history.replaceState(null,"","#"+name);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  qs("#tabnav").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-tab]"); if(!b) return;
+    showTab(b.dataset.tab,true);
+  });
+  const homeLink=qs("#homeLink");
+  if(homeLink){
+    homeLink.addEventListener("click",e=>{
+      e.preventDefault();
+      if(location.hash==="#demo" && typeof showDemoReport==="function"){
+        $("#results").classList.remove("show");
+        $("#results").innerHTML="";
+      }
+      showTab("compare",false);
+      history.replaceState(null,"","/");
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  }
+  window.addEventListener("hashchange",()=>{
+    showTab(location.hash.slice(1).replace(/^demo$/,"compare"),false);
+    if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
+  });
+
+  /* ---------------- Form guides ---------------- */
+  function renderGuides(){
+    qs("#guides-list").innerHTML = GUIDES.map(g=>`
+      <details class="acc">
+        <summary>
+          <span class="form-code">${esc(g.code)}</span>
+          <span class="form-name">${esc(g.name)}</span>
+          <span class="form-for">${esc(g.who)}</span>
+        </summary>
+        <div class="body">
+          <p>${g.purpose}</p>
+          <h4>Key fields to get right</h4>
+          <ul>${g.fields.map(f=>`<li>${f}</li>`).join("")}</ul>
+          <h4>Common mistakes</h4>
+          <ul>${g.mistakes.map(m=>`<li class="warn">${m}</li>`).join("")}</ul>
+          <h4>Documents to have ready</h4>
+          <ul>${g.docs.map(d=>`<li class="ok">${esc(d)}</li>`).join("")}</ul>
+          <div class="tip"><b>Tip.</b> ${g.tip}</div>
+        </div>
+      </details>`).join("");
+  }
+
+  /* ---------------- Visa Bulletin ---------------- */
+  const COUNTRIES=["All","China","India","Mexico","Philippines"];
+  function fmtDate(s){
+    if(s==="C") return "Current";
+    if(s==="U") return "Unavailable";
+    const d=new Date(s+"T00:00:00");
+    return d.toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});
+  }
+  function cutoffRank(v){
+    if(v==="U") return -2;
+    if(v==="C") return 1e15;
+    return new Date(v+"T00:00:00").getTime();
+  }
+  function movementLabel(from, to){
+    if(from===to) return {text:"No change", cls:"neutral"};
+    if(to==="U") return from==="U" ? {text:"Still unavailable", cls:"neutral"} : {text:"Became unavailable", cls:"bad"};
+    if(from==="U") return {text:"Reopened", cls:"good"};
+    if(from==="C" && to!=="C") return {text:"Retrogressed from current", cls:"bad"};
+    if(to==="C") return {text:"Advanced to current", cls:"good"};
+    const days=Math.round((cutoffRank(to)-cutoffRank(from))/86400000);
+    if(days>0){
+      const mo=Math.abs(days/30.4);
+      const t=mo>=1.8 ? `+${mo.toFixed(1)} mo` : `+${Math.round(days/7)} wk`;
+      return {text:t, cls:"good"};
+    }
+    if(days<0){
+      const mo=Math.abs(days/30.4);
+      const t=mo>=1.8 ? `${mo.toFixed(1)} mo back` : `${Math.round(Math.abs(days)/7)} wk back`;
+      return {text:t, cls:"bad"};
+    }
+    return {text:"No change", cls:"neutral"};
+  }
+  function cellClass(from, to){
+    if(from===to) return "";
+    if(to==="U" || (from==="C" && to!=="C")) return "cell-retro";
+    if(to==="C" || (from==="U" && to!=="U")) return "cell-advance";
+    const r=cutoffRank(to)-cutoffRank(from);
+    return r>0 ? "cell-advance" : r<0 ? "cell-retro" : "";
+  }
+  function renderBulletinCompare(){
+    const el=qs("#vb-compare");
+    if(!el) return;
+    const months=BULLETIN.months;
+    if(!months || months.length<2){
+      el.innerHTML=`<tbody><tr><td colspan="6" style="color:var(--ink-faint);font-style:italic;padding:16px">Comparison data is loading…</td></tr></tbody>`;
+      return;
+    }
+    let h=`<colgroup>
+      <col style="width:52px"><col style="width:88px">
+      <col style="width:108px"><col style="width:108px"><col style="width:108px">
+      <col style="width:128px"></colgroup>
+      <thead><tr><th>Cat.</th><th>Country</th>`;
+    months.forEach(m=>{ h+=`<th class="num">${esc(m.label.replace(" 2026",""))}&nbsp;'26</th>`; });
+    h+=`<th>Jun &rarr; Aug</th></tr></thead><tbody>`;
+    for(const cat of ["EB1","EB2","EB3"]){
+      for(const country of COUNTRIES){
+        const vals=months.map(m=>m.eb[cat][country]);
+        const mov=movementLabel(vals[0], vals[vals.length-1]);
+        h+=`<tr><td><b>${cat}</b></td><td>${country}</td>`;
+        vals.forEach((v,i)=>{
+          const cls=["num"];
+          if(v==="U") cls.push("cell-u");
+          else if(i>0) { const cc=cellClass(vals[i-1], v); if(cc) cls.push(cc); }
+          const inner=v==="C"?'<span class="grade A" style="min-width:auto">C</span>':v==="U"?"U":fmtDate(v);
+          h+=`<td class="${cls.join(" ")}">${inner}</td>`;
+        });
+        h+=`<td class="mov ${mov.cls}">${esc(mov.text)}</td></tr>`;
+      }
+    }
+    el.innerHTML=h+"</tbody>";
+  }
+  function computeMovement(){
+    const first=BULLETIN.months[0], last=BULLETIN.months[BULLETIN.months.length-1];
+    const out=[];
+    for(const cat of ["EB1","EB2","EB3"]){
+      for(const c of ["China","India"]){
+        const from=first.eb[cat][c], to=last.eb[cat][c];
+        const mov=movementLabel(from,to);
+        if(mov.text!=="No change") out.push([`${cat} · ${c}`, mov.text, mov.cls]);
+      }
+    }
+    return out;
+  }
+  function renderBulletin(){
+    qs("#bulletin-fresh").innerHTML=`<span class="dot"></span> ${BULLETIN.month} Visa Bulletin &middot; snapshot ${BULLETIN.fetched} &middot; source: ${BULLETIN.source}`;
+    let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th class="num">${c}</th>`).join("")}</tr></thead><tbody>`;
+    for(const cat of ["EB1","EB2","EB3"]){
+      h+=`<tr><td><b>${cat}</b></td>`+COUNTRIES.map(c=>{
+        const v=BULLETIN.eb[cat][c];
+        return v==="C"
+          ? `<td class="num"><span class="grade A" style="min-width:auto">C</span></td>`
+          : v==="U"
+          ? `<td class="num cell-u"><b>U</b></td>`
+          : `<td class="num">${fmtDate(v)}</td>`;
+      }).join("")+`</tr>`;
+    }
+    qs("#vb-table").innerHTML=h+"</tbody>";
+    renderBulletinCompare();
+    const moves=computeMovement();
+    qs("#vb-movement").innerHTML=`<h3 class="secTitle">Jun → Aug highlights</h3>
+      <p class="secSub">Biggest shifts for India and China chargeability over the last three bulletins.</p>
+      <div class="cards">`+(moves.length?moves.map(([k,v,cls])=>
+        `<div class="mini"><div class="k">${esc(k)}</div><div class="v ${cls==="good"?"good":cls==="bad"?"bad":"warn"}">${esc(v)}</div></div>`
+      ).join(""):`<div class="mini"><div class="k">All tracked rows</div><div class="v warn">No change</div><div class="n">Cutoffs unchanged Jun–Aug for India/China EB rows shown above.</div></div>`)+`</div>`;
+  }
+  function checkCurrent(){
+    const cat=qs("#vb-cat").value, country=qs("#vb-country").value, pd=qs("#vb-pd").value;
+    const out=qs("#vb-result");
+    if(!pd){ out.innerHTML=""; return; }
+    const cutoff=BULLETIN.eb[cat][country];
+    const pdDate=new Date(pd+"T00:00:00");
+    let cls,big,sub;
+    if(cutoff==="C"){
+      cls="safe"; big="Current ✓";
+      sub=`${cat} for ${country} is <b>current</b> — a visa number is available regardless of your priority date.`;
+    } else if(cutoff==="U"){
+      cls="danger"; big="Unavailable";
+      sub=`${cat} for ${country} is <b>unavailable</b> this month — no immigrant visas are being issued in this category (common for India EB-2 near fiscal year-end). Expect a reset when the new fiscal year begins in October.`;
+    } else {
+      const cut=new Date(cutoff+"T00:00:00");
+      if(pdDate < cut){
+        cls="safe"; big="You're current ✓";
+        sub=`Your priority date (${fmtDate(pd)}) is <b>earlier</b> than the ${cat} · ${country} cutoff of <b>${fmtDate(cutoff)}</b> — a number is available this month.`;
+      } else {
+        const days=Math.round((pdDate-cut)/86400000);
+        cls="danger"; big="Not yet";
+        sub=`Your priority date (${fmtDate(pd)}) is <b>${days.toLocaleString()} days after</b> the ${cat} · ${country} cutoff of <b>${fmtDate(cutoff)}</b>. Keep watching — the cutoff moves forward over time.`;
+      }
+    }
+    out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${cat} · ${country}</div><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
+  }
+
+  /* ---------------- Processing times ---------------- */
+  function months(n){ return n>=12 ? (n/12).toFixed(1)+" yr" : n+" mo"; }
+  function renderProcessing(){
+    qs("#pt-fresh").innerHTML=`<span class="dot"></span> Snapshot ${PT_FETCHED} &middot; source: ${PT_SOURCE}`;
+    const forms=[...new Set(Object.values(PROCESSING).map(p=>p.form))];
+    qs("#pt-form").innerHTML=forms.map(f=>`<option value="${f}">${esc(FORM_LABEL[f]||f)}</option>`).join("");
+    syncCenters();
+    qs("#pt-form").addEventListener("change",()=>{syncCenters();ptEstimate();});
+    qs("#pt-center").addEventListener("change",ptEstimate);
+    // table
+    let h=`<thead><tr><th>Form</th><th>Center</th><th class="num">Median</th><th class="num">75%</th><th class="num">90%</th><th class="num">Recent approvals</th></tr></thead><tbody>`;
+    h+=Object.values(PROCESSING).map(p=>`<tr><td><b>${p.form}</b></td><td>${p.center}</td><td class="num">${months(p.median_months)}</td><td class="num">${months(p.p75_months)}</td><td class="num">${months(p.p90_months)}</td><td class="num">${p.recent_approvals.toLocaleString()}</td></tr>`).join("");
+    qs("#pt-table").innerHTML=h+"</tbody>";
+    ptEstimate();
+  }
+  function syncCenters(){
+    const form=qs("#pt-form").value;
+    const centers=Object.values(PROCESSING).filter(p=>p.form===form).map(p=>p.center);
+    qs("#pt-center").innerHTML=centers.map(c=>`<option value="${c}">${esc(CENTER_LABEL[c]||c)}</option>`).join("");
+  }
+  function ptEstimate(){
+    const form=qs("#pt-form").value, center=qs("#pt-center").value;
+    const p=PROCESSING[form+"_"+center]; if(!p){qs("#pt-result").innerHTML="";return;}
+    qs("#pt-result").innerHTML=`<div class="callout"><div class="lbl">${p.form} · ${p.center}</div>
+      <div class="big">${months(p.median_months)} <span style="font-size:.7em;color:var(--ink-faint)">typical</span></div>
+      <div class="sub">Half of recent ${p.form} cases at this center finished within <b>${months(p.median_months)}</b>; 9 in 10 within <b>${months(p.p90_months)}</b>. Based on ${p.recent_approvals.toLocaleString()} recent approvals. If your case is past the 90% mark, an inquiry may be warranted.</div></div>`;
+  }
+
+  /* ---------------- Wages ---------------- */
+  function renderWages(){
+    qs("#wg-fresh").innerHTML=`<span class="dot"></span> ${WG_SOURCE} &middot; snapshot ${WG_FETCHED}`;
+    const socs=[...new Set(WAGES.map(w=>w.soc))];
+    qs("#wg-soc").innerHTML=socs.map(s=>`<option value="${s}">${esc(SOC_TITLES[s]||s)} (${s})</option>`).join("");
+    refreshStates();
+    qs("#wg-soc").addEventListener("change",()=>{refreshStates();wgCheck();});
+    ["wg-state","wg-level","wg-offer"].forEach(id=>qs("#"+id).addEventListener("input",wgCheck));
+    wgCheck();
+    // employers
+    renderEmployers();
+    qs("#emp-search").addEventListener("input",renderEmployers);
+  }
+  function refreshStates(){
+    const soc=qs("#wg-soc").value;
+    const states=[...new Set(WAGES.filter(w=>w.soc===soc).map(w=>w.state))];
+    qs("#wg-state").innerHTML=states.map(s=>`<option value="${s}">${s}</option>`).join("");
+  }
+  function wgCheck(){
+    const soc=qs("#wg-soc").value, state=qs("#wg-state").value, level=qs("#wg-level").value;
+    const row=WAGES.find(w=>w.soc===soc&&w.state===state&&w.level===level);
+    const out=qs("#wg-result");
+    if(!row){ out.innerHTML=`<div class="callout note"><div class="sub">No wage data for that occupation, state and level combination in this snapshot.</div></div>`; return; }
+    const offer=parseFloat(qs("#wg-offer").value);
+    let extra="", cls="";
+    if(!isNaN(offer)&&offer>0){
+      const diff=offer-row.wage, pct=(diff/row.wage*100);
+      if(diff>=0){ cls="safe"; extra=`<div class="sub">The offer of <b>${money(offer)}</b> is <b>${money(diff)} (${pct.toFixed(1)}%) above</b> the prevailing wage — compliant for this level. ✓</div>`; }
+      else { cls="danger"; extra=`<div class="sub">The offer of <b>${money(offer)}</b> is <b>${money(-diff)} (${Math.abs(pct).toFixed(1)}%) below</b> the prevailing wage. An LCA at this level would not be certifiable — raise the wage or lower the level.</div>`; }
+    }
+    out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${esc(SOC_TITLES[soc]||soc)} · ${state} · Level ${level}</div>
+      <div class="big">${money(row.wage)} <span style="font-size:.6em;color:var(--ink-faint)">prevailing / yr</span></div>${extra}</div>`;
+  }
+  let empSort={key:"total",dir:-1};
+  function renderEmployers(){
+    const q=(qs("#emp-search").value||"").toLowerCase().trim();
+    let rows=EMPLOYERS.filter(e=>e.name.toLowerCase().includes(q));
+    rows.sort((a,b)=>{
+      let x=a[empSort.key],y=b[empSort.key];
+      if(typeof x==="string"){x=x.toLowerCase();y=y.toLowerCase();}
+      return (x<y?-1:x>y?1:0)*empSort.dir;
+    });
+    const arr=k=> empSort.key===k ? `<span class="arr">${empSort.dir>0?"▲":"▼"}</span>` : "";
+    const gradeClass=g=>g[0];
+    let h=`<thead><tr>
+      <th class="sortable" data-k="name">Employer ${arr("name")}</th>
+      <th class="sortable" data-k="state">State ${arr("state")}</th>
+      <th class="sortable num" data-k="total">Petitions ${arr("total")}</th>
+      <th class="sortable num" data-k="rate">Approval ${arr("rate")}</th>
+      <th class="sortable" data-k="grade">Grade ${arr("grade")}</th>
+    </tr></thead><tbody>`;
+    h+=rows.map(e=>`<tr>
+      <td>${esc(e.name)}${e.dep?'<span class="tag warn">Dependent</span>':""}</td>
+      <td>${e.state}</td>
+      <td class="num">${e.total.toLocaleString()}</td>
+      <td class="num">${e.rate.toFixed(1)}%</td>
+      <td><span class="grade ${gradeClass(e.grade)}">${e.grade}</span></td>
+    </tr>`).join("");
+    if(!rows.length) h+=`<tr><td colspan="5" style="color:var(--ink-faint);font-style:italic">No employer matches that filter.</td></tr>`;
+    qs("#emp-table").innerHTML=h+"</tbody>";
+    qsa("#emp-table th.sortable").forEach(th=>th.addEventListener("click",()=>{
+      const k=th.dataset.k;
+      if(empSort.key===k) empSort.dir*=-1;
+      else empSort={key:k,dir:(k==="name"||k==="state")?1:-1};
+      renderEmployers();
+    }));
+  }
+
+  /* ---------------- init ---------------- */
+  renderGuides();
+  renderBulletin();
+  renderProcessing();
+  renderWages();
+  ["vb-cat","vb-country","vb-pd"].forEach(id=>qs("#"+id).addEventListener("input",checkCurrent));
+  checkCurrent();
+
+  let start = location.hash.slice(1);
+  if(start==="demo") start="compare";
+  if(!TABS.includes(start)){ try{ start=localStorage.getItem("vd_tab"); }catch(e){} }
+  if(TABS.includes(start) && start!=="compare") showTab(start,false);
+  if(location.hash==="#demo" && typeof showDemoReport==="function") showDemoReport();
+})();
+</script>
+
+<!-- KKB CoRi app promo rail: auto-rotating one-by-one slider -->
+<script>
+(function(){
+  var track=document.getElementById('promoTrack');
+  var dotsWrap=document.getElementById('promoDots');
+  var rail=document.getElementById('promoRail');
+  if(!track||!dotsWrap||!rail) return;
+  var slides=track.children, n=slides.length, i=0, timer=null, DELAY=4200;
+  for(var k=0;k<n;k++){
+    var b=document.createElement('button');
+    b.type='button'; b.setAttribute('role','tab');
+    var nm=slides[k].querySelector('.promo-name');
+    b.setAttribute('aria-label', nm?nm.textContent:('App '+(k+1)));
+    (function(idx){ b.addEventListener('click',function(){ go(idx); reset(); }); })(k);
+    dotsWrap.appendChild(b);
+  }
+  var dots=dotsWrap.children;
+  function go(idx){
+    i=(idx+n)%n;
+    track.style.transform='translateX(-'+(i*100)+'%)';
+    for(var d=0;d<n;d++){ dots[d].classList.toggle('on', d===i); }
+  }
+  function start(){ if(!timer) timer=setInterval(function(){ go(i+1); }, DELAY); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  function reset(){ stop(); start(); }
+  rail.addEventListener('mouseenter', stop);
+  rail.addEventListener('mouseleave', start);
+  rail.addEventListener('focusin', stop);
+  rail.addEventListener('focusout', start);
+  document.addEventListener('visibilitychange', function(){ document.hidden?stop():start(); });
+  go(0); start();
+})();
+</script>
+</body>
+</html>

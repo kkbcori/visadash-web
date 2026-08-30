@@ -1,0 +1,14 @@
+{
+  "name": "visadash-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "VisaDash — free, on-device immigration toolkit (visadash.org). Static multi-page build.",
+  "scripts": {
+    "build": "node build.mjs --single-file",
+    "build:multi": "node build.mjs",
+    "build:single-file": "node build.mjs --single-file",
+    "serve": "python3 -m http.server 8731",
+    "check": "for f in src/js/*.js; do node --check \"$f\" || exit 1; done && echo 'js ok'"
+  }
+}

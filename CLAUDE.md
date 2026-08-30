@@ -1,51 +1,61 @@
 # VisaDash — visadash.org
 
 Free, **fully on-device** immigration toolkit. Static site, deployed via **GitHub Pages**
-(`CNAME` → visadash.org, `_headers`, `404.html`, `robots.txt`). No backend, no build step,
-no uploads — everything runs in the visitor's browser. Privacy promise is core to the brand;
-keep it.
+(`CNAME` → visadash.org, `_headers`, `404.html`, `robots.txt`). No backend, no uploads —
+everything runs in the visitor's browser. Privacy promise is core to the brand; keep it.
 
-## Architecture — single file
-The **entire app is `index.html`** (~1500 lines). One `<style>`, two `<script>` blocks:
+## Architecture — templated multi-page build (Task 1, 2026-08)
+**Changed from the old single `index.html` monolith to a Node build.** Source lives in `src/`;
+the build **writes the served files into the repo root** (GitHub Pages serves root), so the
+built `index.html` + route folders + `js/` + `styles.css` + `sitemap.xml` **are committed**.
 
-1. **Comparator script** (first `<script>`) — the original "Casefile" DS-160 / passport /
-   document comparator. Uses pdf.js + tesseract.js (CDN). **Do not refactor it casually**; it
-   binds to its DOM by id/class at load. Its markup lives inside `<section id="tab-compare">`.
-2. **Hub script** (second `<script>`, marked `VisaDash hub: tabs + data tools`) — tab routing
-   + the four data tabs. Self-contained IIFE.
+- **`build.mjs`** (plain Node ESM, no framework): `node build.mjs` → multi-page;
+  `node build.mjs --single-file` (= `npm run build`) also emits **`visadash-offline.html`**,
+  the whole toolkit inlined into one `file://`-openable document (the offline-download promise).
+- **`src/layout.mjs`** — the shared shell (head/meta, nav rail, footer, promo rail) in one place;
+  `renderPage()` handles both multi and single modes.
+- **`src/pages.mjs`** — per-route content + metadata (title/description/canonical/OG/JSON-LD).
+- **`src/content/guides.mjs`** — form-guide data; the build renders the guides index **and**
+  `/form-guides/{slug}` detail pages **statically** (FAQPage JSON-LD), no client JS.
+- **`src/js/*.js`** — one lazy script per tool (`comparator.js` verbatim from the old file;
+  `bulletin/processing/wages/sponsors/audit.js` split out of the old hub IIFE; shared
+  `nav.js` = active-link highlight, `promo.js` = slider, `hashredirect.js` = old `#hash`→route).
+  **Each tool page loads only its own script** — `/visa-bulletin` no longer ships the OCR engine.
+- **`src/_reference/legacy-index.html`** — the old monolith, kept for reference only (not served).
 
-### Tabs
-Top `<nav class="tabs" id="tabnav">` with `data-tab` buttons → `<section class="tab" id="tab-*">`
-panels. Routing: hash (`#guides` etc.) + `localStorage("vd_tab")`, default `compare`.
-Tab keys: `compare, guides, bulletin, processing, wages`.
+**Rebuild after editing anything in `src/`:** `npm run build`, then commit the regenerated root
+files. Don't hand-edit the root `index.html`/route folders — they're build output.
 
-- **compare** — DS-160 comparison tool (preserved verbatim).
-- **guides** — `GUIDES[]` array of form-filling guides (DS-160, I-129, I-140, I-485, I-130,
-  N-400) rendered as `<details>` accordions. Pure static content.
-- **bulletin** — `VB_MONTHS` / `BULLETIN` (EB1/2/3 final action dates for last 3 months + comparison table) + "Am I current?"
-  date check.
-- **processing** — `PROCESSING` (USCIS times by form×center) + estimate callout.
-- **wages** — `WAGES` (DOL prevailing wage) + offer check, and `EMPLOYERS` (H-1B sponsor
-  grades, sortable/filterable).
+### Routes
+`/` hub · `/ds-160-compare` · `/ds-160-audit` (engine lands in Task 3) · `/form-guides` +
+`/form-guides/{ds-160,i-129,i-140,i-485,i-130,n-400}` · `/visa-bulletin` · `/processing-times`
+· `/prevailing-wage` · `/h1b-sponsors`. (Old `/#wages` etc. redirect via `hashredirect.js`.)
 
-## Updating the data (snapshots, embedded inline)
-Data is **hard-coded as JS consts inside the hub script** — keeps the single-file/offline
-promise. Source JSON originally came from the old VisaDash pipeline (`old_files.zip` →
-`visadash-public/data/*.json`: visa_bulletin, processing_times, wage_data, employers; refresh
-script `fetch_visa_bulletin.py`). To refresh figures, edit the `BULLETIN / PROCESSING / WAGES /
-EMPLOYERS` consts and the `*_FETCHED` / freshness strings. These are **periodic snapshots**, not
-live — the footer says so; keep that disclaimer.
+Tools: **compare** = DS-160/passport comparator (verbatim, pdf.js+tesseract, MRZ check digits).
+**bulletin** = `VB_MONTHS`/`BULLETIN` EB dates + "Am I current?". **processing** = `PROCESSING`
+by form×center. **wages** = `WAGES` prevailing-wage + offer check. **sponsors** = `EMPLOYERS`
+H-1B grades (sortable). **audit** = single-doc cross-check (scaffold now, engine Task 3).
+
+## Updating the data (snapshots, still embedded in the tool JS)
+Data remains **hard-coded as consts inside each tool's `src/js/*.js`** (keeps single-file/offline
+promise), with `*_FETCHED`/`*_SOURCE` freshness strings. To refresh: edit the const + the
+snapshot string in the relevant `src/js/*.js`, then `npm run build`. These are **periodic
+snapshots**, not live — the footer says so; keep that disclaimer. (Task 4 will move these into
+versioned `data/*.json` with a schema + a CI refresh; not done yet.)
 
 ## Verify a change (no test suite)
-Headless Chrome screenshots — this is the quick smoke test:
+Rebuild, then headless-Chrome screenshots of the built **routes** (not hashes):
 ```
+npm run build
 python3 -m http.server 8731 &
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-for t in compare guides bulletin processing wages; do
-  "$CHROME" --headless --disable-gpu --virtual-time-budget=2500 \
-    --window-size=1180,1500 --screenshot=/tmp/$t.png "http://localhost:8731/#$t"; done
+for r in "" ds-160-compare/ form-guides/ visa-bulletin/ processing-times/ prevailing-wage/ h1b-sponsors/; do
+  n=$(echo "$r" | tr -d /); n=${n:-hub}
+  "$CHROME" --headless --disable-gpu --virtual-time-budget=3000 \
+    --window-size=1180,1500 --screenshot=/tmp/$n.png "http://localhost:8731/$r"; done
 ```
-JS sanity: extract the hub `<script>` and `node --check`.
+Also open `visadash-offline.html` from `file://` to confirm the single-file build works.
+JS sanity: `npm run check` (`node --check` over `src/js/*.js`).
 
 ## Main menu (2026-08)
 The toolkit menu is a **left-side vertical rail**, not the old horizontal tab bar. **`.wrap`

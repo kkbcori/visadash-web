@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages</title>
-<meta name="description" content="A free, 100% on-device immigration toolkit: compare & audit DS-160s and passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.">
+<title>DS-160 Audit — Cross-Check Your DS-160 Against Your Documents | VisaDash</title>
+<meta name="description" content="Audit a filled DS-160 against your passport, prior visa, I-797, I-20/DS-2019 and I-94 — on-device — to surface name, passport-number, date and consistency issues before your consular interview. Nothing is uploaded.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://visadash.org/">
+<link rel="canonical" href="https://visadash.org/ds-160-audit">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="VisaDash">
-<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta property="og:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
-<meta property="og:url" content="https://visadash.org/">
+<meta property="og:title" content="DS-160 Audit — On-Device Consistency Check">
+<meta property="og:description" content="Cross-check a DS-160 against your supporting documents, entirely in your browser.">
+<meta property="og:url" content="https://visadash.org/ds-160-audit">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta name="twitter:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
+<meta name="twitter:title" content="DS-160 Audit — On-Device Consistency Check">
+<meta name="twitter:description" content="Cross-check a DS-160 against your supporting documents, entirely in your browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <link rel="stylesheet" href="/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"VisaDash","url":"https://visadash.org/","description":"Free on-device U.S. immigration toolkit."}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VisaDash","description":"Free on-device U.S. immigration toolkit.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DS-160 Audit","description":"On-device cross-check of a DS-160 against supporting documents.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/ds-160-audit","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
 </head>
 <body>
 <div class="wrap">
@@ -43,7 +43,7 @@
       <span class="nav-ico" aria-hidden="true">&#128196;</span>
       <span>DS-160 Compare</span>
     </a>
-    <a href="/ds-160-audit" data-path="/ds-160-audit">
+    <a href="/ds-160-audit" data-path="/ds-160-audit" class="on" aria-current="page">
       <span class="nav-ico" aria-hidden="true">&#129534;</span>
       <span>DS-160 Audit</span>
     </a>
@@ -72,53 +72,24 @@
   <div class="page">
 
   <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Compare and audit visa documents, track priority dates, and check processing times &mdash; entirely in your browser.</p>
+    <p class="hero-lede">Cross-check a filled DS-160 against your supporting documents and get a findings report by severity.</p>
   </section>
 
   <div class="content">
 
-  <div class="privacy no-print" style="margin-top:0">
+  <div class="privacy privacy-strong no-print" style="margin-top:0">
     <span>&#128274;</span>
-    <span><b>Nothing leaves this machine.</b> Every tool below runs entirely in your browser &mdash; no file is uploaded, no document text is sent anywhere, and nothing is stored on a server. You can even <a href="/visadash-offline.html" download>download the whole toolkit as a single offline file</a> and run it with no internet.</span>
+    <span><b>This page processes your most sensitive documents &mdash; passports and visas &mdash; and none of them leave your browser.</b> Extraction, OCR and every cross-check run on this device. No file is uploaded, nothing is sent to any server, and nothing is saved after you close the tab.</span>
   </div>
 
-  <div class="hub-grid">
-    <a class="hub-card" href="/ds-160-compare">
-      <span class="hub-ico" aria-hidden="true">&#128196;</span>
-      <span class="hub-title">DS-160 Compare</span>
-    </a>
-    <a class="hub-card" href="/ds-160-audit">
-      <span class="hub-ico" aria-hidden="true">&#129534;</span>
-      <span class="hub-title">DS-160 Audit</span>
-    </a>
-    <a class="hub-card" href="/form-guides">
-      <span class="hub-ico" aria-hidden="true">&#128221;</span>
-      <span class="hub-title">Form Guides</span>
-    </a>
-    <a class="hub-card" href="/visa-bulletin">
-      <span class="hub-ico" aria-hidden="true">&#128197;</span>
-      <span class="hub-title">Visa Bulletin</span>
-    </a>
-    <a class="hub-card" href="/processing-times">
-      <span class="hub-ico" aria-hidden="true">&#9203;</span>
-      <span class="hub-title">Processing Times</span>
-    </a>
-    <a class="hub-card" href="/prevailing-wage">
-      <span class="hub-ico" aria-hidden="true">&#128176;</span>
-      <span class="hub-title">Prevailing Wage</span>
-    </a>
-    <a class="hub-card" href="/h1b-sponsors">
-      <span class="hub-ico" aria-hidden="true">&#127970;</span>
-      <span class="hub-title">H-1B Sponsors</span>
-    </a>
+  <p class="intro">Instead of comparing two versions of one document, the audit validates a single filled DS-160 against the documents behind it &mdash; your passport, a prior U.S. visa, an I-797 approval, an I-20/DS-2019, or an I-94 travel history &mdash; and returns a findings report grouped by severity.</p>
+
+  <div class="tool-notes no-print">
+    <b>What it checks.</b> Name spelling and order against the passport, passport number character-for-character, dates of birth and expiry, petition/receipt and SEVIS numbers, program and travel dates, and internal DS-160 consistency. Findings are graded <b>Blocker</b>, <b>Warning</b> or <b>Info</b> &mdash; never "ready to submit". A low-confidence OCR read is reported as "couldn't read reliably", not as a mismatch.
   </div>
 
-  <div class="tool-notes no-print" style="margin-top:26px">
-    <b>What VisaDash is &mdash; and isn't.</b><br>
-    &bull; It is a free educational toolkit to help you <i>spot</i> issues before they reach a consular officer or adjudicator.<br>
-    &bull; It is <b>not legal advice</b> and is not affiliated with USCIS, the Department of State, or the Department of Labor.<br>
-    &bull; Every output is something for a human to verify against the official instructions on <i>uscis.gov</i> and <i>travel.state.gov</i>.
-  </div>
+  <noscript><p class="intro">The audit runs in JavaScript on your device. Enable JavaScript to use it — your documents still never leave the browser.</p></noscript>
+  <div id="audit-app"></div>
   </div><!-- /.content -->
   </div><!-- /.page -->
 
@@ -176,7 +147,7 @@
 
 </div>
 <script defer src="/js/nav.js"></script>
-<script defer src="/js/hashredirect.js"></script>
+<script defer src="/js/audit.js"></script>
 <script defer src="/js/promo.js"></script>
 </body>
 </html>

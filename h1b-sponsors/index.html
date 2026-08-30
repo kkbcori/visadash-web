@@ -3,27 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages</title>
-<meta name="description" content="A free, 100% on-device immigration toolkit: compare & audit DS-160s and passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.">
+<title>H-1B Sponsor Grades — Top Sponsors, Approval Rates & Risk Flags | VisaDash</title>
+<meta name="description" content="Top H-1B sponsors by petition volume, with approval rate, H-1B-dependent flags, and a risk grade. Sortable and filterable, entirely on-device.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://visadash.org/">
+<link rel="canonical" href="https://visadash.org/h1b-sponsors">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="VisaDash">
-<meta property="og:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta property="og:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
-<meta property="og:url" content="https://visadash.org/">
+<meta property="og:title" content="H-1B Sponsor Grades & Approval Rates">
+<meta property="og:description" content="Top H-1B sponsors by volume with approval rates and risk flags, sortable on-device.">
+<meta property="og:url" content="https://visadash.org/h1b-sponsors">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="VisaDash — Free On-Device Immigration Toolkit">
-<meta name="twitter:description" content="DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.">
+<meta name="twitter:title" content="H-1B Sponsor Grades & Approval Rates">
+<meta name="twitter:description" content="Top H-1B sponsors by volume with approval rates and risk flags, sortable on-device.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="/styles.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"VisaDash","url":"https://visadash.org/","description":"Free on-device U.S. immigration toolkit."}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VisaDash","description":"Free on-device U.S. immigration toolkit.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"H-1B Sponsor Grades","description":"H-1B sponsor grades, approval rates and risk flags.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/h1b-sponsors","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
 </head>
 <body>
 <div class="wrap">
@@ -63,7 +62,7 @@
       <span class="nav-ico" aria-hidden="true">&#128176;</span>
       <span>Prevailing Wage</span>
     </a>
-    <a href="/h1b-sponsors" data-path="/h1b-sponsors">
+    <a href="/h1b-sponsors" data-path="/h1b-sponsors" class="on" aria-current="page">
       <span class="nav-ico" aria-hidden="true">&#127970;</span>
       <span>H-1B Sponsors</span>
     </a>
@@ -72,53 +71,28 @@
   <div class="page">
 
   <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Compare and audit visa documents, track priority dates, and check processing times &mdash; entirely in your browser.</p>
+    <p class="hero-lede">Top H-1B sponsors by petition volume, with approval rate and risk flags.</p>
   </section>
 
   <div class="content">
 
-  <div class="privacy no-print" style="margin-top:0">
-    <span>&#128274;</span>
-    <span><b>Nothing leaves this machine.</b> Every tool below runs entirely in your browser &mdash; no file is uploaded, no document text is sent anywhere, and nothing is stored on a server. You can even <a href="/visadash-offline.html" download>download the whole toolkit as a single offline file</a> and run it with no internet.</span>
-  </div>
+    <div class="freshness" id="emp-fresh"><span class="dot"></span> Loading snapshot…</div>
 
-  <div class="hub-grid">
-    <a class="hub-card" href="/ds-160-compare">
-      <span class="hub-ico" aria-hidden="true">&#128196;</span>
-      <span class="hub-title">DS-160 Compare</span>
-    </a>
-    <a class="hub-card" href="/ds-160-audit">
-      <span class="hub-ico" aria-hidden="true">&#129534;</span>
-      <span class="hub-title">DS-160 Audit</span>
-    </a>
-    <a class="hub-card" href="/form-guides">
-      <span class="hub-ico" aria-hidden="true">&#128221;</span>
-      <span class="hub-title">Form Guides</span>
-    </a>
-    <a class="hub-card" href="/visa-bulletin">
-      <span class="hub-ico" aria-hidden="true">&#128197;</span>
-      <span class="hub-title">Visa Bulletin</span>
-    </a>
-    <a class="hub-card" href="/processing-times">
-      <span class="hub-ico" aria-hidden="true">&#9203;</span>
-      <span class="hub-title">Processing Times</span>
-    </a>
-    <a class="hub-card" href="/prevailing-wage">
-      <span class="hub-ico" aria-hidden="true">&#128176;</span>
-      <span class="hub-title">Prevailing Wage</span>
-    </a>
-    <a class="hub-card" href="/h1b-sponsors">
-      <span class="hub-ico" aria-hidden="true">&#127970;</span>
-      <span class="hub-title">H-1B Sponsors</span>
-    </a>
-  </div>
-
-  <div class="tool-notes no-print" style="margin-top:26px">
-    <b>What VisaDash is &mdash; and isn't.</b><br>
-    &bull; It is a free educational toolkit to help you <i>spot</i> issues before they reach a consular officer or adjudicator.<br>
-    &bull; It is <b>not legal advice</b> and is not affiliated with USCIS, the Department of State, or the Department of Labor.<br>
-    &bull; Every output is something for a human to verify against the official instructions on <i>uscis.gov</i> and <i>travel.state.gov</i>.
-  </div>
+    <h3 class="secTitle">H-1B sponsor grades</h3>
+    <p class="secSub">Top sponsors by petition volume, with approval rate and risk flags. Click a column to sort.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="emp-search">Filter employer</label>
+        <input type="text" id="emp-search" placeholder="Type a company name…">
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="dt" id="emp-table"></table></div>
+    <div class="legend">
+      <span><span class="grade A" style="min-width:auto">A</span> 92%+ approvals</span>
+      <span><span class="grade B" style="min-width:auto">B</span> 84–92%</span>
+      <span><span class="grade C" style="min-width:auto">C</span> &lt;84%</span>
+      <span><span class="tag warn">Dependent</span> H-1B-dependent employer (extra attestations)</span>
+    </div>
   </div><!-- /.content -->
   </div><!-- /.page -->
 
@@ -176,7 +150,7 @@
 
 </div>
 <script defer src="/js/nav.js"></script>
-<script defer src="/js/hashredirect.js"></script>
+<script defer src="/js/sponsors.js"></script>
 <script defer src="/js/promo.js"></script>
 </body>
 </html>
