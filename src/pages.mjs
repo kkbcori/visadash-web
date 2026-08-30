@@ -3,7 +3,8 @@
 import { SITE, NAV } from "./layout.mjs";
 
 const OCR_HEAD = `<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>`;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<script type="module">import * as E from "/engine/doctypes.mjs"; window.VDEngine = E; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
 
 const softwareApp = (name, desc, url) => ({
   "@context": "https://schema.org",

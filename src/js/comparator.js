@@ -438,6 +438,115 @@ function compareGeneral(a, b) {
   return { kind: "general", diff, discrepancies: changes, consistent: sameCount, rows: [] };
 }
 
+/* ============ engine path (extended document types) ============ */
+const ENGINE_NEW = ["i797", "i20", "ead", "lca", "offer"];
+
+function engineCompare(a, b) {
+  const E = window.VDEngine;
+  if (!E) return null;
+  if (mode !== "auto") return null;            // explicit ds160/passport/general → legacy
+  const detA = E.detectType(a.text), detB = E.detectType(b.text);
+  const idA = detA.id, idB = detB.id;
+  const isNew = id => ENGINE_NEW.includes(id);
+  const crossPair = (x, y) => (x === "lca" && y === "offer") || (x === "offer" && y === "lca");
+
+  const docOf = (id, side) => ({ type: id, ...E.TYPE_BY_ID[id].extract({ text: side.text, lines: side.lines }) });
+
+  if (crossPair(idA, idB)) {
+    const res = E.compareCross(docOf(idA, a), docOf(idB, b));
+    if (res.error) return { error: res.error };
+    return { ...res, title: "LCA ↔ offer letter", labels: ["LCA", "Offer"], a, b, detA, detB };
+  }
+  if (idA === idB && isNew(idA)) {
+    const res = E.compareVersions(idA, docOf(idA, a), docOf(idA, b));
+    if (res.error) return { error: res.error };
+    return { ...res, title: `${E.TYPE_BY_ID[idA].label} — version comparison`,
+             labels: ["Earlier", "Later"], a, b, detA, detB };
+  }
+  // Mixed/unknown involving a new type, no defined comparison → say so (don't diff garbage)
+  if ((isNew(idA) || isNew(idB)) && idA !== idB) {
+    return { error: `Side A looks like ${detA.label} and side B like ${detB.label}. ` +
+      `These are different document types with no defined comparison, so VisaDash won't diff them field-by-field. ` +
+      `Upload two of the same type, or an LCA against an offer letter.` };
+  }
+  return null;                                  // ds160/passport/general → legacy renderer
+}
+
+const ENG_SEV = {
+  blocker:  { cls: "sev-crit",  label: "Blocker" },
+  critical: { cls: "sev-crit",  label: "Critical" },
+  high:     { cls: "sev-high",  label: "High" },
+  warning:  { cls: "sev-high",  label: "Warning" },
+  medium:   { cls: "sev-med",   label: "Medium" },
+  info:     { cls: "sev-info",  label: "Info" },
+  low:      { cls: "sev-info",  label: "Low" },
+  unreadable:{ cls: "sev-unread", label: "Unreadable" },
+  none:     { cls: "", label: "" },
+};
+
+function confDot(c) {
+  const pct = Math.round((c || 0) * 100);
+  const lvl = c >= 0.85 ? "hi" : c >= 0.5 ? "mid" : "lo";
+  return `<span class="conf conf-${lvl}" title="Extraction confidence ${pct}%">${pct}%</span>`;
+}
+function srcTitle(f) {
+  if (!f || !f.source) return "";
+  const s = f.source;
+  return ` title="Source${s.line >= 0 ? " line " + (s.line + 1) : " (MRZ)"}: ${escapeHtml(s.snippet || "")}"`;
+}
+
+function renderEngineResult(eng) {
+  const [la, lb] = eng.labels;
+  const findings = (eng.findings || []).filter(f => !f.skipped);
+  const skipped = (eng.findings || []).filter(f => f.skipped);
+  const blockers = findings.filter(f => /blocker|critical/.test(f.severity)).length;
+  const warns = findings.filter(f => /warning|high|medium/.test(f.severity)).length;
+
+  const findingCard = f => {
+    const sv = ENG_SEV[f.severity] || ENG_SEV.info;
+    return `<div class="callout ${/blocker|critical/.test(f.severity) ? "danger" : "note"}">
+      <div class="lbl"><span class="eng-chip ${sv.cls}">${sv.label}</span> ${escapeHtml(f.title)}${f.loud ? " ⚠" : ""}</div>
+      ${f.detail ? `<div class="sub">${escapeHtml(f.detail)}</div>` : ""}</div>`;
+  };
+
+  const row = r => {
+    const sv = ENG_SEV[r.severity] || ENG_SEV.none;
+    const outClass = r.outcome === "match" ? "eng-ok"
+      : r.outcome === "unreadable" ? "eng-unread"
+      : r.outcome === "mismatch" ? "eng-bad"
+      : "eng-neutral";
+    const av = r.a || { value: "", confidence: 0 }, bv = r.b || { value: "", confidence: 0 };
+    return `<tr class="${outClass}">
+      <td>${escapeHtml(r.label)}${sv.label ? ` <span class="eng-chip ${sv.cls}">${sv.label}</span>` : ""}</td>
+      <td${srcTitle(av)}>${escapeHtml(av.value || "—")} ${confDot(av.confidence)}</td>
+      <td${srcTitle(bv)}>${escapeHtml(bv.value || "—")} ${confDot(bv.confidence)}</td>
+      <td class="eng-out">${r.outcome}</td>
+    </tr>`;
+  };
+
+  const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review — verify each against your documents.`;
+
+  const html = `<div class="verdict ${blockers ? "verdict-bad" : warns ? "verdict-warn" : "verdict-ok"}">
+      <div class="v-title">${escapeHtml(eng.title)}</div>
+      <div class="v-sub">${summary}</div>
+    </div>
+    ${eng.detA && eng.detB && (eng.detA.ambiguous || eng.detB.ambiguous)
+      ? `<div class="callout note"><div class="sub">Detection was not clear-cut for at least one side — confirm the document types are what you intended.</div></div>` : ""}
+    ${findings.length ? `<div class="eng-findings">${findings.map(findingCard).join("")}</div>`
+      : `<div class="callout note"><div class="sub">No rule-based flags fired. Still review the fields below against your originals.</div></div>`}
+    <div class="tbl-wrap"><table class="dt eng-table">
+      <thead><tr><th>Field</th><th class="num">${escapeHtml(la)}</th><th class="num">${escapeHtml(lb)}</th><th>Outcome</th></tr></thead>
+      <tbody>${(eng.rows || []).map(row).join("")}</tbody>
+    </table></div>
+    ${skipped.length ? `<div class="tool-notes"><b>Rules skipped</b> (a required field wasn't found on both documents):<br>${skipped.map(s => "&bull; " + escapeHtml(s.id) + " — " + escapeHtml(s.reason)).join("<br>")}</div>` : ""}
+    <div class="tool-notes"><b>Confidence + source.</b> Each value shows the extraction confidence; hover a value to see the exact source line it came from. A mismatch between two low-confidence reads is marked <i>unreadable</i>, not a discrepancy. This is not legal advice — verify every field against your original documents.</div>`;
+
+  const el = $("#results");
+  el.innerHTML = html;
+  el.classList.add("show");
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 /* ============ run ============ */
 $("#runBtn").addEventListener("click", run);
 $("#demoBtn").addEventListener("click", showDemoReport);
@@ -506,6 +615,21 @@ async function run() {
     const b = await buildSide("B");
     log(`Side A detected as: ${a.kind.toUpperCase()}`, "ok");
     log(`Side B detected as: ${b.kind.toUpperCase()}`, "ok");
+
+    // Engine path: the extended document types (I-797, I-20/DS-2019, EAD, LCA↔offer)
+    // are handled by the pure VDEngine with confidence + source. DS-160/passport/
+    // general keep their original rich renderer below.
+    const eng = engineCompare(a, b);
+    if (eng) {
+      if (eng.error) { log("! " + eng.error, "err"); renderError(eng.error); }
+      else {
+        log(`Engine comparison: ${eng.title}`, "ok");
+        renderEngineResult(eng);
+        const es = $$(".compare-steps span"); if (es[2]) es[2].classList.add("on");
+        log("Done.", "ok");
+      }
+      return;
+    }
 
     let kind = mode;
     if (mode === "auto") {

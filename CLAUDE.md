@@ -36,6 +36,26 @@ Tools: **compare** = DS-160/passport comparator (verbatim, pdf.js+tesseract, MRZ
 by form×center. **wages** = `WAGES` prevailing-wage + offer check. **sponsors** = `EMPLOYERS`
 H-1B grades (sortable). **audit** = single-doc cross-check (scaffold now, engine Task 3).
 
+## Document-type engine (Task 2, 2026-08)
+`src/engine/doctypes.mjs` — **pure ESM, no DOM/OCR/network**, runs in the browser (loaded on
+compare/audit as `<script type="module">` → `window.VDEngine`) and under `node --test`
+(`test/doctypes.test.mjs`, synthetic fixtures only). It's a declarative `DocumentType` registry:
+each type has `detect(text)`, `extract({text,lines})→{fields}`, a `fieldSchema` (key, normalizer,
+`same|differ|either` semantics, severity) and data-driven flag `rules`. Every extracted field is
+`{value, confidence, source:{line,snippet}}`; a mismatch between two <0.5-confidence reads is
+`unreadable`, never a hard discrepancy.
+
+Six types: `ds160`, `passport` (MRZ check digits drive confidence), `i797` (classification-change
++ validity-gap flags), `i20` (loud SEVIS-ID-change flag), `ead` (category-code flag), and the
+cross-type `lca`↔`offer` (wage-below-LCA = blocker, worksite/dates checks). `detectType` scores
+all and flags ambiguity; mixed types with no defined comparison are refused, not diffed.
+
+**UI wiring:** `comparator.js` routes the **four new types + LCA↔offer** through the engine via
+`engineCompare()`/`renderEngineResult()` (confidence badges + hover-for-source). **DS-160/passport
+still use the original rich renderer** — the engine implements+tests them too, but the UI switch
+is deferred to avoid regressing the Task-1 results UI. `npm run build` inlines the engine as a
+global into `visadash-offline.html` (module imports can't resolve from `file://`).
+
 ## Updating the data (snapshots, still embedded in the tool JS)
 Data remains **hard-coded as consts inside each tool's `src/js/*.js`** (keeps single-file/offline
 promise), with `*_FETCHED`/`*_SOURCE` freshness strings. To refresh: edit the const + the

@@ -9,6 +9,7 @@
     "build:multi": "node build.mjs",
     "build:single-file": "node build.mjs --single-file",
     "serve": "python3 -m http.server 8731",
+    "test": "node --test",
     "check": "for f in src/js/*.js; do node --check \"$f\" || exit 1; done && echo 'js ok'"
   }
 }

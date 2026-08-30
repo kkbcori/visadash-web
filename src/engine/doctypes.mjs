@@ -1,0 +1,487 @@
+// VisaDash document-type engine — pure, framework-free, runs in the browser
+// (as an ES module) and under `node --test`. No DOM, no OCR, no network here:
+// the browser layer feeds in already-extracted { text, lines } and renders the
+// result. Every extracted field carries { value, confidence, source } so the UI
+// can show the source snippet and so low-confidence reads never masquerade as
+// hard mismatches.
+
+/* ───────────────────────── field + normalizers ───────────────────────── */
+
+export const mkField = (value, confidence = 0, source = null) => ({ value, confidence, source });
+
+const stripDiacritics = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+export const norm = {
+  plain:  s => (s || "").trim(),
+  upper:  s => (s || "").toUpperCase().trim(),
+  // name: case-fold, strip diacritics, collapse whitespace, drop punctuation
+  name:   s => stripDiacritics(String(s || "")).toUpperCase().replace(/[.,]/g, " ").replace(/\s+/g, " ").trim(),
+  // ids: keep only [A-Z0-9]
+  id:     s => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, ""),
+  // date → ISO yyyy-mm-dd when parseable, else the trimmed string
+  date:   s => toISO(s) || (s || "").trim(),
+  money:  s => { const n = parseFloat(String(s || "").replace(/[^0-9.]/g, "")); return isNaN(n) ? null : n; },
+};
+
+const MONTHS = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
+export function toISO(raw) {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  let m;
+  if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/))) return `${m[1]}-${m[2]}-${m[3]}`;
+  // DD-MMM-YYYY (DS-160 / I-94 style)
+  if ((m = s.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[A-Za-z]*[-\s](\d{4})$/))) {
+    const mo = MONTHS[m[2].toLowerCase()]; if (mo) return `${m[3]}-${pad2(mo)}-${pad2(+m[1])}`;
+  }
+  // MMM DD, YYYY (I-797 style)
+  if ((m = s.match(/^([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4})$/))) {
+    const mo = MONTHS[m[1].toLowerCase()]; if (mo) return `${m[3]}-${pad2(mo)}-${pad2(+m[2])}`;
+  }
+  // MM/DD/YYYY
+  if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return `${m[3]}-${pad2(+m[1])}-${pad2(+m[2])}`;
+  return null;
+}
+const pad2 = n => String(n).padStart(2, "0");
+
+/* comparison outcome for two normalized values under a comparator */
+export function compareValues(a, b, normalizer) {
+  const na = normalizer(a.value), nb = normalizer(b.value);
+  const bothLow = a.confidence < 0.5 && b.confidence < 0.5;
+  if (!a.value && !b.value) return "absent";
+  if (!a.value || !b.value) return "one-sided";
+  if (na === nb && na !== "") return "match";
+  if (bothLow) return "unreadable";            // two poor OCR reads → not a hard mismatch
+  return "mismatch";
+}
+
+/* ───────────────────────── label extraction ───────────────────────── */
+
+// Pull a labelled value out of OCR/text lines. Confidence reflects HOW it was
+// found: same-line value = high, value on the next line = medium.
+export function grabLabel(lines, labels, { key } = {}) {
+  const arr = Array.isArray(labels) ? labels : [labels];
+  const L = lines.map(l => String(l).replace(/\s+/g, " ").trim());
+  for (const label of arr) {
+    const lc = label.toLowerCase();
+    for (let i = 0; i < L.length; i++) {
+      const idx = L[i].toLowerCase().indexOf(lc);
+      if (idx === -1) continue;
+      let val = L[i].slice(idx + label.length).replace(/^[\s:.\-]+/, "").trim();
+      let conf = 0.9, srcLine = i;
+      if (!val && i + 1 < L.length) { val = L[i + 1].trim(); conf = 0.6; srcLine = i + 1; }
+      if (val) return mkField(val, conf, { line: srcLine, label, snippet: L[srcLine] });
+    }
+  }
+  return mkField("", 0, null);
+}
+
+/* ───────────────────────── MRZ (ICAO 9303 TD3) ───────────────────────── */
+
+const pad44 = l => ((l || "").replace(/\s+/g, "").toUpperCase() + "<".repeat(44)).slice(0, 44);
+export function findMRZ(text) {
+  const cand = String(text).split(/\n/)
+    .map(l => l.replace(/\s+/g, "").toUpperCase())
+    .filter(l => /^[A-Z0-9<]{28,}$/.test(l) && l.includes("<"));
+  for (let i = 0; i < cand.length - 1; i++)
+    if (/^P[A-Z0-9<]/.test(cand[i])) return [pad44(cand[i]), pad44(cand[i + 1])];
+  if (cand.length >= 2) return [pad44(cand[cand.length - 2]), pad44(cand[cand.length - 1])];
+  return null;
+}
+function mrzCheckDigit(str) {
+  const w = [7, 3, 1]; let s = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i]; let v = 0;
+    if (c >= "0" && c <= "9") v = +c;
+    else if (c >= "A" && c <= "Z") v = c.charCodeAt(0) - 55;
+    s += v * w[i % 3];
+  }
+  return s % 10;
+}
+const ckOk = (field, actual) => /[0-9]/.test(actual) && +actual === mrzCheckDigit(field);
+function mrzDate(raw, kind) {
+  if (!/^\d{6}$/.test(raw)) return raw || "";
+  const yy = +raw.slice(0, 2), mm = raw.slice(2, 4), dd = raw.slice(4, 6);
+  const year = kind === "exp" ? 2000 + yy
+    : (yy <= (new Date().getFullYear() % 100) ? 2000 + yy : 1900 + yy);
+  return `${year}-${mm}-${dd}`;
+}
+// returns { fields, checks } or null
+export function parseMRZ(lines, text) {
+  let l1, l2;
+  const clean = (lines || []).filter(Boolean);
+  if (clean.length >= 2 && /^[A-Z0-9<]/i.test(clean[0].replace(/\s+/g, "")) && clean[0].replace(/\s+/g,"").length >= 20) {
+    l1 = pad44(clean[0]); l2 = pad44(clean[1]);
+    if (!/^P/.test(l1) && text) { const m = findMRZ(text); if (m) [l1, l2] = m; }
+  } else {
+    const m = findMRZ(text || clean.join("\n"));
+    if (!m) return null;
+    [l1, l2] = m;
+  }
+  const nameParts = l1.slice(5, 44).split("<<");
+  const surname = (nameParts[0] || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const given   = (nameParts.slice(1).join(" ") || "").replace(/</g, " ").replace(/\s+/g, " ").trim();
+  const checks = {
+    docNumber: ckOk(l2.slice(0, 9), l2[9]),
+    dob:       ckOk(l2.slice(13, 19), l2[19]),
+    expiry:    ckOk(l2.slice(21, 27), l2[27]),
+    composite: ckOk(l2.slice(0,10)+l2.slice(13,20)+l2.slice(21,28)+l2.slice(28,43), l2[43]),
+  };
+  // confidence from the check digit for that field (validated → 0.98, else 0.5)
+  const c = ok => ok ? 0.98 : 0.5;
+  const src = { line: -1, label: "MRZ", snippet: l2 };
+  const fields = {
+    docType:        mkField(l1.slice(0, 2).replace(/</g, "").trim() || "P", 0.9, { ...src, snippet: l1 }),
+    issuer:         mkField(l1.slice(2, 5).replace(/</g, "").trim(), 0.9, { ...src, snippet: l1 }),
+    surname:        mkField(surname, 0.9, { ...src, snippet: l1 }),
+    given:          mkField(given, 0.9, { ...src, snippet: l1 }),
+    docNumber:      mkField(l2.slice(0, 9).replace(/</g, "").trim(), c(checks.docNumber), src),
+    nationality:    mkField(l2.slice(10, 13).replace(/</g, "").trim(), 0.9, src),
+    dob:            mkField(mrzDate(l2.slice(13, 19), "dob"), c(checks.dob), src),
+    sex:            mkField(l2.slice(20, 21).replace(/</g, "X") || "X", 0.9, src),
+    expiry:         mkField(mrzDate(l2.slice(21, 27), "exp"), c(checks.expiry), src),
+    personalNumber: mkField(l2.slice(28, 42).replace(/</g, "").trim(), 0.6, src),
+  };
+  return { fields, checks, l1, l2 };
+}
+
+/* ───────────────────────── document types ───────────────────────── */
+// A DocumentType is:
+//   { id, label, detect(text)->0..1, extract({text,lines})->{fields}, fieldSchema:[
+//        { key, label, normalizer, semantics:'same'|'differ'|'either', severity } ],
+//     rules:[ { id, severity, requires:[keys], evaluate(a,b|doc)->finding|null } ] }
+
+const CLASS_WORDS = /\b(H-?1B|H1-?B|L-?1[AB]?|O-?1|TN|E-?[23]|EB-?[123]|F-?1|J-?1|B-?1\/B-?2)\b/i;
+
+function scoreFrom(text, patterns) {
+  const up = text.toUpperCase();
+  let hits = 0;
+  for (const p of patterns) if (p.test(up)) hits++;
+  return patterns.length ? hits / patterns.length : 0;
+}
+
+const passport = {
+  id: "passport", label: "Passport",
+  detect: text => findMRZ(text) ? 0.95 : 0,
+  extract: ({ text, lines }) => {
+    const p = parseMRZ(lines, text);
+    return p ? { fields: p.fields, mrz: { checks: p.checks, l1: p.l1, l2: p.l2 } } : { fields: {} };
+  },
+  fieldSchema: [
+    { key: "docType", label: "Document type", normalizer: norm.upper, semantics: "same", severity: "low" },
+    { key: "issuer", label: "Issuing country", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "surname", label: "Surname", normalizer: norm.name, semantics: "same", severity: "critical" },
+    { key: "given", label: "Given names", normalizer: norm.name, semantics: "same", severity: "critical" },
+    { key: "dob", label: "Date of birth", normalizer: norm.date, semantics: "same", severity: "critical" },
+    { key: "sex", label: "Sex", normalizer: norm.upper, semantics: "same", severity: "critical" },
+    { key: "nationality", label: "Nationality", normalizer: norm.upper, semantics: "same", severity: "critical" },
+    { key: "docNumber", label: "Passport number", normalizer: norm.id, semantics: "differ", severity: "high" },
+    { key: "expiry", label: "Expiry date", normalizer: norm.date, semantics: "differ", severity: "high" },
+    { key: "personalNumber", label: "Personal number", normalizer: norm.id, semantics: "either", severity: "low" },
+  ],
+  rules: [],
+};
+
+const ds160 = {
+  id: "ds160", label: "DS-160",
+  detect: text => /DS[-\s]?160|NONIMMIGRANT VISA APPLICATION/i.test(text) ? 0.95 : 0,
+  extract: ({ lines }) => {
+    const g = (labels, key) => grabLabel(lines, labels, { key });
+    return { fields: {
+      surname: g(["Surnames", "Surname"]),
+      given: g(["Given Names", "Given Name"]),
+      nativeName: g(["Full Name in Native Alphabet"]),
+      otherNames: g(["Other Names Used"]),
+      sex: g(["Sex"]),
+      maritalStatus: g(["Marital Status"]),
+      dob: g(["Date of Birth"]),
+      cityOfBirth: g(["City of Birth"]),
+      stateOfBirth: g(["State/Province of Birth"]),
+      countryOfBirth: g(["Country/Region of Birth"]),
+      nationality: g(["Country/Region of Origin (Nationality)", "Nationality"]),
+      nationalId: g(["National Identification Number"]),
+      passportNumber: g(["Passport/Travel Document Number", "Passport Number"]),
+      passportBookNumber: g(["Passport Book Number"]),
+      passportIssuer: g(["Country/Authority that Issued Passport/Travel Document"]),
+      passportIssuance: g(["Passport Issuance Date"]),
+      passportExpiration: g(["Passport Expiration Date"]),
+      purposeOfTrip: g(["Purpose of Trip to the U.S."]),
+      arrivalDate: g(["Intended Date of Arrival"]),
+      email: g(["Email Address"]),
+      phone: g(["Primary Phone Number"]),
+      petitionNumber: g(["Petition Number", "Receipt Number", "SEVIS"]),
+    } };
+  },
+  fieldSchema: [
+    { key: "surname", label: "Surname", normalizer: norm.name, semantics: "same", severity: "critical" },
+    { key: "given", label: "Given names", normalizer: norm.name, semantics: "same", severity: "critical" },
+    { key: "dob", label: "Date of birth", normalizer: norm.date, semantics: "same", severity: "critical" },
+    { key: "sex", label: "Sex", normalizer: norm.upper, semantics: "same", severity: "critical" },
+    { key: "nationality", label: "Nationality", normalizer: norm.upper, semantics: "same", severity: "critical" },
+    { key: "passportNumber", label: "Passport number", normalizer: norm.id, semantics: "same", severity: "critical" },
+    { key: "nativeName", label: "Native-alphabet name", normalizer: norm.plain, semantics: "same", severity: "high" },
+    { key: "cityOfBirth", label: "City of birth", normalizer: norm.name, semantics: "same", severity: "high" },
+    { key: "stateOfBirth", label: "State/province of birth", normalizer: norm.name, semantics: "same", severity: "high" },
+    { key: "countryOfBirth", label: "Country of birth", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "maritalStatus", label: "Marital status", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "otherNames", label: "Other names used", normalizer: norm.name, semantics: "same", severity: "high" },
+    { key: "passportExpiration", label: "Passport expiration", normalizer: norm.date, semantics: "same", severity: "high" },
+    { key: "passportIssuance", label: "Passport issuance", normalizer: norm.date, semantics: "same", severity: "high" },
+    { key: "passportIssuer", label: "Passport issuer", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "purposeOfTrip", label: "Purpose of trip", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "email", label: "Email address", normalizer: norm.upper, semantics: "same", severity: "medium" },
+    { key: "phone", label: "Primary phone", normalizer: norm.id, semantics: "same", severity: "medium" },
+    { key: "arrivalDate", label: "Intended arrival", normalizer: norm.date, semantics: "same", severity: "medium" },
+    { key: "nationalId", label: "National ID number", normalizer: norm.id, semantics: "same", severity: "medium" },
+    { key: "passportBookNumber", label: "Passport book number", normalizer: norm.id, semantics: "same", severity: "medium" },
+  ],
+  rules: [],
+};
+
+const i797 = {
+  id: "i797", label: "I-797 Notice of Action",
+  detect: text => scoreFrom(text, [/I-?797/, /NOTICE OF ACTION/, /RECEIPT NUMBER/, /USCIS/]) >= 0.5 ? 0.9 : 0,
+  extract: ({ lines }) => ({ fields: {
+    receiptNumber: grabLabel(lines, ["Receipt Number", "Receipt No"]),
+    noticeType: grabLabel(lines, ["Notice Type"]),
+    caseType: grabLabel(lines, ["Case Type", "Class", "Classification", "Petition Type"]),
+    petitioner: grabLabel(lines, ["Petitioner", "Employer"]),
+    beneficiary: grabLabel(lines, ["Beneficiary"]),
+    validFrom: grabLabel(lines, ["Valid From", "Validity From", "Petition Validity"]),
+    validTo: grabLabel(lines, ["Valid To", "Valid Until", "Validity To"]),
+    noticeDate: grabLabel(lines, ["Notice Date", "Received Date"]),
+    serviceCenter: grabLabel(lines, ["Service Center", "USCIS Office"]),
+  } }),
+  fieldSchema: [
+    { key: "receiptNumber", label: "Receipt number", normalizer: norm.id, semantics: "same", severity: "critical" },
+    { key: "beneficiary", label: "Beneficiary", normalizer: norm.name, semantics: "same", severity: "critical" },
+    { key: "petitioner", label: "Petitioner", normalizer: norm.name, semantics: "same", severity: "high" },
+    { key: "caseType", label: "Classification", normalizer: norm.upper, semantics: "same", severity: "high" },
+    { key: "noticeType", label: "Notice type", normalizer: norm.upper, semantics: "either", severity: "medium" },
+    { key: "validFrom", label: "Validity start", normalizer: norm.date, semantics: "differ", severity: "high" },
+    { key: "validTo", label: "Validity end", normalizer: norm.date, semantics: "differ", severity: "high" },
+    { key: "noticeDate", label: "Notice date", normalizer: norm.date, semantics: "differ", severity: "low" },
+    { key: "serviceCenter", label: "Service center", normalizer: norm.upper, semantics: "either", severity: "low" },
+  ],
+  rules: [
+    { id: "i797-classification-change", severity: "high", requires: ["caseType"],
+      evaluate: (a, b) => valChanged(a, b, "caseType", norm.upper)
+        ? finding("high", "Classification changed", `${a.fields.caseType.value} → ${b.fields.caseType.value}`) : null },
+    { id: "i797-validity-gap", severity: "warning", requires: ["validTo", "validFrom"],
+      evaluate: (a, b) => {
+        const oldEnd = toISO(a.fields.validTo.value), newStart = toISO(b.fields.validFrom.value);
+        if (oldEnd && newStart && newStart > oldEnd)
+          return finding("warning", "Gap between old validity end and new start",
+            `${oldEnd} → ${newStart} (${daysBetween(oldEnd, newStart)} day gap)`);
+        return null;
+      } },
+  ],
+};
+
+const i20 = {
+  id: "i20", label: "I-20 / DS-2019",
+  detect: text => scoreFrom(text, [/SEVIS/, /I-?20|DS-?2019/, /CERTIFICATE OF ELIGIBILITY|EXCHANGE VISITOR/, /PROGRAM/]) >= 0.5 ? 0.9 : 0,
+  extract: ({ lines }) => ({ fields: {
+    sevisId: grabLabel(lines, ["SEVIS ID", "SEVIS Identification", "SEVIS No", "SEVIS"]),
+    schoolName: grabLabel(lines, ["School Name", "Program Sponsor", "Sponsor Name"]),
+    programStart: grabLabel(lines, ["Program Start", "Start of Program", "Begin"]),
+    programEnd: grabLabel(lines, ["Program End", "End of Program", "End Date"]),
+    degreeLevel: grabLabel(lines, ["Education Level", "Degree Level", "Level"]),
+    fieldOfStudy: grabLabel(lines, ["Major", "Field of Study", "CIP"]),
+    funding: grabLabel(lines, ["Total", "Estimated average costs", "Funding"]),
+    employmentAuth: grabLabel(lines, ["Employment Authorization", "CPT", "OPT", "Practical Training"]),
+  } }),
+  fieldSchema: [
+    { key: "sevisId", label: "SEVIS ID", normalizer: norm.id, semantics: "same", severity: "critical" },
+    { key: "schoolName", label: "School / sponsor", normalizer: norm.name, semantics: "same", severity: "high" },
+    { key: "programStart", label: "Program start", normalizer: norm.date, semantics: "differ", severity: "high" },
+    { key: "programEnd", label: "Program end", normalizer: norm.date, semantics: "differ", severity: "high" },
+    { key: "degreeLevel", label: "Degree level", normalizer: norm.upper, semantics: "same", severity: "medium" },
+    { key: "fieldOfStudy", label: "Field of study", normalizer: norm.upper, semantics: "same", severity: "medium" },
+    { key: "funding", label: "Funding total", normalizer: norm.money, semantics: "differ", severity: "low" },
+    { key: "employmentAuth", label: "Employment authorization", normalizer: norm.upper, semantics: "either", severity: "low" },
+  ],
+  rules: [
+    { id: "i20-sevis-change", severity: "warning", requires: ["sevisId"],
+      evaluate: (a, b) => valChanged(a, b, "sevisId", norm.id)
+        ? finding("warning", "SEVIS ID changed — likely a transfer or new record",
+            `${a.fields.sevisId.value} → ${b.fields.sevisId.value}`, /*loud*/true) : null },
+    { id: "i20-funding-change", severity: "info", requires: ["funding"],
+      evaluate: (a, b) => valChanged(a, b, "funding", norm.money)
+        ? finding("info", "Funding total changed",
+            `${a.fields.funding.value} → ${b.fields.funding.value}`) : null },
+  ],
+};
+
+const ead = {
+  id: "ead", label: "EAD card (I-766)",
+  detect: text => scoreFrom(text, [/I-?766/, /EMPLOYMENT AUTHORIZATION/, /USCIS#|USCIS NUMBER/, /CATEGORY/]) >= 0.5 ? 0.85 : 0,
+  extract: ({ lines }) => ({ fields: {
+    cardNumber: grabLabel(lines, ["Card Number", "Card No"]),
+    category: grabLabel(lines, ["Category", "Category Code"]),
+    validFrom: grabLabel(lines, ["Valid From", "Not Valid Before"]),
+    validTo: grabLabel(lines, ["Valid Until", "Card Expires", "Expires"]),
+    uscisNumber: grabLabel(lines, ["USCIS#", "USCIS Number", "USCIS No", "A-Number", "A#"]),
+  } }),
+  fieldSchema: [
+    { key: "uscisNumber", label: "USCIS number", normalizer: norm.id, semantics: "same", severity: "critical" },
+    { key: "category", label: "Category code", normalizer: norm.id, semantics: "same", severity: "high" },
+    { key: "cardNumber", label: "Card number", normalizer: norm.id, semantics: "differ", severity: "medium" },
+    { key: "validFrom", label: "Valid from", normalizer: norm.date, semantics: "differ", severity: "medium" },
+    { key: "validTo", label: "Valid until", normalizer: norm.date, semantics: "differ", severity: "high" },
+  ],
+  rules: [
+    { id: "ead-category-change", severity: "high", requires: ["category"],
+      evaluate: (a, b) => valChanged(a, b, "category", norm.id)
+        ? finding("high", "EAD category code changed",
+            `${a.fields.category.value} → ${b.fields.category.value}`) : null },
+  ],
+};
+
+// LCA (ETA-9035) and offer letter are two SIDES of a cross-type comparison.
+const lca = {
+  id: "lca", label: "LCA (ETA-9035)",
+  detect: text => scoreFrom(text, [/ETA-?9035|LABOR CONDITION APPLICATION/, /PREVAILING WAGE/, /SOC/, /WAGE LEVEL|WAGE RATE/]) >= 0.5 ? 0.9 : 0,
+  extract: ({ lines }) => ({ fields: {
+    socCode: grabLabel(lines, ["SOC Code", "SOC/O*NET", "SOC"]),
+    jobTitle: grabLabel(lines, ["Job Title", "Occupation"]),
+    worksite: grabLabel(lines, ["Worksite Address", "Place of Employment", "Worksite"]),
+    wageRate: grabLabel(lines, ["Wage Rate", "Wage Offer", "Rate of Pay", "Prevailing Wage"]),
+    wageLevel: grabLabel(lines, ["Wage Level", "Level"]),
+    employFrom: grabLabel(lines, ["Begin Date", "Period of Employment", "Employment Start"]),
+    employTo: grabLabel(lines, ["End Date", "Employment End"]),
+    fullTime: grabLabel(lines, ["Full Time", "Full-Time Position", "FT/PT"]),
+  } }),
+  fieldSchema: [],
+  rules: [],
+};
+
+const offerLetter = {
+  id: "offer", label: "Offer letter",
+  detect: text => scoreFrom(text, [/OFFER OF EMPLOYMENT|OFFER LETTER|WE ARE PLEASED TO OFFER/, /SALARY|ANNUAL COMPENSATION|BASE PAY/, /POSITION|TITLE/]) >= 0.5 ? 0.7 : 0,
+  extract: ({ lines }) => ({ fields: {
+    jobTitle: grabLabel(lines, ["Position", "Title", "Job Title"]),
+    worksite: grabLabel(lines, ["Location", "Worksite", "Office", "Work Location"]),
+    salary: grabLabel(lines, ["Salary", "Base Pay", "Annual Compensation", "Base Salary"]),
+    startDate: grabLabel(lines, ["Start Date", "Anticipated Start"]),
+    fullTime: grabLabel(lines, ["Full Time", "Full-Time", "Employment Type"]),
+    socCode: grabLabel(lines, ["SOC"]),
+  } }),
+  fieldSchema: [],
+  rules: [],
+};
+
+export const DOC_TYPES = [passport, ds160, i797, i20, ead, lca, offerLetter];
+export const TYPE_BY_ID = Object.fromEntries(DOC_TYPES.map(t => [t.id, t]));
+
+/* ───────────────────────── detection ───────────────────────── */
+
+export function detectType(text) {
+  const scored = DOC_TYPES.map(t => ({ id: t.id, label: t.label, score: t.detect(text || "") }))
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score);
+  if (!scored.length) return { id: "general", label: "Unrecognized", score: 0, ambiguous: false, candidates: [] };
+  const top = scored[0];
+  const ambiguous = scored.length > 1 && (top.score - scored[1].score) < 0.15;
+  return { id: top.id, label: top.label, score: top.score, ambiguous, candidates: scored };
+}
+
+/* ───────────────────────── comparison ───────────────────────── */
+
+// Same-type version diff (DS-160↔DS-160, passport↔passport, I-797↔I-797, …)
+export function compareVersions(typeId, a, b) {
+  const type = TYPE_BY_ID[typeId];
+  if (!type) return { error: `Unknown document type: ${typeId}` };
+  const rows = [];
+  for (const f of type.fieldSchema) {
+    const av = a.fields[f.key] || mkField("", 0), bv = b.fields[f.key] || mkField("", 0);
+    if (!av.value && !bv.value) continue;
+    const outcome = compareValues(av, bv, f.normalizer);
+    rows.push({
+      key: f.key, label: f.label, semantics: f.semantics,
+      a: av, b: bv, outcome,
+      severity: severityFor(f, outcome),
+      confidence: Math.min(av.confidence || 0, bv.confidence || 0),
+    });
+  }
+  const findings = [];
+  for (const rule of type.rules) {
+    if (rule.requires.some(k => !(a.fields[k]?.value) || !(b.fields[k]?.value))) {
+      findings.push({ id: rule.id, skipped: true, reason: "required field not found on both versions" });
+      continue;
+    }
+    const f = rule.evaluate(a, b);
+    if (f) findings.push({ id: rule.id, ...f });
+  }
+  return { type: typeId, mode: "version", rows, findings };
+}
+
+// Cross-type comparison. Only LCA↔offer is defined.
+export function compareCross(a, b) {
+  const pair = new Set([a.type, b.type]);
+  if (pair.has("lca") && pair.has("offer")) return compareLcaOffer(a, b);
+  return { error: `No cross-type comparison defined for ${a.type} vs ${b.type}. ` +
+    `These are different document types; comparing them field-by-field would produce noise.`, undefinedPair: true };
+}
+
+function compareLcaOffer(a, b) {
+  const L = a.type === "lca" ? a : b;   // LCA side
+  const O = a.type === "lca" ? b : a;   // offer side
+  const findings = [];
+  const rows = [];
+  const pair = (label, lkey, okey, normalizer, semantics, severity) => {
+    const lv = L.fields[lkey] || mkField(""), ov = O.fields[okey] || mkField("");
+    if (!lv.value && !ov.value) return;
+    rows.push({ label, a: lv, b: ov, outcome: compareValues(lv, ov, normalizer), semantics, severity,
+                confidence: Math.min(lv.confidence || 0, ov.confidence || 0) });
+  };
+  pair("SOC code", "socCode", "socCode", norm.id, "same", "high");
+  pair("Job title", "jobTitle", "jobTitle", norm.name, "same", "high");
+  pair("Worksite", "worksite", "worksite", norm.name, "same", "high");
+  pair("Full/part time", "fullTime", "fullTime", norm.upper, "same", "medium");
+
+  // offered wage below LCA rate
+  const lcaWage = norm.money(L.fields.wageRate?.value), offerWage = norm.money(O.fields.salary?.value);
+  if (lcaWage != null && offerWage != null) {
+    rows.push({ label: "Wage", a: L.fields.wageRate, b: O.fields.salary, semantics: "same",
+      outcome: offerWage >= lcaWage ? "match" : "mismatch", severity: "critical",
+      confidence: Math.min(L.fields.wageRate.confidence, O.fields.salary.confidence) });
+    if (offerWage < lcaWage)
+      findings.push(finding("blocker", "Offered wage is below the LCA wage rate",
+        `offer ${offerWage} < LCA ${lcaWage}`));
+  }
+  // worksite mismatch
+  if (L.fields.worksite?.value && O.fields.worksite?.value &&
+      norm.name(L.fields.worksite.value) !== norm.name(O.fields.worksite.value))
+    findings.push(finding("warning", "Worksite differs between LCA and offer",
+      `${L.fields.worksite.value} ≠ ${O.fields.worksite.value}`));
+  // offer start outside LCA validity
+  const start = toISO(O.fields.startDate?.value),
+        from = toISO(L.fields.employFrom?.value), to = toISO(L.fields.employTo?.value);
+  if (start && from && start < from)
+    findings.push(finding("warning", "Offer start date is before the LCA period of employment", `${start} < ${from}`));
+  if (start && to && start > to)
+    findings.push(finding("warning", "Offer start date is after the LCA period of employment", `${start} > ${to}`));
+
+  return { type: "lca-offer", mode: "cross", rows, findings };
+}
+
+/* ───────────────────────── helpers ───────────────────────── */
+
+function severityFor(f, outcome) {
+  if (outcome === "match" || outcome === "absent") return "none";
+  if (outcome === "unreadable") return "unreadable";
+  if (outcome === "one-sided") return f.severity === "critical" ? "high" : "low";
+  // mismatch
+  if (f.semantics === "differ") return "info";   // expected to change (e.g. new passport number)
+  if (f.semantics === "either") return "info";
+  return f.severity;                              // 'same' mismatch → its declared severity
+}
+
+function valChanged(a, b, key, normalizer) {
+  const av = a.fields[key]?.value, bv = b.fields[key]?.value;
+  if (!av || !bv) return false;
+  return normalizer(av) !== normalizer(bv);
+}
+function finding(severity, title, detail, loud = false) { return { severity, title, detail, loud }; }
+function daysBetween(isoA, isoB) {
+  return Math.round((Date.parse(isoB) - Date.parse(isoA)) / 86400000);
+}

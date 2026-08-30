@@ -113,6 +113,12 @@ function build() {
   for (const f of fs.readdirSync(path.join(SRC, "js"))) {
     fs.copyFileSync(path.join(SRC, "js", f), path.join(jsOut, f));
   }
+  // engine (pure ESM module, loaded on compare/audit as <script type="module">)
+  const engOut = path.join(ROOT, "engine");
+  fs.mkdirSync(engOut, { recursive: true });
+  for (const f of fs.readdirSync(path.join(SRC, "engine"))) {
+    fs.copyFileSync(path.join(SRC, "engine", f), path.join(engOut, f));
+  }
 
   // 2. render every route
   const routes = allPages.map(writeMulti);
@@ -154,8 +160,15 @@ function buildSingleFile(pages) {
     return `  <section class="tab${i===0?" active":""}" id="tab-${t.id}">\n${body}\n  </section>`;
   }).join("\n");
 
+  // Inline the ESM engine as a global for the offline file (module imports can't
+  // resolve from file://). Strip `export ` and expose the public API on window.
+  const engineSrc = read(path.join(SRC, "engine", "doctypes.mjs"))
+    .replace(/^export\s+/gm, "");
+  const engineGlobal = `(function(){\n${engineSrc}\n`
+    + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n})();`;
+
   const scriptFiles = ["comparator","audit","bulletin","processing","wages","sponsors"];
-  const inlineJs = scriptFiles.map(f => resolveInline(`/js/${f}.js`)).join("\n;\n");
+  const inlineJs = engineGlobal + "\n;\n" + scriptFiles.map(f => resolveInline(`/js/${f}.js`)).join("\n;\n");
   const promoJs = resolveInline("/js/promo.js");
 
   const navBtns = TABS.map((t,i)=>`    <button type="button" data-tab="${t.id}"${i===0?' class="on"':''}>
