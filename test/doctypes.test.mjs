@@ -285,7 +285,8 @@ Visa Number: N0000000`;
   assert.equal(d.fields.hasDriversLicense.value, "YES");
   assert.equal(d.fields.driversLicenseNumber.value, "12345678");   // strips "(1):"
   assert.equal(d.fields.driversLicenseState.value, "TEXAS");
-  assert.equal(d.fields.dateLastVisaIssued.value, "2018-10-17");   // parsed to ISO
+  assert.equal(d.fields.dateLastVisaIssued.value, "17 OCTOBER 2018");     // stored raw…
+  assert.equal(toISO(d.fields.dateLastVisaIssued.value), "2018-10-17");   // …normalized at compare time
   assert.equal(d.fields.priorVisaNumber.value, "N0000000");
 });
 
