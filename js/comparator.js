@@ -586,7 +586,7 @@ function buildReportHtml(rep) {
       const rows = rep.rows.filter(r => (r.category || "Details") === cat);
       if (!rows.length) return "";
       const changed = rows.filter(r => r.outcome !== "match").length;
-      return `<details${changed ? " open" : ""}><summary><b>${escapeHtml(cat)}</b> — ${changed} changed &middot; ${rows.length - changed} unchanged</summary>${tableFor(rows)}</details>`;
+      return `<details open><summary><b>${escapeHtml(cat)}</b> — ${changed} changed &middot; ${rows.length - changed} unchanged</summary>${tableFor(rows)}</details>`;
     }).join("");
   } else {
     itemsHtml = tableFor(rep.rows);
@@ -608,7 +608,7 @@ function buildReportHtml(rep) {
   th,td{border:1px solid #ddd;padding:7px 9px;text-align:left;vertical-align:top;word-break:break-word}
   th{background:#f3f0e8} td.it{width:32%} td.nt{width:14%;color:#777;font-size:12px}
   .disc{color:#777;font-size:12px;margin-top:18px;border-top:1px solid #eee;padding-top:10px}
-  @media print{body{margin:0} details{break-inside:avoid}}
+  @media print{body{margin:0} details{break-inside:avoid} details>*{display:block !important}}
 </style></head><body>
 <h1>VisaDash — comparison report</h1>
 <p class="meta">${escapeHtml(rep.title)} &middot; generated ${escapeHtml(stamp)} &middot; produced on-device, nothing uploaded</p>
