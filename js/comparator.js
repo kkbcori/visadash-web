@@ -113,18 +113,31 @@ function itemsToLines(items) {
     ln.sort((a, b) => a.x - b.x).map(i => i.s).join(" ").replace(/\s+/g, " ").trim());
 }
 async function ocrPdf(pdf, key, maxPages = 8) {
+  if (!window.Tesseract) throw new Error("OCR engine (tesseract.js) failed to load — check your connection and reload.");
   let text = "";
   const n = Math.min(pdf.numPages, maxPages);
+  const MAX_SIDE = 2600;                     // cap canvas so large scans don't overflow the browser limit
   for (let p = 1; p <= n; p++) {
-    const page = await pdf.getPage(p);
-    const vp = page.getViewport({ scale: 2 });
-    const c = document.createElement("canvas");
-    c.width = vp.width; c.height = vp.height;
-    await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
-    const r = await Tesseract.recognize(c, "eng", { logger: ocrLogger(key, p) });
-    text += "\n" + r.data.text;
+    try {
+      const page = await pdf.getPage(p);
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(2, MAX_SIDE / Math.max(base.width, base.height));
+      const vp = page.getViewport({ scale: Math.max(1, scale) });
+      const c = document.createElement("canvas");
+      c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      const ctx = c.getContext("2d");
+      if (!ctx) throw new Error("could not create a canvas to render the page");
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const r = await Tesseract.recognize(c, "eng", { logger: ocrLogger(key, p) });
+      text += "\n" + (r && r.data ? r.data.text : "");
+      c.width = c.height = 0;                 // release the (large) canvas promptly
+    } catch (e) {
+      const msg = (e && (e.message || e.name)) || String(e) || "unknown OCR error";
+      throw new Error(`OCR failed on page ${p}: ${msg}`);
+    }
   }
   if (pdf.numPages > maxPages) log(`  (OCR limited to first ${maxPages} pages)`, "");
+  if (!text.trim()) throw new Error("OCR produced no text — the scan may be too low-resolution. Try a sharper file, or paste the passport MRZ.");
   return text;
 }
 function ocrLogger(key, page) {
@@ -444,32 +457,38 @@ const ENGINE_NEW = ["i797", "i20", "ead", "lca", "offer"];
 function engineCompare(a, b) {
   const E = window.VDEngine;
   if (!E) return null;
-  if (mode !== "auto") return null;            // explicit ds160/passport/general → legacy
+  if (mode === "general") return null;         // "Other docs" → legacy text diff
+  const docOf = (id, side) => ({ type: id, ...E.TYPE_BY_ID[id].extract({ text: side.text, lines: side.lines }) });
+  const crossPair = (x, y) => (x === "lca" && y === "offer") || (x === "offer" && y === "lca");
+  const KNOWN = ["ds160", "passport", "i797", "i20", "ead"];
+
+  // Explicit mode overrides detection.
+  if (mode === "ds160" || mode === "passport") {
+    const res = E.compareVersions(mode, docOf(mode, a), docOf(mode, b));
+    if (res.error) return { error: res.error };
+    return { ...res, title: `${E.TYPE_BY_ID[mode].label} — version comparison`, labels: ["Earlier", "Later"], a, b };
+  }
+
+  // Auto-detect.
   const detA = E.detectType(a.text), detB = E.detectType(b.text);
   const idA = detA.id, idB = detB.id;
-  const isNew = id => ENGINE_NEW.includes(id);
-  const crossPair = (x, y) => (x === "lca" && y === "offer") || (x === "offer" && y === "lca");
-
-  const docOf = (id, side) => ({ type: id, ...E.TYPE_BY_ID[id].extract({ text: side.text, lines: side.lines }) });
 
   if (crossPair(idA, idB)) {
     const res = E.compareCross(docOf(idA, a), docOf(idB, b));
     if (res.error) return { error: res.error };
     return { ...res, title: "LCA ↔ offer letter", labels: ["LCA", "Offer"], a, b, detA, detB };
   }
-  if (idA === idB && isNew(idA)) {
+  if (idA === idB && KNOWN.includes(idA)) {
     const res = E.compareVersions(idA, docOf(idA, a), docOf(idA, b));
     if (res.error) return { error: res.error };
-    return { ...res, title: `${E.TYPE_BY_ID[idA].label} — version comparison`,
-             labels: ["Earlier", "Later"], a, b, detA, detB };
+    return { ...res, title: `${E.TYPE_BY_ID[idA].label} — version comparison`, labels: ["Earlier", "Later"], a, b, detA, detB };
   }
-  // Mixed/unknown involving a new type, no defined comparison → say so (don't diff garbage)
-  if ((isNew(idA) || isNew(idB)) && idA !== idB) {
+  if (idA !== "general" && idB !== "general" && idA !== idB) {
     return { error: `Side A looks like ${detA.label} and side B like ${detB.label}. ` +
       `These are different document types with no defined comparison, so VisaDash won't diff them field-by-field. ` +
       `Upload two of the same type, or an LCA against an offer letter.` };
   }
-  return null;                                  // ds160/passport/general → legacy renderer
+  return null;                                  // unrecognized → legacy text diff
 }
 
 const ENG_SEV = {
@@ -495,6 +514,51 @@ function srcTitle(f) {
   return ` title="Source${s.line >= 0 ? " line " + (s.line + 1) : " (MRZ)"}: ${escapeHtml(s.snippet || "")}"`;
 }
 
+/* ---- shared 4-column comparison table: Item | Earlier | Later | Difference ---- */
+function diffNote(oldV, newV, outcome) {
+  if (outcome === "match") return "No change";
+  if (outcome === "unreadable") return "Couldn't read reliably";
+  if (outcome === "one-sided" || outcome === "absent") return oldV ? "Only in earlier" : "Only in later";
+  const isISO = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || "").trim());
+  if (isISO(oldV) && isISO(newV)) {
+    const d = Math.round((Date.parse(newV) - Date.parse(oldV)) / 86400000);
+    return (d > 0 ? "+" : "") + d + " day" + (Math.abs(d) === 1 ? "" : "s");
+  }
+  return "Changed";
+}
+function cmpRow(n, label, oldV, newV, outcome, oldTitle, newTitle, chip) {
+  const cls = outcome === "match" ? "cmp-same"
+    : outcome === "unreadable" ? "cmp-unread" : "cmp-diff";
+  return `<tr>
+      <td class="cmp-item"><span class="cmp-n">${n}</span>${label ? " " + escapeHtml(label) : ""}${chip || ""}</td>
+      <td class="cmp-cell ${cls}"${oldTitle || ""}>${escapeHtml(oldV || "—")}</td>
+      <td class="cmp-cell ${cls}"${newTitle || ""}>${escapeHtml(newV || "—")}</td>
+      <td class="cmp-note">${escapeHtml(diffNote(oldV, newV, outcome))}</td>
+    </tr>`;
+}
+function cmpTable(colA, colB, rowsHtml) {
+  return `<div class="tbl-wrap"><table class="dt cmp-table">
+      <thead><tr><th>Item</th><th>${escapeHtml(colA)}</th><th>${escapeHtml(colB)}</th><th>Difference</th></tr></thead>
+      <tbody>${rowsHtml}</tbody></table></div>`;
+}
+function paintComparison(o) {
+  const html = `<div class="verdict ${o.verdictClass}">
+      <div class="v-title">${escapeHtml(o.title)}</div>
+      <div class="v-sub">${o.summary}</div>
+    </div>
+    ${o.aboveHtml || ""}
+    ${o.changedRows
+      ? cmpTable(o.colA, o.colB, o.changedRows)
+      : `<div class="callout note"><div class="sub">No differences found between the two documents in the compared items.</div></div>`}
+    ${o.sameRows
+      ? `<details class="cmp-collapse"><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"} — click to expand</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}
+    ${o.belowHtml || ""}`;
+  const el = $("#results");
+  el.innerHTML = html;
+  el.classList.add("show");
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderEngineResult(eng) {
   const [la, lb] = eng.labels;
   const findings = (eng.findings || []).filter(f => !f.skipped);
@@ -509,42 +573,55 @@ function renderEngineResult(eng) {
       ${f.detail ? `<div class="sub">${escapeHtml(f.detail)}</div>` : ""}</div>`;
   };
 
-  const row = r => {
-    const sv = ENG_SEV[r.severity] || ENG_SEV.none;
-    const outClass = r.outcome === "match" ? "eng-ok"
-      : r.outcome === "unreadable" ? "eng-unread"
-      : r.outcome === "mismatch" ? "eng-bad"
-      : "eng-neutral";
+  let n = 0; const changed = [], same = [];
+  for (const r of (eng.rows || [])) {
+    if (r.outcome === "absent") continue;
+    n++;
     const av = r.a || { value: "", confidence: 0 }, bv = r.b || { value: "", confidence: 0 };
-    return `<tr class="${outClass}">
-      <td>${escapeHtml(r.label)}${sv.label ? ` <span class="eng-chip ${sv.cls}">${sv.label}</span>` : ""}</td>
-      <td${srcTitle(av)}>${escapeHtml(av.value || "—")} ${confDot(av.confidence)}</td>
-      <td${srcTitle(bv)}>${escapeHtml(bv.value || "—")} ${confDot(bv.confidence)}</td>
-      <td class="eng-out">${r.outcome}</td>
-    </tr>`;
-  };
+    const sv = ENG_SEV[r.severity] || ENG_SEV.none;
+    const chip = (r.outcome !== "match" && sv.label) ? ` <span class="eng-chip ${sv.cls}">${sv.label}</span>` : "";
+    const html = cmpRow(n, r.label, av.value, bv.value, r.outcome, srcTitle(av), srcTitle(bv), chip);
+    (r.outcome === "match" ? same : changed).push(html);
+  }
 
-  const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review — verify each against your documents.`;
+  const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review`
+    + (same.length ? ` · ${same.length} unchanged` : "") + " — verify each against your documents.";
+  const above = (eng.detA && eng.detB && (eng.detA.ambiguous || eng.detB.ambiguous)
+      ? `<div class="callout note"><div class="sub">Detection was not clear-cut for at least one side — confirm the document types are what you intended.</div></div>` : "")
+    + (findings.length ? `<div class="eng-findings">${findings.map(findingCard).join("")}</div>` : "");
+  const below = (skipped.length
+      ? `<div class="tool-notes"><b>Rules skipped</b> (a required field wasn't found on both documents):<br>${skipped.map(s => "&bull; " + escapeHtml(s.id) + " — " + escapeHtml(s.reason)).join("<br>")}</div>` : "")
+    + `<div class="tool-notes"><b>Green = same, red = different.</b> Hover a value to see the exact source line it came from. A mismatch between two low-confidence reads is marked <i>couldn't read reliably</i>, not a discrepancy. This is not legal advice — verify every item against your original documents.</div>`;
 
-  const html = `<div class="verdict ${blockers ? "verdict-bad" : warns ? "verdict-warn" : "verdict-ok"}">
-      <div class="v-title">${escapeHtml(eng.title)}</div>
-      <div class="v-sub">${summary}</div>
-    </div>
-    ${eng.detA && eng.detB && (eng.detA.ambiguous || eng.detB.ambiguous)
-      ? `<div class="callout note"><div class="sub">Detection was not clear-cut for at least one side — confirm the document types are what you intended.</div></div>` : ""}
-    ${findings.length ? `<div class="eng-findings">${findings.map(findingCard).join("")}</div>`
-      : `<div class="callout note"><div class="sub">No rule-based flags fired. Still review the fields below against your originals.</div></div>`}
-    <div class="tbl-wrap"><table class="dt eng-table">
-      <thead><tr><th>Field</th><th class="num">${escapeHtml(la)}</th><th class="num">${escapeHtml(lb)}</th><th>Outcome</th></tr></thead>
-      <tbody>${(eng.rows || []).map(row).join("")}</tbody>
-    </table></div>
-    ${skipped.length ? `<div class="tool-notes"><b>Rules skipped</b> (a required field wasn't found on both documents):<br>${skipped.map(s => "&bull; " + escapeHtml(s.id) + " — " + escapeHtml(s.reason)).join("<br>")}</div>` : ""}
-    <div class="tool-notes"><b>Confidence + source.</b> Each value shows the extraction confidence; hover a value to see the exact source line it came from. A mismatch between two low-confidence reads is marked <i>unreadable</i>, not a discrepancy. This is not legal advice — verify every field against your original documents.</div>`;
+  paintComparison({
+    title: eng.title,
+    verdictClass: blockers ? "verdict-bad" : (warns || changed.length) ? "verdict-warn" : "verdict-ok",
+    summary, aboveHtml: above, colA: la, colB: lb,
+    changedRows: changed.join(""), sameRows: same.length ? same.join("") : "", sameCount: same.length,
+    belowHtml: below,
+  });
+}
 
-  const el = $("#results");
-  el.innerHTML = html;
-  el.classList.add("show");
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+/* general / "other docs": present the line diff as the same 4-column table */
+function renderGeneralTable(gres) {
+  const diff = gres.diff || [];
+  let n = 0; const changed = [], same = [];
+  for (let i = 0; i < diff.length; i++) {
+    const d = diff[i];
+    if (d.t === "same") { n++; same.push(cmpRow(n, "", d.x, d.x, "match")); }
+    else if (d.t === "del" && diff[i + 1] && diff[i + 1].t === "add") { n++; changed.push(cmpRow(n, "", d.x, diff[i + 1].x, "mismatch")); i++; }
+    else if (d.t === "del") { n++; changed.push(cmpRow(n, "", d.x, "", "one-sided")); }
+    else { n++; changed.push(cmpRow(n, "", "", d.x, "one-sided")); }
+  }
+  const summary = `${changed.length} changed line${changed.length === 1 ? "" : "s"}`
+    + (same.length ? ` · ${same.length} unchanged` : "") + " — review below.";
+  paintComparison({
+    title: "Document text comparison",
+    verdictClass: changed.length ? "verdict-warn" : "verdict-ok",
+    summary, colA: "Earlier", colB: "Later",
+    changedRows: changed.join(""), sameRows: same.length ? same.join("") : "", sameCount: same.length,
+    belowHtml: `<div class="tool-notes">Line-by-line comparison of the extracted text. This is not legal advice — verify against your documents.</div>`,
+  });
 }
 
 /* ============ run ============ */
@@ -555,8 +632,30 @@ $("#resetBtn").addEventListener("click", () => location.reload());
 function showDemoReport() {
   $("#log").innerHTML = "";
   $("#log").classList.remove("show");
-  const demo = buildDemoComparison();
-  renderResults(demo.result, demo.a, demo.b, "ds160", false, true);
+  const E = window.VDEngine;
+  if (E) {
+    const A = `Nonimmigrant Visa Application DS-160
+      Surname: SHARMA
+      Given Names: PRIYA ANIL
+      Date of Birth: 01-JAN-1988
+      Sex: FEMALE
+      Nationality: INDIA
+      Passport Number: Z1234567
+      Passport Expiration Date: 01-JAN-2030
+      Marital Status: SINGLE
+      Email Address: priya.old@gmail.com
+      Intended Date of Arrival: 15-JUN-2024`;
+    const B = A.replace("PRIYA ANIL", "PRIYA A").replace("Z1234567", "Z7654321")
+      .replace("01-JAN-2030", "01-JAN-2034").replace("SINGLE", "MARRIED")
+      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026");
+    const docOf = t => ({ type: "ds160", ...E.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
+    const res = E.compareVersions("ds160", docOf(A), docOf(B));
+    renderEngineResult({ ...res, title: "DS-160 — sample comparison", labels: ["Earlier", "Later"] });
+  } else {
+    renderGeneralTable(compareGeneral(
+      { lines: ["Surname: SHARMA", "Given Names: PRIYA ANIL", "Passport Number: Z1234567"] },
+      { lines: ["Surname: SHARMA", "Given Names: PRIYA A", "Passport Number: Z7654321"] }));
+  }
   const steps = $$(".compare-steps span");
   if (steps[2]) steps[2].classList.add("on");
   log("Loaded sample DS-160 comparison (demo data).", "ok");
@@ -631,23 +730,11 @@ async function run() {
       return;
     }
 
-    let kind = mode;
-    if (mode === "auto") {
-      kind = (a.kind === b.kind) ? a.kind : "general";
-    }
-    let result, typeMismatch = (a.kind !== b.kind);
-
-    if (kind === "passport")      result = comparePassport(a, b);
-    else if (kind === "ds160")    result = compareDS160(a, b);
-    else                          result = compareGeneral(a, b);
-
-    if (result.error) { log("! " + result.error, "err"); renderError(result.error); }
-    else {
-      renderResults(result, a, b, kind, typeMismatch && mode === "auto");
-      const steps = $$(".compare-steps span");
-      if (steps[2]) steps[2].classList.add("on");
-      log("Done.", "ok");
-    }
+    // Fallback: unrecognized / "Other docs" → text diff rendered as the same 4-column table.
+    renderGeneralTable(compareGeneral(a, b));
+    const steps = $$(".compare-steps span");
+    if (steps[2]) steps[2].classList.add("on");
+    log("Done.", "ok");
   } catch (err) {
     log("! " + err.message, "err");
     renderError(err.message);

@@ -828,3 +828,19 @@
 .dot-stale{ background:#c8892a !important; box-shadow:0 0 0 3px rgba(200,137,42,.18); }
 .freshness.is-stale{ color:#8a5a12; }
 .stale-warn{ color:#a3271b; }
+
+/* ============ 4-column comparison table (compare tool) ============ */
+.cmp-table{ width:100%; table-layout:fixed; }
+.cmp-table th, .cmp-table td{ vertical-align:top; word-break:break-word; }
+.cmp-table th:first-child, .cmp-table td.cmp-item{ width:30%; }
+.cmp-table td.cmp-note{ width:14%; color:var(--ink-faint); font:500 .8rem/1.3 "IBM Plex Mono",monospace; }
+.cmp-item .cmp-n{ display:inline-block; min-width:1.6em; padding:0 5px; margin-right:6px; border-radius:5px;
+  background:var(--paper-2); color:var(--ink-soft); font:600 .74rem/1.5 "IBM Plex Mono",monospace; text-align:center; }
+.cmp-cell{ font:500 .9rem/1.35 "IBM Plex Sans",sans-serif; }
+.cmp-cell.cmp-same{ background:#e9f2ec; color:#255e37; }
+.cmp-cell.cmp-diff{ background:#fbe9e7; color:#9a2f22; }
+.cmp-cell.cmp-unread{ background:#eee9f3; color:#5b4a76; }
+.cmp-collapse{ margin-top:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+.cmp-collapse > summary{ cursor:pointer; padding:11px 14px; font:600 .88rem/1 "IBM Plex Sans",sans-serif; color:var(--ink-soft); }
+.cmp-collapse[open] > summary{ border-bottom:1px solid var(--line); }
+.cmp-collapse .tbl-wrap{ padding:4px 8px 10px; }

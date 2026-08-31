@@ -36,6 +36,19 @@ Tools: **compare** = DS-160/passport comparator (verbatim, pdf.js+tesseract, MRZ
 by form×center. **wages** = `WAGES` prevailing-wage + offer check. **sponsors** = `EMPLOYERS`
 H-1B grades (sortable). **audit** = single-doc cross-check (scaffold now, engine Task 3).
 
+## Comparator UI (2026-08, post-Task-2)
+The compare tool now renders **every** comparison as a single **4-column table** —
+`Item (# + field) | Earlier | Later | Difference` — via `paintComparison`/`cmpRow` in
+`comparator.js`. Cells are **green when equal, red when different**; per-field severity chips
+show on changed rows; **matching rows collapse** into a `<details>` ("N unchanged items"). DS-160,
+passport, and the new types all route through `VDEngine` (`engineCompare`); only "Other docs"
+uses the legacy line-diff, itself rendered into the same table (`renderGeneralTable`). The legacy
+card renderer (`renderResults`, `compareDS160`, `comparePassport`, `buildDemoComparison`) is now
+**dead code** kept for reference; the demo button builds a sample via the engine.
+**OCR hardening:** `ocrPdf` caps canvas to 2600px/side (large passport scans were overflowing the
+browser canvas limit and throwing an empty error that surfaced as "undefined"), wraps per-page
+failures with a real message, and errors clearly if OCR yields no text.
+
 ## Document-type engine (Task 2, 2026-08)
 `src/engine/doctypes.mjs` — **pure ESM, no DOM/OCR/network**, runs in the browser (loaded on
 compare/audit as `<script type="module">` → `window.VDEngine`) and under `node --test`
