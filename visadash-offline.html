@@ -1311,6 +1311,8 @@ function compareValues(a, b, normalizer) {
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normKey = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
+const stripSep = s => s.replace(/^\s*\(\d+\)/, "").replace(/^[\s:.\-–—>|]+/, "").trim();
+
 function grabLabel(lines, labels, { key } = {}) {
   const arr = Array.isArray(labels) ? labels : [labels];
   const L = lines.map(l => String(l).replace(/\s+/g, " ").trim());
@@ -1318,15 +1320,18 @@ function grabLabel(lines, labels, { key } = {}) {
   for (const label of arr) {
     const lk = normKey(label);
     if (!lk) continue;
-    // whitespace/punctuation-flexible matcher built from the label's words
-    const re = new RegExp(label.trim().split(/\s+/).map(escRe).join("\\W+") + "\\W*", "i");
+    // Match the label ONLY at the start of a line (after optional bullets/space) and
+    // ending on a real boundary — so "Given Names" won't match inside "Mother's Given
+    // Names", and "Class" won't match inside "Classification". Whitespace/punctuation
+    // between the label's own words stays flexible.
+    const re = new RegExp("^\\W*" + label.trim().split(/\s+/).map(escRe).join("\\W+") + "(?![A-Za-z0-9])", "i");
     for (let i = 0; i < L.length; i++) {
-      if (Lk[i].indexOf(lk) === -1) continue;      // fast reject via normalized key
+      if (Lk[i].indexOf(lk) !== 0) continue;       // fast reject: normalized line must START with the label
       const m = L[i].match(re);
-      let val = m ? L[i].slice(m.index + m[0].length).trim() : "";
-      val = val.replace(/^[\s:.\-–—>]+/, "").trim();
+      if (!m) continue;
+      let val = stripSep(L[i].slice(m[0].length));
       let conf = 0.9, srcLine = i;
-      if (!val && i + 1 < L.length) { val = L[i + 1].trim().replace(/^[\s:.\-–—>]+/, "").trim(); conf = 0.6; srcLine = i + 1; }
+      if (!val && i + 1 < L.length) { val = stripSep(L[i + 1]); conf = 0.6; srcLine = i + 1; }
       // reject a "value" that is obviously just another field label (no data)
       if (val && !/^[A-Za-z][A-Za-z '/&().-]{2,}:$/.test(val)) {
         return mkField(val, conf, { line: srcLine, label, snippet: L[srcLine] });
@@ -1445,79 +1450,104 @@ const passport = {
 // DS-160 fields — ONE source drives both extract() and fieldSchema, grouped by the
 // DS-160's own sections so the report can present collapsible categories.
 // n = normalizer, s = semantics, sv = severity, labels = extractor label variants.
+// Category order + labels mirror the real DS-160 nav / "Print Application" printout.
 const DS160_CATEGORIES = [
-  "Personal Information 1", "Personal Information 2", "Address and Phone", "Passport",
-  "Travel", "U.S. Point of Contact", "Family", "Work/Education/Training",
+  "Personal Information 1", "Personal Information 2", "Travel", "Travel Companions",
+  "Previous U.S. Travel", "Address and Phone", "Passport", "U.S. Point of Contact",
+  "Family", "Work / Education / Training",
 ];
 const DS160_FIELDS = [
-  // ── Personal ──
+  // ── Personal Information 1 ──  (the printout prints the name as "Name Provided: SURNAME, GIVEN"; see extract())
   { key: "surname", label: "Surname", cat: "Personal Information 1", n: norm.name, s: "same", sv: "critical", labels: ["Surnames", "Surname", "Last Name", "Family Name"] },
   { key: "given", label: "Given names", cat: "Personal Information 1", n: norm.name, s: "same", sv: "critical", labels: ["Given Names", "Given Name", "First Name"] },
   { key: "nativeName", label: "Full name in native alphabet", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "high", labels: ["Full Name in Native Alphabet", "Name in Native Alphabet", "Native Alphabet"] },
   { key: "otherNames", label: "Other names used", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["Other Names Used", "Other Names"] },
-  { key: "telecode", label: "Telecode name", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "low", labels: ["Telecode"] },
+  { key: "telecode", label: "Telecode name", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "low", labels: ["Telecode Name Used", "Telecode Name", "Telecode"] },
   { key: "sex", label: "Sex", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "critical", labels: ["Sex", "Gender"] },
   { key: "maritalStatus", label: "Marital status", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "high", labels: ["Marital Status"] },
   { key: "dob", label: "Date of birth", cat: "Personal Information 1", n: norm.date, s: "same", sv: "critical", labels: ["Date of Birth", "Birth Date", "DOB"] },
   { key: "cityOfBirth", label: "City of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["City of Birth", "Place of Birth"] },
   { key: "stateOfBirth", label: "State/province of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "medium", labels: ["State/Province of Birth", "State of Birth", "Province of Birth"] },
   { key: "countryOfBirth", label: "Country of birth", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "high", labels: ["Country/Region of Birth", "Country of Birth"] },
-  // ── Nationality & IDs ──
+  // ── Personal Information 2 ──
   { key: "nationality", label: "Nationality", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "critical", labels: ["Country/Region of Origin (Nationality)", "Nationality"] },
   { key: "otherNationality", label: "Other nationality", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "medium", labels: ["Other Nationality", "Hold or Held Any Other Nationality"] },
   { key: "nationalId", label: "National ID number", cat: "Personal Information 2", n: norm.id, s: "same", sv: "medium", labels: ["National Identification Number", "National ID Number", "National ID"] },
   { key: "ssn", label: "U.S. Social Security number", cat: "Personal Information 2", n: norm.id, s: "same", sv: "medium", labels: ["U.S. Social Security Number", "Social Security Number"] },
   { key: "taxId", label: "U.S. taxpayer ID", cat: "Personal Information 2", n: norm.id, s: "same", sv: "low", labels: ["U.S. Taxpayer ID Number", "Taxpayer ID Number", "Taxpayer ID"] },
-  // ── Passport ──
-  { key: "passportType", label: "Passport type", cat: "Passport", n: norm.upper, s: "same", sv: "low", labels: ["Passport/Travel Document Type", "Passport Type", "Document Type"] },
-  { key: "passportNumber", label: "Passport number", cat: "Passport", n: norm.id, s: "same", sv: "critical", labels: ["Passport/Travel Document Number", "Passport Number", "Document Number"] },
-  { key: "passportBookNumber", label: "Passport book number", cat: "Passport", n: norm.id, s: "same", sv: "medium", labels: ["Passport Book Number", "Book Number"] },
-  { key: "passportIssuer", label: "Issuing country/authority", cat: "Passport", n: norm.upper, s: "same", sv: "high", labels: ["Country/Authority that Issued Passport/Travel Document", "Issuing Country", "Issuing Authority"] },
-  { key: "passportIssueCity", label: "Passport issued in city", cat: "Passport", n: norm.name, s: "same", sv: "low", labels: ["City where Issued", "City of Issuance", "Passport Issued in City"] },
-  { key: "passportIssueCountry", label: "Passport issued in country", cat: "Passport", n: norm.upper, s: "same", sv: "low", labels: ["Country/Region where Issued", "Country where Issued"] },
-  { key: "passportIssuance", label: "Issuance date", cat: "Passport", n: norm.date, s: "same", sv: "high", labels: ["Passport Issuance Date", "Date of Issuance", "Issuance Date"] },
-  { key: "passportExpiration", label: "Expiration date", cat: "Passport", n: norm.date, s: "same", sv: "high", labels: ["Passport Expiration Date", "Expiration Date"] },
-  // ── Travel Info ──
+  // ── Travel ──
   { key: "purposeOfTrip", label: "Purpose of trip", cat: "Travel", n: norm.upper, s: "same", sv: "high", labels: ["Purpose of Trip to the U.S.", "Purpose of Trip"] },
   { key: "purposeSpecify", label: "Purpose (specify)", cat: "Travel", n: norm.upper, s: "same", sv: "low", labels: ["Specify"] },
+  { key: "petitionNumber", label: "Application receipt / petition number", cat: "Travel", n: norm.id, s: "same", sv: "high", labels: ["Application Receipt/Petition Number", "Petition Number", "Receipt Number"] },
   { key: "whoPaying", label: "Who is paying for the trip", cat: "Travel", n: norm.upper, s: "same", sv: "medium", labels: ["Person/Entity Paying for Your Trip", "Who is Paying for Your Trip"] },
   { key: "intendedArrival", label: "Intended date of arrival", cat: "Travel", n: norm.date, s: "same", sv: "medium", labels: ["Intended Date of Arrival", "Date of Arrival"] },
-  { key: "lengthOfStay", label: "Intended length of stay", cat: "Travel", n: norm.plain, s: "same", sv: "low", labels: ["Intended Length of Stay", "Length of Stay"] },
-  { key: "stayAddress", label: "Address where you will stay", cat: "Travel", n: norm.plain, s: "same", sv: "medium", labels: ["Address Where You Will Stay in the U.S.", "Address Where You Will Stay"] },
-  // ── U.S. Point of Contact ──
-  { key: "contactName", label: "Contact person", cat: "U.S. Point of Contact", n: norm.name, s: "same", sv: "medium", labels: ["Contact Person Name", "Name of Contact Person", "Contact Person"] },
-  { key: "contactOrg", label: "Contact organization", cat: "U.S. Point of Contact", n: norm.name, s: "same", sv: "low", labels: ["Name of Organization", "Organization Name"] },
-  { key: "contactRelationship", label: "Relationship to you", cat: "U.S. Point of Contact", n: norm.upper, s: "same", sv: "low", labels: ["Relationship to You"] },
-  { key: "contactPhone", label: "Contact phone", cat: "U.S. Point of Contact", n: norm.id, s: "same", sv: "low", labels: ["Contact Phone Number", "U.S. Point of Contact Phone"] },
-  { key: "contactEmail", label: "Contact email", cat: "U.S. Point of Contact", n: norm.upper, s: "same", sv: "low", labels: ["Contact Email Address", "Point of Contact Email"] },
-  // ── Address & Phone (applicant) ──
+  { key: "lengthOfStay", label: "Intended length of stay", cat: "Travel", n: norm.plain, s: "same", sv: "low", labels: ["Intended Length of Stay in U.S.", "Intended Length of Stay", "Length of Stay"] },
+  { key: "stayAddress", label: "Address where you will stay", cat: "Travel", n: norm.plain, s: "same", sv: "medium", labels: ["Address where you will stay in the U.S.", "Address Where You Will Stay in the U.S.", "Address Where You Will Stay"] },
+  // ── Travel Companions ──
+  { key: "travelCompanions", label: "Other persons traveling with you", cat: "Travel Companions", n: norm.upper, s: "same", sv: "low", labels: ["Other Persons Traveling with You", "Are there other persons traveling with you"] },
+  // ── Previous U.S. Travel ──
+  { key: "beenInUS", label: "Ever been in the U.S.?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", labels: ["Have you ever been in the U.S."] },
+  { key: "issuedUSVisa", label: "Ever issued a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", labels: ["Have you ever been issued a U.S. Visa", "Have you ever been issued a U.S. visa"] },
+  { key: "priorVisaNumber", label: "Previous visa number", cat: "Previous U.S. Travel", n: norm.id, s: "same", sv: "medium", labels: ["Visa Number"] },
+  { key: "visaRefused", label: "Ever refused a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "high", labels: ["Have you ever been refused a U.S. Visa", "been refused admission to the United States"] },
+  { key: "immigrantPetition", label: "Immigrant petition filed for you?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", labels: ["Has anyone ever filed an immigrant petition on your behalf"] },
+  // ── Address and Phone ──
   { key: "homeAddress", label: "Home address", cat: "Address and Phone", n: norm.plain, s: "same", sv: "medium", labels: ["Home Address", "Street Address (Line 1)", "Applicant Address"] },
   { key: "homePhone", label: "Primary phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "medium", labels: ["Primary Phone Number", "Home Phone Number", "Primary Phone"] },
   { key: "secondaryPhone", label: "Secondary phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "low", labels: ["Secondary Phone Number", "Secondary Phone"] },
   { key: "workPhone", label: "Work phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "low", labels: ["Work Phone Number", "Work Phone"] },
   { key: "email", label: "Email address", cat: "Address and Phone", n: norm.upper, s: "same", sv: "medium", labels: ["E-mail Address", "Email Address"] },
-  { key: "socialMedia", label: "Social media", cat: "Address and Phone", n: norm.plain, s: "same", sv: "low", labels: ["Social Media Identifier", "Social Media Provider/Platform", "Social Media"] },
+  { key: "socialMediaProvider", label: "Social media platform", cat: "Address and Phone", n: norm.upper, s: "same", sv: "low", labels: ["Social Media Provider/Platform", "Social Media Provider"] },
+  { key: "socialMediaId", label: "Social media identifier", cat: "Address and Phone", n: norm.plain, s: "same", sv: "low", labels: ["Social Media Identifier"] },
+  // ── Passport ──
+  { key: "passportType", label: "Passport type", cat: "Passport", n: norm.upper, s: "same", sv: "low", labels: ["Passport/Travel Document Type", "Passport Type", "Document Type"] },
+  { key: "passportNumber", label: "Passport number", cat: "Passport", n: norm.id, s: "same", sv: "critical", labels: ["Passport/Travel Document Number", "Passport Number", "Document Number"] },
+  { key: "passportBookNumber", label: "Passport book number", cat: "Passport", n: norm.id, s: "same", sv: "medium", labels: ["Passport Book Number", "Book Number"] },
+  { key: "passportIssuer", label: "Issuing country/authority", cat: "Passport", n: norm.upper, s: "same", sv: "high", labels: ["Country/Authority that Issued Passport/Travel Document", "Issuing Country", "Issuing Authority"] },
+  { key: "passportIssueCity", label: "Passport issued in city", cat: "Passport", n: norm.name, s: "same", sv: "low", labels: ["City where issued", "City of Issuance", "Passport Issued in City"] },
+  { key: "passportIssueCountry", label: "Passport issued in country", cat: "Passport", n: norm.upper, s: "same", sv: "low", labels: ["Country/Region where issued", "Country where Issued"] },
+  { key: "passportIssuance", label: "Issuance date", cat: "Passport", n: norm.date, s: "same", sv: "high", labels: ["Passport Issuance Date", "Date of Issuance", "Issuance Date"] },
+  { key: "passportExpiration", label: "Expiration date", cat: "Passport", n: norm.date, s: "same", sv: "high", labels: ["Passport Expiration Date", "Expiration Date"] },
+  // ── U.S. Point of Contact ──
+  { key: "contactName", label: "Contact person", cat: "U.S. Point of Contact", n: norm.name, s: "same", sv: "medium", labels: ["Contact Person Name in the U.S.", "Contact Person Name", "Name of Contact Person", "Contact Person"] },
+  { key: "contactOrg", label: "Contact organization", cat: "U.S. Point of Contact", n: norm.name, s: "same", sv: "low", labels: ["Organization Name in the U.S.", "Name of Organization", "Organization Name"] },
+  { key: "contactRelationship", label: "Relationship to you", cat: "U.S. Point of Contact", n: norm.upper, s: "same", sv: "low", labels: ["Relationship to You"] },
+  { key: "contactAddress", label: "Contact address", cat: "U.S. Point of Contact", n: norm.plain, s: "same", sv: "low", labels: ["U.S. Contact Address"] },
+  { key: "contactPhone", label: "Contact phone", cat: "U.S. Point of Contact", n: norm.id, s: "same", sv: "low", labels: ["Contact Phone Number", "U.S. Point of Contact Phone"] },
   // ── Family ──
   { key: "fatherSurname", label: "Father's surname", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Father's Surnames", "Father's Surname", "Fathers Surname"] },
   { key: "fatherGiven", label: "Father's given names", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Father's Given Names", "Fathers Given Names"] },
   { key: "motherSurname", label: "Mother's surname", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Mother's Surnames", "Mother's Surname", "Mothers Surname"] },
   { key: "motherGiven", label: "Mother's given names", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Mother's Given Names", "Mothers Given Names"] },
   { key: "spouseName", label: "Spouse's full name", cat: "Family", n: norm.name, s: "same", sv: "low", labels: ["Spouse's Full Name", "Spouse Full Name", "Spouse Name"] },
-  // ── Work / Education ──
-  { key: "presentEmployer", label: "Present employer or school", cat: "Work/Education/Training", n: norm.name, s: "same", sv: "medium", labels: ["Present Employer or School Name", "Primary Occupation", "Employer Name", "Present Employer"] },
-  { key: "employerAddress", label: "Employer/school address", cat: "Work/Education/Training", n: norm.plain, s: "same", sv: "low", labels: ["Present Employer or School Address", "Employer Address", "Employer/School Address"] },
-  { key: "monthlyIncome", label: "Monthly income", cat: "Work/Education/Training", n: norm.money, s: "same", sv: "low", labels: ["Monthly Income in Local Currency", "Monthly Income", "Monthly Salary"] },
-  // used only by the audit/petition cross-checks, not shown as its own field row
-  { key: "petitionNumber", label: "Petition/receipt number", cat: "Travel", n: norm.id, s: "same", sv: "high", labels: ["Petition Number", "Receipt Number", "SEVIS ID", "SEVIS"] },
+  // ── Work / Education / Training ──
+  { key: "occupation", label: "Primary occupation", cat: "Work / Education / Training", n: norm.upper, s: "same", sv: "medium", labels: ["Primary Occupation"] },
+  { key: "presentEmployer", label: "Present employer or school", cat: "Work / Education / Training", n: norm.name, s: "same", sv: "medium", labels: ["Present Employer or School Name", "Employer Name", "Present Employer"] },
+  { key: "employerAddress", label: "Employer/school address", cat: "Work / Education / Training", n: norm.plain, s: "same", sv: "low", labels: ["Present Employer or School Address", "Employer Address", "Employer/School Address"] },
+  { key: "startDate", label: "Start date", cat: "Work / Education / Training", n: norm.date, s: "same", sv: "low", labels: ["Start Date"] },
+  { key: "monthlyIncome", label: "Monthly income", cat: "Work / Education / Training", n: norm.money, s: "same", sv: "low", labels: ["Monthly Salary in Local Currency", "Monthly Income in Local Currency", "Monthly Income", "Monthly Salary"] },
 ];
 
 const ds160 = {
   id: "ds160", label: "DS-160",
   categories: DS160_CATEGORIES,
   detect: text => /DS[-\s]?160|NONIMMIGRANT VISA APPLICATION/i.test(text) ? 0.95 : 0,
-  extract: ({ lines }) => ({
-    fields: Object.fromEntries(DS160_FIELDS.map(f => [f.key, grabLabel(lines, f.labels)])),
-  }),
+  extract: ({ lines }) => {
+    const fields = Object.fromEntries(DS160_FIELDS.map(f => [f.key, grabLabel(lines, f.labels)]));
+    // The DS-160 "Print Application" / confirmation prints the name once as
+    // "Name Provided: SURNAME, GIVEN" — split it into surname/given when they weren't
+    // found as separate labels.
+    if (!fields.surname.value || !fields.given.value) {
+      const np = grabLabel(lines, ["Name Provided", "Full Name Provided"]);
+      const comma = np.value.indexOf(",");
+      if (comma > -1) {
+        const sn = np.value.slice(0, comma).trim(), gn = np.value.slice(comma + 1).trim();
+        if (!fields.surname.value && sn) fields.surname = mkField(sn, np.confidence, np.source);
+        if (!fields.given.value && gn) fields.given = mkField(gn, np.confidence, np.source);
+      }
+    }
+    return { fields };
+  },
   fieldSchema: DS160_FIELDS.map(f => ({
     key: f.key, label: f.label, category: f.cat, normalizer: f.n, semantics: f.s, severity: f.sv,
   })),
@@ -2556,20 +2586,29 @@ function showDemoReport() {
   $("#log").classList.remove("show");
   const E = window.VDEngine;
   if (E) {
-    const A = `Nonimmigrant Visa Application DS-160
-      Surname: SHARMA
-      Given Names: PRIYA ANIL
-      Date of Birth: 01-JAN-1988
+    const A = `Online Nonimmigrant Visa Application (DS-160)
+      Name Provided: SHARMA, PRIYA ANIL
       Sex: FEMALE
-      Nationality: INDIA
-      Passport Number: Z1234567
-      Passport Expiration Date: 01-JAN-2030
       Marital Status: SINGLE
+      Date of Birth: 01-JAN-1988
+      Country/Region of Birth: INDIA
+      Country/Region of Origin (Nationality): INDIA
+      Purpose of Trip to the U.S.: TEMP. BUSINESS OR PLEASURE VISITOR (B)
+      Intended Date of Arrival: 15-JUN-2024
+      Person/Entity Paying for Your Trip: SELF
+      Have you ever been in the U.S.? NO
+      Primary Phone Number: +91 98765 43210
       Email Address: priya.old@gmail.com
-      Intended Date of Arrival: 15-JUN-2024`;
+      Passport/Travel Document Number: Z1234567
+      Passport Expiration Date: 01-JAN-2030
+      Father's Surnames: SHARMA
+      Mother's Given Names: SUNITA
+      Primary Occupation: COMPUTER SCIENTIST
+      Present Employer or School Name: ACME SOFTWARE`;
     const B = A.replace("PRIYA ANIL", "PRIYA A").replace("Z1234567", "Z7654321")
       .replace("01-JAN-2030", "01-JAN-2034").replace("SINGLE", "MARRIED")
-      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026");
+      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026")
+      .replace("been in the U.S.? NO", "been in the U.S.? YES").replace("ACME SOFTWARE", "GLOBEX CORP");
     const docOf = t => ({ type: "ds160", ...E.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
     const res = E.compareVersions("ds160", docOf(A), docOf(B));
     renderEngineResult({ ...res, title: "DS-160 — sample comparison", labels: ["Earlier", "Later"] });

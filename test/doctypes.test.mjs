@@ -176,6 +176,28 @@ test("DS-160 rows carry their category and pick up new fields", () => {
   assert.ok(r.rows.every(x => x.category), "every compared row has a category");
 });
 
+/* ── real DS-160 "Print Application" format: Name Provided: SURNAME, GIVEN ── */
+test("DS-160 extractor handles the real printout (Name Provided, section labels)", () => {
+  const doc = t => ({ type: "ds160", ..._mod.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
+  const A = `Online Nonimmigrant Visa Application (DS-160)
+Name Provided: SNOW, JOHNQQ
+Country/Region of Origin (Nationality): AFGHANISTAN
+Passport/Travel Document Number: M1111111
+Primary Occupation: EDUCATION
+Present Employer or School Name: STATE UNIVERSITY
+Have you ever been in the U.S.? NO`;
+  const B = A.replace("SNOW, JOHNQQ", "STARK, JOHNQQ").replace("M1111111", "M2222222").replace("been in the U.S.? NO", "been in the U.S.? YES");
+  const da = doc(A), db = doc(B);
+  assert.equal(da.fields.surname.value, "SNOW");
+  assert.equal(da.fields.given.value, "JOHNQQ");
+  assert.equal(da.fields.nationality.value, "AFGHANISTAN");
+  assert.equal(da.fields.occupation.value, "EDUCATION");
+  const r = compareVersions("ds160", da, db);
+  assert.equal(r.rows.find(x => x.key === "surname").outcome, "mismatch");
+  assert.equal(r.rows.find(x => x.key === "passportNumber").outcome, "mismatch");
+  assert.equal(r.rows.find(x => x.key === "beenInUS").outcome, "mismatch");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

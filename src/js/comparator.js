@@ -753,20 +753,29 @@ function showDemoReport() {
   $("#log").classList.remove("show");
   const E = window.VDEngine;
   if (E) {
-    const A = `Nonimmigrant Visa Application DS-160
-      Surname: SHARMA
-      Given Names: PRIYA ANIL
-      Date of Birth: 01-JAN-1988
+    const A = `Online Nonimmigrant Visa Application (DS-160)
+      Name Provided: SHARMA, PRIYA ANIL
       Sex: FEMALE
-      Nationality: INDIA
-      Passport Number: Z1234567
-      Passport Expiration Date: 01-JAN-2030
       Marital Status: SINGLE
+      Date of Birth: 01-JAN-1988
+      Country/Region of Birth: INDIA
+      Country/Region of Origin (Nationality): INDIA
+      Purpose of Trip to the U.S.: TEMP. BUSINESS OR PLEASURE VISITOR (B)
+      Intended Date of Arrival: 15-JUN-2024
+      Person/Entity Paying for Your Trip: SELF
+      Have you ever been in the U.S.? NO
+      Primary Phone Number: +91 98765 43210
       Email Address: priya.old@gmail.com
-      Intended Date of Arrival: 15-JUN-2024`;
+      Passport/Travel Document Number: Z1234567
+      Passport Expiration Date: 01-JAN-2030
+      Father's Surnames: SHARMA
+      Mother's Given Names: SUNITA
+      Primary Occupation: COMPUTER SCIENTIST
+      Present Employer or School Name: ACME SOFTWARE`;
     const B = A.replace("PRIYA ANIL", "PRIYA A").replace("Z1234567", "Z7654321")
       .replace("01-JAN-2030", "01-JAN-2034").replace("SINGLE", "MARRIED")
-      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026");
+      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026")
+      .replace("been in the U.S.? NO", "been in the U.S.? YES").replace("ACME SOFTWARE", "GLOBEX CORP");
     const docOf = t => ({ type: "ds160", ...E.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
     const res = E.compareVersions("ds160", docOf(A), docOf(B));
     renderEngineResult({ ...res, title: "DS-160 — sample comparison", labels: ["Earlier", "Later"] });

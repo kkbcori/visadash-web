@@ -47,6 +47,12 @@ comparator groups rows into **collapsible category sections** (`renderEngineResu
 class="cmp-cat">`, red header + auto-open when it has changes, Expand/Collapse-all), and the
 downloadable/print report groups the same way (`buildReportHtml`, `<details>` per category).
 To add/rename DS-160 fields or sections: edit `DS160_FIELDS`/`DS160_CATEGORIES` only.
+Labels and the 10 categories mirror the **real DS-160 "Print Application" printout** (exemplar at
+`/Users/kkbcori/_KKB/Personal/VisaDash/Visadash_docs/DS-160-Example_11012019.pdf`): the printout
+prints the name once as `Name Provided: SURNAME, GIVEN` — `ds160.extract` splits it into
+surname/given. **`grabLabel` matches labels only at the START of a line and on a word boundary**
+(`^\W*…(?![A-Za-z0-9])`) so "Given Names" no longer matches inside "Mother's Given Names" and
+"Class" not inside "Classification" — this was a real extraction bug. ~59 fields.
 
 ## Comparator UI (2026-08, post-Task-2)
 The compare tool now renders **every** comparison as a single **4-column table** —
