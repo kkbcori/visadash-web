@@ -93,6 +93,34 @@ export function grabLabel(lines, labels, { key } = {}) {
   return mkField("", 0, null);
 }
 
+// Yes/No questions: the DS-160 print wraps a long question over several lines and
+// puts the answer (YES / NO / DOES NOT APPLY) at the end of the first line OR on a
+// line below. Match a distinctive question PREFIX at line start, then take the
+// trailing answer on that line, else the nearest answer line just below.
+const YN_TRAIL = /\b(YES|NO|DOES NOT APPLY)\s*$/i;
+const YN_LEAD  = /^(YES|NO|DOES NOT APPLY)\b/i;
+export function grabYesNo(lines, labels) {
+  const arr = Array.isArray(labels) ? labels : [labels];
+  const L = lines.map(l => String(l).replace(/\s+/g, " ").trim());
+  const Lk = L.map(normKey);
+  for (const label of arr) {
+    const lk = normKey(label);
+    if (!lk) continue;
+    const re = new RegExp("^\\W*" + label.trim().split(/\s+/).map(escRe).join("\\W+") + "(?![A-Za-z0-9])", "i");
+    for (let i = 0; i < L.length; i++) {
+      if (Lk[i].indexOf(lk) !== 0) continue;
+      if (!re.test(L[i])) continue;
+      const m = L[i].slice(L[i].match(re)[0].length).match(YN_TRAIL);
+      if (m) return mkField(m[1].toUpperCase().replace(/\s+/g, " "), 0.9, { line: i, label, snippet: L[i] });
+      for (let j = i + 1; j < Math.min(i + 6, L.length); j++) {
+        const a = L[j].match(YN_LEAD);
+        if (a) return mkField(a[1].toUpperCase().replace(/\s+/g, " "), 0.85, { line: j, label, snippet: L[j] });
+      }
+    }
+  }
+  return mkField("", 0, null);
+}
+
 /* ───────────────────────── MRZ (ICAO 9303 TD3) ───────────────────────── */
 
 const pad44 = l => ((l || "").replace(/\s+/g, "").toUpperCase() + "<".repeat(44)).slice(0, 44);
@@ -224,7 +252,8 @@ const DS160_FIELDS = [
   { key: "countryOfBirth", label: "Country of birth", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "high", labels: ["Country/Region of Birth", "Country of Birth"] },
   // ── Personal Information 2 ──
   { key: "nationality", label: "Nationality", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "critical", labels: ["Country/Region of Origin (Nationality)", "Nationality"] },
-  { key: "otherNationality", label: "Other nationality", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "medium", labels: ["Other Nationality", "Hold or Held Any Other Nationality"] },
+  { key: "otherNationality", label: "Held any other nationality?", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "medium", q: true, labels: ["Do you hold or have you held any nationality", "Hold or Held Any Other Nationality", "Other Nationality"] },
+  { key: "permanentResident", label: "Permanent resident elsewhere?", cat: "Personal Information 2", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Are you a permanent resident of a country/region other than your", "Are you a permanent resident of a country"] },
   { key: "nationalId", label: "National ID number", cat: "Personal Information 2", n: norm.id, s: "same", sv: "medium", labels: ["National Identification Number", "National ID Number", "National ID"] },
   { key: "ssn", label: "U.S. Social Security number", cat: "Personal Information 2", n: norm.id, s: "same", sv: "medium", labels: ["U.S. Social Security Number", "Social Security Number"] },
   { key: "taxId", label: "U.S. taxpayer ID", cat: "Personal Information 2", n: norm.id, s: "same", sv: "low", labels: ["U.S. Taxpayer ID Number", "Taxpayer ID Number", "Taxpayer ID"] },
@@ -237,13 +266,13 @@ const DS160_FIELDS = [
   { key: "lengthOfStay", label: "Intended length of stay", cat: "Travel", n: norm.plain, s: "same", sv: "low", labels: ["Intended Length of Stay in U.S.", "Intended Length of Stay", "Length of Stay"] },
   { key: "stayAddress", label: "Address where you will stay", cat: "Travel", n: norm.plain, s: "same", sv: "medium", labels: ["Address where you will stay in the U.S.", "Address Where You Will Stay in the U.S.", "Address Where You Will Stay"] },
   // ── Travel Companions ──
-  { key: "travelCompanions", label: "Other persons traveling with you", cat: "Travel Companions", n: norm.upper, s: "same", sv: "low", labels: ["Other Persons Traveling with You", "Are there other persons traveling with you"] },
+  { key: "travelCompanions", label: "Other persons traveling with you?", cat: "Travel Companions", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Are there other persons traveling with you", "Other Persons Traveling with You"] },
   // ── Previous U.S. Travel ──
-  { key: "beenInUS", label: "Ever been in the U.S.?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", labels: ["Have you ever been in the U.S."] },
-  { key: "issuedUSVisa", label: "Ever issued a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", labels: ["Have you ever been issued a U.S. Visa", "Have you ever been issued a U.S. visa"] },
+  { key: "beenInUS", label: "Ever been in the U.S.?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", q: true, labels: ["Have you ever been in the U.S."] },
+  { key: "issuedUSVisa", label: "Ever issued a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", q: true, labels: ["Have you ever been issued a U.S. Visa", "Have you ever been issued a U.S. visa"] },
   { key: "priorVisaNumber", label: "Previous visa number", cat: "Previous U.S. Travel", n: norm.id, s: "same", sv: "medium", labels: ["Visa Number"] },
-  { key: "visaRefused", label: "Ever refused a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "high", labels: ["Have you ever been refused a U.S. Visa", "been refused admission to the United States"] },
-  { key: "immigrantPetition", label: "Immigrant petition filed for you?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", labels: ["Has anyone ever filed an immigrant petition on your behalf"] },
+  { key: "visaRefused", label: "Ever refused a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "high", q: true, labels: ["Have you ever been refused a U.S. Visa", "been refused admission to the United States"] },
+  { key: "immigrantPetition", label: "Immigrant petition filed for you?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Has anyone ever filed an immigrant petition on your behalf"] },
   // ── Address and Phone ──
   { key: "homeAddress", label: "Home address", cat: "Address and Phone", n: norm.plain, s: "same", sv: "medium", labels: ["Home Address", "Street Address (Line 1)", "Applicant Address"] },
   { key: "homePhone", label: "Primary phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "medium", labels: ["Primary Phone Number", "Home Phone Number", "Primary Phone"] },
@@ -290,7 +319,8 @@ const ds160 = {
   categories: DS160_CATEGORIES,
   detect: text => /DS[-\s]?160|NONIMMIGRANT VISA APPLICATION/i.test(text) ? 0.95 : 0,
   extract: ({ lines }) => {
-    const fields = Object.fromEntries(DS160_FIELDS.map(f => [f.key, grabLabel(lines, f.labels)]));
+    const fields = Object.fromEntries(DS160_FIELDS.map(f =>
+      [f.key, (f.q ? grabYesNo : grabLabel)(lines, f.labels)]));
     // The DS-160 "Print Application" / confirmation prints the name once as
     // "Name Provided: SURNAME, GIVEN" — split it into surname/given when they weren't
     // found as separate labels.

@@ -224,6 +224,27 @@ Mother's Given Names: MARY`;
   assert.equal(d.fields.given.value, "JANE Q");
 });
 
+/* ── multi-line wrapped yes/no questions (answer on a line below) ── */
+test("DS-160 captures wrapped yes/no questions with the answer on a later line", () => {
+  const text = `Country/Region of Origin (Nationality): SOMELAND
+Do you hold or have you held any nationality other than the one
+indicated above on nationality?
+NO
+Are you a permanent resident of a country/region other than your
+country/region of origin (nationality) above?
+YES
+Have you ever been in the U.S.? YES
+Have you ever been refused a U.S. Visa, or been refused admission to
+the United States, or withdrawn your application for admission at the
+port of entry?
+NO`;
+  const d = _mod.TYPE_BY_ID.ds160.extract({ text, lines: text.split("\n").map(s => s.trim()) });
+  assert.equal(d.fields.otherNationality.value, "NO");
+  assert.equal(d.fields.permanentResident.value, "YES");
+  assert.equal(d.fields.beenInUS.value, "YES");        // answer on the same line
+  assert.equal(d.fields.visaRefused.value, "NO");      // answer 3 lines below
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);
