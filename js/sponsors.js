@@ -5,11 +5,11 @@
   const qsa = (s,r=document)=>[...r.querySelectorAll(s)];
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-  const EMP_FETCHED="2026-03-18", EMP_SOURCE="USCIS H-1B Employer Data Hub FY2025";
-  const EMPLOYERS=[{name:"AMAZON.COM SERVICES LLC",total:13670,rate:88.4,grade:"B",state:"WA",dep:false},{name:"INFOSYS LIMITED",total:12480,rate:85.2,grade:"B",state:"TX",dep:true},{name:"TATA CONSULTANCY SERVICES",total:11500,rate:84.0,grade:"B",state:"NJ",dep:true},{name:"GOOGLE LLC",total:10842,rate:97.8,grade:"A",state:"CA",dep:false},{name:"COGNIZANT TECHNOLOGY SOLUTIONS",total:9840,rate:83.1,grade:"B",state:"NJ",dep:true},{name:"MICROSOFT CORPORATION",total:9410,rate:96.2,grade:"A",state:"WA",dep:false},{name:"WIPRO LIMITED",total:9320,rate:82.4,grade:"B-",state:"CA",dep:true},{name:"META PLATFORMS INC",total:7900,rate:96.0,grade:"A",state:"CA",dep:false},{name:"HCL AMERICA INC",total:7290,rate:83.8,grade:"B",state:"TX",dep:true},{name:"APPLE INC",total:7040,rate:96.5,grade:"A+",state:"CA",dep:false},{name:"ERNST & YOUNG LLP",total:6400,rate:88.1,grade:"B+",state:"NY",dep:false},{name:"DELOITTE CONSULTING LLP",total:6380,rate:88.5,grade:"B+",state:"NY",dep:false},{name:"DELL TECHNOLOGIES INC",total:4970,rate:93.2,grade:"A-",state:"TX",dep:false},{name:"JPMORGAN CHASE BANK",total:4640,rate:93.1,grade:"A-",state:"NY",dep:false},{name:"SALESFORCE INC",total:3824,rate:94.8,grade:"A",state:"CA",dep:false}];
+  const DATA = window.VDData("employers");
+  const EMPLOYERS = DATA ? DATA.employers : [];
 
-  const fresh=qs("#emp-fresh");
-  if(fresh) fresh.innerHTML=`<span class="dot"></span> ${EMP_SOURCE} &middot; snapshot ${EMP_FETCHED}`;
+  window.VDFresh(qs("#emp-fresh"), DATA, "H-1B sponsors");
+  if(!DATA) return;
 
   let empSort={key:"total",dir:-1};
   function renderEmployers(){

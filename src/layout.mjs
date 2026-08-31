@@ -115,7 +115,9 @@ function scriptTags(page, mode, resolve) {
   }).join("\n");
 }
 
-export function renderPage(page, { mode = "multi", styles = "", resolve = () => "" } = {}) {
+export function renderPage(page, { mode = "multi", styles = "", resolve = () => "", dataJson = "" } = {}) {
+  const dataScript = dataJson
+    ? `\n  <script type="application/json" id="vd-data">${dataJson}</script>` : "";
   return `${head(page, mode, styles)}
 <body>
 <div class="wrap">
@@ -130,7 +132,7 @@ ${page.hero ? `  <section class="hero no-print" aria-label="Introduction">
     <p class="hero-lede">${page.hero}</p>
   </section>\n` : ""}
   <div class="content">
-${page.bodyHtml}
+${page.bodyHtml}${dataScript}
   </div><!-- /.content -->
   </div><!-- /.page -->
 

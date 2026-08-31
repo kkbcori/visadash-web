@@ -19,6 +19,13 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">"
 const read = p => fs.readFileSync(p, "utf8");
 const styles = read(path.join(SRC, "styles.css"));
 
+// Datasets (Task 4): loaded from data/*.json, validated, injected per page as JSON.
+const DATA_DIR = path.join(ROOT, "data");
+const DATA_FILE = { visa_bulletin: "visa_bulletin.json", processing_times: "processing_times.json",
+  wage_data: "wage_data.json", employers: "employers.json" };
+const dataJsonFor = name => name && DATA_FILE[name]
+  ? JSON.stringify(JSON.parse(read(path.join(DATA_DIR, DATA_FILE[name])))) : "";
+
 // ---- resolver: map a "/js/foo.js" (or "/styles.css") ref to inline source for single-file mode
 function resolveInline(ref) {
   if (ref === "/styles.css") return styles;
@@ -91,7 +98,7 @@ ${guideBlock(g)}`,
 
 // ---- write one multi-page route ----
 function writeMulti(page) {
-  const html = renderPage(page, { mode: "multi" });
+  const html = renderPage(page, { mode: "multi", dataJson: dataJsonFor(page.data) });
   const outDir = path.join(ROOT, page.dir);
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "index.html"), html);
@@ -155,9 +162,12 @@ function buildSingleFile(pages) {
     { id:"sponsors",   route:"/h1b-sponsors",     label:"H-1B Sponsors",    ico:"&#127970;" },
   ];
   const guidesBody = guidesIndexBody();
+  const TAB_DATA = { bulletin: "visa_bulletin", processing: "processing_times", wages: "wage_data", sponsors: "employers" };
   const sections = TABS.map((t, i) => {
     const body = t.id === "guides" ? guidesBody : byRoute[t.route].bodyHtml;
-    return `  <section class="tab${i===0?" active":""}" id="tab-${t.id}">\n${body}\n  </section>`;
+    const dj = TAB_DATA[t.id] ? dataJsonFor(TAB_DATA[t.id]) : "";
+    const dataScript = dj ? `\n  <script type="application/json" id="vd-data-${TAB_DATA[t.id]}">${dj}</script>` : "";
+    return `  <section class="tab${i===0?" active":""}" id="tab-${t.id}">\n${body}${dataScript}\n  </section>`;
   }).join("\n");
 
   // Inline the ESM engines as globals for the offline file (module imports can't
@@ -170,7 +180,7 @@ function buildSingleFile(pages) {
     + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n`
     + `window.VDAudit={runAudit,nameOutcome,parseVisaFoil,parseI94,RULES};\n})();`;
 
-  const scriptFiles = ["comparator","audit","bulletin","processing","wages","sponsors"];
+  const scriptFiles = ["vddata","comparator","audit","bulletin","processing","wages","sponsors"];
   const inlineJs = engineGlobal + "\n;\n" + scriptFiles.map(f => resolveInline(`/js/${f}.js`)).join("\n;\n");
   const promoJs = resolveInline("/js/promo.js");
 

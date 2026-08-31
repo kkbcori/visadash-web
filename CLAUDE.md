@@ -69,12 +69,25 @@ builds typed docs via `window.VDEngine`, runs `window.VDAudit`, renders findings
 with source snippets + a client-side "download report". Audit page head (`AUDIT_HEAD` in
 pages.mjs) imports both engines as modules; build inlines both into `visadash-offline.html`.
 
-## Updating the data (snapshots, still embedded in the tool JS)
-Data remains **hard-coded as consts inside each tool's `src/js/*.js`** (keeps single-file/offline
-promise), with `*_FETCHED`/`*_SOURCE` freshness strings. To refresh: edit the const + the
-snapshot string in the relevant `src/js/*.js`, then `npm run build`. These are **periodic
-snapshots**, not live — the footer says so; keep that disclaimer. (Task 4 will move these into
-versioned `data/*.json` with a schema + a CI refresh; not done yet.)
+## Data freshness (Task 4, 2026-08)
+Datasets now live in **versioned `data/*.json`** (`visa_bulletin`, `processing_times`,
+`wage_data`, `employers`), each with `schema_version`, `fetched_at`, `source`. **To refresh:
+edit the JSON's values + `fetched_at`, `npm run validate:data`, then `npm run build`.** The build
+injects the needed dataset into each page as `<script type="application/json" id="vd-data">`
+(unique `id="vd-data-<name>"` per tab in the offline file); the tool JS reads it via shared
+`src/js/vddata.js` (`window.VDData` / `window.VDFresh`). `VDFresh` renders a **"Data as of {date}"**
+badge and a **staleness warning past 45 days** (`data/schema.mjs` → `STALE_DAYS`). The tool JS no
+longer embeds the data (single source of truth = `data/`).
+
+- **`data/schema.mjs`** — per-dataset validators + sanity checks (bulletin can't retrogress >5yr
+  MoM, wages in 15k–1M, percentiles ordered, etc.). **`npm run validate:data`** (CI-friendly).
+- **`scripts/refresh_data.mjs`** (`npm run refresh:data`) — refresh pipeline: parse → validate →
+  write only if valid; emits `$GITHUB_OUTPUT` so the workflow opens an issue on failure. The
+  per-source **parsers are documented stubs that throw** (scraping gov sites reliably is its own
+  project); until filled in, the job safely no-ops (skips) rather than committing garbage.
+- **`.github/workflows/refresh-data.yml`** — monthly cron (5th, 06:00 UTC) + `workflow_dispatch`;
+  rebuilds + commits on a successful update, opens a `data-refresh` issue on validation failure;
+  a separate `validate` job runs `validate_data.mjs`.
 
 ## Verify a change (no test suite)
 Rebuild, then headless-Chrome screenshots of the built **routes** (not hashes):

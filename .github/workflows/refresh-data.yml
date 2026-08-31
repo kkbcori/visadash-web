@@ -1,0 +1,62 @@
+name: Refresh datasets
+
+# Monthly (and on-demand) refresh of the Visa Bulletin, processing-time and wage
+# datasets. Data is validated against data/schema.mjs BEFORE anything is committed;
+# if validation fails, we open an issue instead of shipping wrong dates.
+on:
+  schedule:
+    - cron: "0 6 5 * *"   # 06:00 UTC on the 5th of each month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Refresh + validate datasets
+        id: refresh
+        run: node scripts/refresh_data.mjs
+
+      - name: Rebuild site with refreshed data
+        if: steps.refresh.outputs.updated != '0'
+        run: node build.mjs --single-file
+
+      - name: Commit refreshed data
+        if: steps.refresh.outputs.updated != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ index.html */index.html js/ styles.css sitemap.xml visadash-offline.html
+          git commit -m "chore(data): monthly dataset refresh [skip ci]" || echo "nothing to commit"
+          git push
+
+      - name: Open an issue on validation failure
+        if: failure() || steps.refresh.outputs.needs_issue == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `${{ steps.refresh.outputs.summary }}` || "The refresh job failed before producing a summary.";
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Dataset refresh needs attention (${new Date().toISOString().slice(0,10)})`,
+              body: `The monthly dataset refresh could not safely update one or more datasets, so nothing was committed for those.\n\n${summary}\n\nA parser is likely broken or a source changed. The live site keeps the last known-good (possibly stale) snapshot — the UI shows a staleness warning past 45 days.`,
+              labels: ["data-refresh"],
+            });
+
+  validate:
+    # Also validate on manual runs / as a reusable gate.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: node scripts/validate_data.mjs

@@ -182,13 +182,13 @@ ${slot("B", "Later version", "current filing")}
 
   /* ─────────────── Visa Bulletin ─────────────── */
   {
-    route: "/visa-bulletin", dir: "visa-bulletin",
+    route: "/visa-bulletin", dir: "visa-bulletin", data: "visa_bulletin",
     title: "Visa Bulletin Tracker & Priority Date Checker — Employment-Based | VisaDash",
     description: "Employment-based Final Action Dates from the latest Visa Bulletin, a 3-month comparison showing what advanced or retrogressed, and an 'am I current?' priority-date checker. On-device.",
     ogTitle: "Visa Bulletin Tracker & Priority Date Checker",
     ogDescription: "Latest EB Final Action Dates, 3-month movement, and an 'am I current?' checker.",
     hero: "Employment-based Final Action Dates, three-month movement, and a quick priority-date check.",
-    scripts: ["/js/bulletin.js"],
+    scripts: ["/js/vddata.js", "/js/bulletin.js"],
     jsonld: [softwareApp("Visa Bulletin Tracker", "Employment-based Visa Bulletin tracker and priority-date checker.", SITE.origin + "/visa-bulletin")],
     bodyHtml: `
     <div class="freshness" id="bulletin-fresh"><span class="dot"></span> Loading latest bulletin…</div>
@@ -223,13 +223,13 @@ ${slot("B", "Later version", "current filing")}
 
   /* ─────────────── Processing times ─────────────── */
   {
-    route: "/processing-times", dir: "processing-times",
+    route: "/processing-times", dir: "processing-times", data: "processing_times",
     title: "USCIS Processing Times — Median, 75th & 90th Percentile by Form & Center | VisaDash",
     description: "Typical USCIS processing times by form and service center — median plus the 75th and 90th percentile so you can see the long tail, not just the average. Estimate your wait on-device.",
     ogTitle: "USCIS Processing Times by Form & Service Center",
     ogDescription: "Median, 75th and 90th-percentile USCIS processing times, with a wait estimator.",
     hero: "Typical USCIS processing times by form and service center &mdash; median, plus the long tail.",
-    scripts: ["/js/processing.js"],
+    scripts: ["/js/vddata.js", "/js/processing.js"],
     jsonld: [softwareApp("USCIS Processing Time Lookup", "USCIS processing-time percentiles by form and service center.", SITE.origin + "/processing-times")],
     bodyHtml: `
     <div class="freshness" id="pt-fresh"><span class="dot"></span> Loading snapshot…</div>
@@ -254,13 +254,13 @@ ${slot("B", "Later version", "current filing")}
 
   /* ─────────────── Prevailing wage ─────────────── */
   {
-    route: "/prevailing-wage", dir: "prevailing-wage",
+    route: "/prevailing-wage", dir: "prevailing-wage", data: "wage_data",
     title: "Prevailing Wage Check — DOL Wage Levels for H-1B & PERM | VisaDash",
     description: "Look up the DOL prevailing wage for an occupation, state and wage level, then compare it to a salary offer to see whether an LCA at that level would be certifiable. On-device.",
     ogTitle: "Prevailing Wage Check for H-1B & PERM",
     ogDescription: "DOL prevailing-wage lookup by SOC, state and level, with an offer comparison.",
     hero: "Is the offered salary at or above the DOL prevailing wage for that occupation, area and level?",
-    scripts: ["/js/wages.js"],
+    scripts: ["/js/vddata.js", "/js/wages.js"],
     jsonld: [softwareApp("Prevailing Wage Check", "DOL prevailing-wage lookup and offer comparison for H-1B and PERM.", SITE.origin + "/prevailing-wage")],
     bodyHtml: `
     <div class="freshness" id="wg-fresh"><span class="dot"></span> Loading snapshot…</div>
@@ -290,13 +290,13 @@ ${slot("B", "Later version", "current filing")}
 
   /* ─────────────── H-1B sponsors ─────────────── */
   {
-    route: "/h1b-sponsors", dir: "h1b-sponsors",
+    route: "/h1b-sponsors", dir: "h1b-sponsors", data: "employers",
     title: "H-1B Sponsor Grades — Top Sponsors, Approval Rates & Risk Flags | VisaDash",
     description: "Top H-1B sponsors by petition volume, with approval rate, H-1B-dependent flags, and a risk grade. Sortable and filterable, entirely on-device.",
     ogTitle: "H-1B Sponsor Grades & Approval Rates",
     ogDescription: "Top H-1B sponsors by volume with approval rates and risk flags, sortable on-device.",
     hero: "Top H-1B sponsors by petition volume, with approval rate and risk flags.",
-    scripts: ["/js/sponsors.js"],
+    scripts: ["/js/vddata.js", "/js/sponsors.js"],
     jsonld: [softwareApp("H-1B Sponsor Grades", "H-1B sponsor grades, approval rates and risk flags.", SITE.origin + "/h1b-sponsors")],
     bodyHtml: `
     <div class="freshness" id="emp-fresh"><span class="dot"></span> Loading snapshot…</div>

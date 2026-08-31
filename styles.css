@@ -823,3 +823,8 @@
 .verdict-ok{ background:#e9f2ec; border-color:#b6d6bf; }
 .verdict .v-title{ font:600 1.05rem/1.2 "Newsreader",serif; }
 .verdict .v-sub{ color:var(--ink-soft); font-size:.9rem; margin-top:3px; }
+
+/* ============ data freshness / staleness (Task 4) ============ */
+.dot-stale{ background:#c8892a !important; box-shadow:0 0 0 3px rgba(200,137,42,.18); }
+.freshness.is-stale{ color:#8a5a12; }
+.stale-warn{ color:#a3271b; }

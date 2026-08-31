@@ -10,6 +10,8 @@
     "build:single-file": "node build.mjs --single-file",
     "serve": "python3 -m http.server 8731",
     "test": "node --test",
+    "validate:data": "node scripts/validate_data.mjs",
+    "refresh:data": "node scripts/refresh_data.mjs",
     "check": "for f in src/js/*.js; do node --check \"$f\" || exit 1; done && echo 'js ok'"
   }
 }

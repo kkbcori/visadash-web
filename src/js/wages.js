@@ -5,12 +5,12 @@
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const money = n => "$"+Math.round(n).toLocaleString("en-US");
 
-  const WG_FETCHED="2026-03-18", WG_SOURCE="DOL OFLC LCA Disclosure Data FY2025 Q4";
-  const SOC_TITLES={"15-1252":"Software Developers & Engineers","15-1211":"Computer Systems Analysts","15-2051":"Data Scientists"};
-  const WAGES=[{soc:"15-1252",state:"TX",level:"I",wage:78540},{soc:"15-1252",state:"TX",level:"II",wage:98000},{soc:"15-1252",state:"TX",level:"III",wage:112847},{soc:"15-1252",state:"TX",level:"IV",wage:138290},{soc:"15-1252",state:"CA",level:"I",wage:112000},{soc:"15-1252",state:"CA",level:"II",wage:142000},{soc:"15-1252",state:"CA",level:"III",wage:172500},{soc:"15-1252",state:"CA",level:"IV",wage:215000},{soc:"15-1252",state:"NY",level:"I",wage:98000},{soc:"15-1252",state:"NY",level:"II",wage:122000},{soc:"15-1252",state:"NY",level:"III",wage:148000},{soc:"15-1252",state:"NY",level:"IV",wage:182000},{soc:"15-1252",state:"WA",level:"I",wage:105000},{soc:"15-1252",state:"WA",level:"II",wage:130000},{soc:"15-1252",state:"WA",level:"III",wage:158000},{soc:"15-1252",state:"WA",level:"IV",wage:195000},{soc:"15-1211",state:"TX",level:"I",wage:72100},{soc:"15-1211",state:"TX",level:"II",wage:89400},{soc:"15-1211",state:"TX",level:"III",wage:104200},{soc:"15-1211",state:"TX",level:"IV",wage:126800},{soc:"15-2051",state:"TX",level:"I",wage:82000},{soc:"15-2051",state:"TX",level:"II",wage:104000},{soc:"15-2051",state:"TX",level:"III",wage:124000},{soc:"15-2051",state:"TX",level:"IV",wage:152000}];
+  const DATA = window.VDData("wage_data");
+  const SOC_TITLES = DATA ? DATA.soc_titles : {};
+  const WAGES = DATA ? DATA.wages : [];
 
   function renderWages(){
-    qs("#wg-fresh").innerHTML=`<span class="dot"></span> ${WG_SOURCE} &middot; snapshot ${WG_FETCHED}`;
+    window.VDFresh(qs("#wg-fresh"), DATA, "DOL prevailing wage");
     const socs=[...new Set(WAGES.map(w=>w.soc))];
     qs("#wg-soc").innerHTML=socs.map(s=>`<option value="${s}">${esc(SOC_TITLES[s]||s)} (${s})</option>`).join("");
     refreshStates();
@@ -39,5 +39,5 @@
       <div class="big">${money(row.wage)} <span style="font-size:.6em;color:var(--ink-faint)">prevailing / yr</span></div>${extra}</div>`;
   }
 
-  renderWages();
+  if(!DATA){ window.VDFresh(qs("#wg-fresh"), null); } else { renderWages(); }
 })();

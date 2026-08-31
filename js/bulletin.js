@@ -3,30 +3,14 @@
 (function(){
   const qs  = (s,r=document)=>r.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const getData = window.VDData;   // shared data + freshness helper
 
-  /* ---- embedded data (periodic snapshot, on-device) ---- */
-  const VB_MONTHS = [
-    { label:"June 2026", eb:{
-      EB1:{All:"C",China:"2023-04-01",India:"2022-12-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"2013-09-01",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-06-01",China:"2021-08-01",India:"2013-12-15",Mexico:"2024-06-01",Philippines:"2023-08-01"}
-    }},
-    { label:"July 2026", eb:{
-      EB1:{All:"C",China:"2023-06-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-08-01",China:"2021-12-22",India:"2014-01-01",Mexico:"2024-08-01",Philippines:"2023-08-01"}
-    }},
-    { label:"August 2026", eb:{
-      EB1:{All:"C",China:"2023-07-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-09-01",China:"2022-01-01",India:"2014-01-01",Mexico:"2024-09-01",Philippines:"2023-08-01"}
-    }}
-  ];
-  const BULLETIN = {
-    month:"August 2026", fetched:"2026-08-28", source:"travel.state.gov",
-    months: VB_MONTHS,
-    eb: VB_MONTHS[2].eb
-  };
+  /* ---- data: versioned snapshot from data/visa_bulletin.json (injected at build) ---- */
+  const DATA = getData("visa_bulletin");
+  const BULLETIN = DATA ? {
+    month: DATA.month, fetched: DATA.fetched_at, source: DATA.source,
+    months: DATA.months, eb: DATA.months[DATA.months.length-1].eb
+  } : null;
 
   const COUNTRIES=["All","China","India","Mexico","Philippines"];
   function fmtDate(s){
@@ -111,7 +95,7 @@
     return out;
   }
   function renderBulletin(){
-    qs("#bulletin-fresh").innerHTML=`<span class="dot"></span> ${BULLETIN.month} Visa Bulletin &middot; snapshot ${BULLETIN.fetched} &middot; source: ${BULLETIN.source}`;
+    window.VDFresh(qs("#bulletin-fresh"), DATA, `${BULLETIN.month} Visa Bulletin`);
     let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th class="num">${c}</th>`).join("")}</tr></thead><tbody>`;
     for(const cat of ["EB1","EB2","EB3"]){
       h+=`<tr><td><b>${cat}</b></td>`+COUNTRIES.map(c=>{
@@ -159,6 +143,7 @@
     out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${cat} · ${country}</div><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
   }
 
+  if(!BULLETIN){ window.VDFresh(qs("#bulletin-fresh"), null); return; }
   renderBulletin();
   ["vb-cat","vb-country","vb-pd"].forEach(id=>qs("#"+id).addEventListener("input",checkCurrent));
   checkCurrent();

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "dataset": "visa_bulletin",
+  "fetched_at": "2026-08-28",
+  "source": "travel.state.gov",
+  "month": "August 2026",
+  "months": [
+    { "label": "June 2026", "eb": {
+      "EB1": {"All":"C","China":"2023-04-01","India":"2022-12-15","Mexico":"C","Philippines":"C"},
+      "EB2": {"All":"C","China":"2021-09-01","India":"2013-09-01","Mexico":"C","Philippines":"C"},
+      "EB3": {"All":"2024-06-01","China":"2021-08-01","India":"2013-12-15","Mexico":"2024-06-01","Philippines":"2023-08-01"}
+    }},
+    { "label": "July 2026", "eb": {
+      "EB1": {"All":"C","China":"2023-06-01","India":"2022-10-15","Mexico":"C","Philippines":"C"},
+      "EB2": {"All":"C","China":"2021-09-01","India":"U","Mexico":"C","Philippines":"C"},
+      "EB3": {"All":"2024-08-01","China":"2021-12-22","India":"2014-01-01","Mexico":"2024-08-01","Philippines":"2023-08-01"}
+    }},
+    { "label": "August 2026", "eb": {
+      "EB1": {"All":"C","China":"2023-07-01","India":"2022-10-15","Mexico":"C","Philippines":"C"},
+      "EB2": {"All":"C","China":"2021-09-01","India":"U","Mexico":"C","Philippines":"C"},
+      "EB3": {"All":"2024-09-01","China":"2022-01-01","India":"2014-01-01","Mexico":"2024-09-01","Philippines":"2023-08-01"}
+    }}
+  ]
+}

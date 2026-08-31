@@ -836,6 +836,11 @@
 .verdict .v-title{ font:600 1.05rem/1.2 "Newsreader",serif; }
 .verdict .v-sub{ color:var(--ink-soft); font-size:.9rem; margin-top:3px; }
 
+/* ============ data freshness / staleness (Task 4) ============ */
+.dot-stale{ background:#c8892a !important; box-shadow:0 0 0 3px rgba(200,137,42,.18); }
+.freshness.is-stale{ color:#8a5a12; }
+.stale-warn{ color:#a3271b; }
+
 </style>
 </head>
 <body>
@@ -1165,6 +1170,7 @@
       </div>
     </div>
     <div id="vb-result"></div>
+  <script type="application/json" id="vd-data-visa_bulletin">{"schema_version":1,"dataset":"visa_bulletin","fetched_at":"2026-08-28","source":"travel.state.gov","month":"August 2026","months":[{"label":"June 2026","eb":{"EB1":{"All":"C","China":"2023-04-01","India":"2022-12-15","Mexico":"C","Philippines":"C"},"EB2":{"All":"C","China":"2021-09-01","India":"2013-09-01","Mexico":"C","Philippines":"C"},"EB3":{"All":"2024-06-01","China":"2021-08-01","India":"2013-12-15","Mexico":"2024-06-01","Philippines":"2023-08-01"}}},{"label":"July 2026","eb":{"EB1":{"All":"C","China":"2023-06-01","India":"2022-10-15","Mexico":"C","Philippines":"C"},"EB2":{"All":"C","China":"2021-09-01","India":"U","Mexico":"C","Philippines":"C"},"EB3":{"All":"2024-08-01","China":"2021-12-22","India":"2014-01-01","Mexico":"2024-08-01","Philippines":"2023-08-01"}}},{"label":"August 2026","eb":{"EB1":{"All":"C","China":"2023-07-01","India":"2022-10-15","Mexico":"C","Philippines":"C"},"EB2":{"All":"C","China":"2021-09-01","India":"U","Mexico":"C","Philippines":"C"},"EB3":{"All":"2024-09-01","China":"2022-01-01","India":"2014-01-01","Mexico":"2024-09-01","Philippines":"2023-08-01"}}}]}</script>
   </section>
   <section class="tab" id="tab-processing">
 
@@ -1186,6 +1192,7 @@
 
     <h3 class="secTitle">All processing times</h3>
     <div class="tbl-wrap"><table class="dt" id="pt-table"></table></div>
+  <script type="application/json" id="vd-data-processing_times">{"schema_version":1,"dataset":"processing_times","fetched_at":"2026-03-18","source":"egov.uscis.gov/processing-times","form_label":{"I-129":"I-129 — Nonimmigrant worker (H-1B/L/O/etc.)","I-140":"I-140 — Immigrant petition (EB green card)","I-485":"I-485 — Adjustment of status","I-765":"I-765 — Employment authorization (EAD)"},"center_label":{"WAC":"WAC — California (CSC)","LIN":"LIN — Nebraska (NSC)","VSC":"VSC — Vermont (VSC)","EAC":"EAC — Vermont (EAC)","NBC":"NBC — National Benefits Center"},"processing":{"I-129_WAC":{"form":"I-129","center":"WAC","median_months":4.2,"p75_months":6.1,"p90_months":8.4,"recent_approvals":847},"I-129_LIN":{"form":"I-129","center":"LIN","median_months":3.8,"p75_months":5.6,"p90_months":7.2,"recent_approvals":1203},"I-129_VSC":{"form":"I-129","center":"VSC","median_months":4.6,"p75_months":6.4,"p90_months":8.9,"recent_approvals":621},"I-129_EAC":{"form":"I-129","center":"EAC","median_months":3.2,"p75_months":4.8,"p90_months":6.5,"recent_approvals":982},"I-140_WAC":{"form":"I-140","center":"WAC","median_months":6.2,"p75_months":9.1,"p90_months":14.3,"recent_approvals":412},"I-140_VSC":{"form":"I-140","center":"VSC","median_months":5.8,"p75_months":8.4,"p90_months":12.1,"recent_approvals":389},"I-765_NBC":{"form":"I-765","center":"NBC","median_months":3.1,"p75_months":4.2,"p90_months":5.8,"recent_approvals":2841},"I-485_NBC":{"form":"I-485","center":"NBC","median_months":18.4,"p75_months":24.2,"p90_months":36.1,"recent_approvals":1204}}}</script>
   </section>
   <section class="tab" id="tab-wages">
 
@@ -1212,6 +1219,7 @@
       </div>
     </div>
     <div id="wg-result"></div>
+  <script type="application/json" id="vd-data-wage_data">{"schema_version":1,"dataset":"wage_data","fetched_at":"2026-03-18","source":"DOL OFLC LCA Disclosure Data FY2025 Q4","soc_titles":{"15-1252":"Software Developers & Engineers","15-1211":"Computer Systems Analysts","15-2051":"Data Scientists"},"wages":[{"soc":"15-1252","state":"TX","level":"I","wage":78540},{"soc":"15-1252","state":"TX","level":"II","wage":98000},{"soc":"15-1252","state":"TX","level":"III","wage":112847},{"soc":"15-1252","state":"TX","level":"IV","wage":138290},{"soc":"15-1252","state":"CA","level":"I","wage":112000},{"soc":"15-1252","state":"CA","level":"II","wage":142000},{"soc":"15-1252","state":"CA","level":"III","wage":172500},{"soc":"15-1252","state":"CA","level":"IV","wage":215000},{"soc":"15-1252","state":"NY","level":"I","wage":98000},{"soc":"15-1252","state":"NY","level":"II","wage":122000},{"soc":"15-1252","state":"NY","level":"III","wage":148000},{"soc":"15-1252","state":"NY","level":"IV","wage":182000},{"soc":"15-1252","state":"WA","level":"I","wage":105000},{"soc":"15-1252","state":"WA","level":"II","wage":130000},{"soc":"15-1252","state":"WA","level":"III","wage":158000},{"soc":"15-1252","state":"WA","level":"IV","wage":195000},{"soc":"15-1211","state":"TX","level":"I","wage":72100},{"soc":"15-1211","state":"TX","level":"II","wage":89400},{"soc":"15-1211","state":"TX","level":"III","wage":104200},{"soc":"15-1211","state":"TX","level":"IV","wage":126800},{"soc":"15-2051","state":"TX","level":"I","wage":82000},{"soc":"15-2051","state":"TX","level":"II","wage":104000},{"soc":"15-2051","state":"TX","level":"III","wage":124000},{"soc":"15-2051","state":"TX","level":"IV","wage":152000}]}</script>
   </section>
   <section class="tab" id="tab-sponsors">
 
@@ -1232,6 +1240,7 @@
       <span><span class="grade C" style="min-width:auto">C</span> &lt;84%</span>
       <span><span class="tag warn">Dependent</span> H-1B-dependent employer (extra attestations)</span>
     </div>
+  <script type="application/json" id="vd-data-employers">{"schema_version":1,"dataset":"employers","fetched_at":"2026-03-18","source":"USCIS H-1B Employer Data Hub FY2025","employers":[{"name":"AMAZON.COM SERVICES LLC","total":13670,"rate":88.4,"grade":"B","state":"WA","dep":false},{"name":"INFOSYS LIMITED","total":12480,"rate":85.2,"grade":"B","state":"TX","dep":true},{"name":"TATA CONSULTANCY SERVICES","total":11500,"rate":84,"grade":"B","state":"NJ","dep":true},{"name":"GOOGLE LLC","total":10842,"rate":97.8,"grade":"A","state":"CA","dep":false},{"name":"COGNIZANT TECHNOLOGY SOLUTIONS","total":9840,"rate":83.1,"grade":"B","state":"NJ","dep":true},{"name":"MICROSOFT CORPORATION","total":9410,"rate":96.2,"grade":"A","state":"WA","dep":false},{"name":"WIPRO LIMITED","total":9320,"rate":82.4,"grade":"B-","state":"CA","dep":true},{"name":"META PLATFORMS INC","total":7900,"rate":96,"grade":"A","state":"CA","dep":false},{"name":"HCL AMERICA INC","total":7290,"rate":83.8,"grade":"B","state":"TX","dep":true},{"name":"APPLE INC","total":7040,"rate":96.5,"grade":"A+","state":"CA","dep":false},{"name":"ERNST & YOUNG LLP","total":6400,"rate":88.1,"grade":"B+","state":"NY","dep":false},{"name":"DELOITTE CONSULTING LLP","total":6380,"rate":88.5,"grade":"B+","state":"NY","dep":false},{"name":"DELL TECHNOLOGIES INC","total":4970,"rate":93.2,"grade":"A-","state":"TX","dep":false},{"name":"JPMORGAN CHASE BANK","total":4640,"rate":93.1,"grade":"A-","state":"NY","dep":false},{"name":"SALESFORCE INC","total":3824,"rate":94.8,"grade":"A","state":"CA","dep":false}]}</script>
   </section>
   </div>
   </div>
@@ -1985,6 +1994,30 @@ function parseI94(text) {
 window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};
 window.VDAudit={runAudit,nameOutcome,parseVisaFoil,parseI94,RULES};
 })();
+;
+"use strict";
+/* VisaDash — shared dataset access + freshness badge.
+   Data is injected at build time as <script type="application/json" id="vd-data[-name]">.
+   VDFresh renders a "Data as of {date}" badge and a staleness warning past 45 days. */
+(function(){
+  window.VDData = function(name){
+    var el = document.getElementById("vd-data-" + name) || document.getElementById("vd-data");
+    if(!el) return null;
+    try { return JSON.parse(el.textContent); } catch(e){ return null; }
+  };
+  window.VDFresh = function(el, d, label){
+    if(!el) return;
+    if(!d || !d.fetched_at){ el.innerHTML = '<span class="dot"></span> Data unavailable'; return; }
+    var days = Math.floor((Date.now() - Date.parse(d.fetched_at + "T00:00:00")) / 86400000);
+    var stale = days > 45;
+    el.classList.toggle("is-stale", stale);
+    el.innerHTML = '<span class="dot' + (stale ? " dot-stale" : "") + '"></span> '
+      + (label ? label + " &middot; " : "")
+      + "Data as of " + d.fetched_at + " &middot; source: " + d.source
+      + (stale ? ' &middot; <b class="stale-warn">' + days + " days old — may be out of date; confirm against the official source</b>" : "");
+  };
+})();
+
 ;
 "use strict";
 if (window.pdfjsLib) {
@@ -3242,30 +3275,14 @@ function downloadReport(node) {
 (function(){
   const qs  = (s,r=document)=>r.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const getData = window.VDData;   // shared data + freshness helper
 
-  /* ---- embedded data (periodic snapshot, on-device) ---- */
-  const VB_MONTHS = [
-    { label:"June 2026", eb:{
-      EB1:{All:"C",China:"2023-04-01",India:"2022-12-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"2013-09-01",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-06-01",China:"2021-08-01",India:"2013-12-15",Mexico:"2024-06-01",Philippines:"2023-08-01"}
-    }},
-    { label:"July 2026", eb:{
-      EB1:{All:"C",China:"2023-06-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-08-01",China:"2021-12-22",India:"2014-01-01",Mexico:"2024-08-01",Philippines:"2023-08-01"}
-    }},
-    { label:"August 2026", eb:{
-      EB1:{All:"C",China:"2023-07-01",India:"2022-10-15",Mexico:"C",Philippines:"C"},
-      EB2:{All:"C",China:"2021-09-01",India:"U",Mexico:"C",Philippines:"C"},
-      EB3:{All:"2024-09-01",China:"2022-01-01",India:"2014-01-01",Mexico:"2024-09-01",Philippines:"2023-08-01"}
-    }}
-  ];
-  const BULLETIN = {
-    month:"August 2026", fetched:"2026-08-28", source:"travel.state.gov",
-    months: VB_MONTHS,
-    eb: VB_MONTHS[2].eb
-  };
+  /* ---- data: versioned snapshot from data/visa_bulletin.json (injected at build) ---- */
+  const DATA = getData("visa_bulletin");
+  const BULLETIN = DATA ? {
+    month: DATA.month, fetched: DATA.fetched_at, source: DATA.source,
+    months: DATA.months, eb: DATA.months[DATA.months.length-1].eb
+  } : null;
 
   const COUNTRIES=["All","China","India","Mexico","Philippines"];
   function fmtDate(s){
@@ -3350,7 +3367,7 @@ function downloadReport(node) {
     return out;
   }
   function renderBulletin(){
-    qs("#bulletin-fresh").innerHTML=`<span class="dot"></span> ${BULLETIN.month} Visa Bulletin &middot; snapshot ${BULLETIN.fetched} &middot; source: ${BULLETIN.source}`;
+    window.VDFresh(qs("#bulletin-fresh"), DATA, `${BULLETIN.month} Visa Bulletin`);
     let h=`<thead><tr><th>Category</th>${COUNTRIES.map(c=>`<th class="num">${c}</th>`).join("")}</tr></thead><tbody>`;
     for(const cat of ["EB1","EB2","EB3"]){
       h+=`<tr><td><b>${cat}</b></td>`+COUNTRIES.map(c=>{
@@ -3398,6 +3415,7 @@ function downloadReport(node) {
     out.innerHTML=`<div class="callout ${cls}"><div class="lbl">${cat} · ${country}</div><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
   }
 
+  if(!BULLETIN){ window.VDFresh(qs("#bulletin-fresh"), null); return; }
   renderBulletin();
   ["vb-cat","vb-country","vb-pd"].forEach(id=>qs("#"+id).addEventListener("input",checkCurrent));
   checkCurrent();
@@ -3410,14 +3428,14 @@ function downloadReport(node) {
   const qs  = (s,r=document)=>r.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-  const PT_FETCHED="2026-03-18", PT_SOURCE="egov.uscis.gov/processing-times";
-  const PROCESSING = {"I-129_WAC":{form:"I-129",center:"WAC",median_months:4.2,p75_months:6.1,p90_months:8.4,recent_approvals:847},"I-129_LIN":{form:"I-129",center:"LIN",median_months:3.8,p75_months:5.6,p90_months:7.2,recent_approvals:1203},"I-129_VSC":{form:"I-129",center:"VSC",median_months:4.6,p75_months:6.4,p90_months:8.9,recent_approvals:621},"I-129_EAC":{form:"I-129",center:"EAC",median_months:3.2,p75_months:4.8,p90_months:6.5,recent_approvals:982},"I-140_WAC":{form:"I-140",center:"WAC",median_months:6.2,p75_months:9.1,p90_months:14.3,recent_approvals:412},"I-140_VSC":{form:"I-140",center:"VSC",median_months:5.8,p75_months:8.4,p90_months:12.1,recent_approvals:389},"I-765_NBC":{form:"I-765",center:"NBC",median_months:3.1,p75_months:4.2,p90_months:5.8,recent_approvals:2841},"I-485_NBC":{form:"I-485",center:"NBC",median_months:18.4,p75_months:24.2,p90_months:36.1,recent_approvals:1204}};
-  const FORM_LABEL = {"I-129":"I-129 — Nonimmigrant worker (H-1B/L/O/etc.)","I-140":"I-140 — Immigrant petition (EB green card)","I-485":"I-485 — Adjustment of status","I-765":"I-765 — Employment authorization (EAD)"};
-  const CENTER_LABEL = {WAC:"WAC — California (CSC)",LIN:"LIN — Nebraska (NSC)",VSC:"VSC — Vermont (VSC)",EAC:"EAC — Vermont (EAC)",NBC:"NBC — National Benefits Center"};
+  const DATA = window.VDData("processing_times");
+  const PROCESSING = DATA ? DATA.processing : {};
+  const FORM_LABEL = DATA ? DATA.form_label : {};
+  const CENTER_LABEL = DATA ? DATA.center_label : {};
 
   function months(n){ return n>=12 ? (n/12).toFixed(1)+" yr" : n+" mo"; }
   function renderProcessing(){
-    qs("#pt-fresh").innerHTML=`<span class="dot"></span> Snapshot ${PT_FETCHED} &middot; source: ${PT_SOURCE}`;
+    window.VDFresh(qs("#pt-fresh"), DATA, "USCIS processing times");
     const forms=[...new Set(Object.values(PROCESSING).map(p=>p.form))];
     qs("#pt-form").innerHTML=forms.map(f=>`<option value="${f}">${esc(FORM_LABEL[f]||f)}</option>`).join("");
     syncCenters();
@@ -3441,7 +3459,7 @@ function downloadReport(node) {
       <div class="sub">Half of recent ${p.form} cases at this center finished within <b>${months(p.median_months)}</b>; 9 in 10 within <b>${months(p.p90_months)}</b>. Based on ${p.recent_approvals.toLocaleString()} recent approvals. If your case is past the 90% mark, an inquiry may be warranted.</div></div>`;
   }
 
-  renderProcessing();
+  if(!DATA){ window.VDFresh(qs("#pt-fresh"), null); } else { renderProcessing(); }
 })();
 
 ;
@@ -3452,12 +3470,12 @@ function downloadReport(node) {
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const money = n => "$"+Math.round(n).toLocaleString("en-US");
 
-  const WG_FETCHED="2026-03-18", WG_SOURCE="DOL OFLC LCA Disclosure Data FY2025 Q4";
-  const SOC_TITLES={"15-1252":"Software Developers & Engineers","15-1211":"Computer Systems Analysts","15-2051":"Data Scientists"};
-  const WAGES=[{soc:"15-1252",state:"TX",level:"I",wage:78540},{soc:"15-1252",state:"TX",level:"II",wage:98000},{soc:"15-1252",state:"TX",level:"III",wage:112847},{soc:"15-1252",state:"TX",level:"IV",wage:138290},{soc:"15-1252",state:"CA",level:"I",wage:112000},{soc:"15-1252",state:"CA",level:"II",wage:142000},{soc:"15-1252",state:"CA",level:"III",wage:172500},{soc:"15-1252",state:"CA",level:"IV",wage:215000},{soc:"15-1252",state:"NY",level:"I",wage:98000},{soc:"15-1252",state:"NY",level:"II",wage:122000},{soc:"15-1252",state:"NY",level:"III",wage:148000},{soc:"15-1252",state:"NY",level:"IV",wage:182000},{soc:"15-1252",state:"WA",level:"I",wage:105000},{soc:"15-1252",state:"WA",level:"II",wage:130000},{soc:"15-1252",state:"WA",level:"III",wage:158000},{soc:"15-1252",state:"WA",level:"IV",wage:195000},{soc:"15-1211",state:"TX",level:"I",wage:72100},{soc:"15-1211",state:"TX",level:"II",wage:89400},{soc:"15-1211",state:"TX",level:"III",wage:104200},{soc:"15-1211",state:"TX",level:"IV",wage:126800},{soc:"15-2051",state:"TX",level:"I",wage:82000},{soc:"15-2051",state:"TX",level:"II",wage:104000},{soc:"15-2051",state:"TX",level:"III",wage:124000},{soc:"15-2051",state:"TX",level:"IV",wage:152000}];
+  const DATA = window.VDData("wage_data");
+  const SOC_TITLES = DATA ? DATA.soc_titles : {};
+  const WAGES = DATA ? DATA.wages : [];
 
   function renderWages(){
-    qs("#wg-fresh").innerHTML=`<span class="dot"></span> ${WG_SOURCE} &middot; snapshot ${WG_FETCHED}`;
+    window.VDFresh(qs("#wg-fresh"), DATA, "DOL prevailing wage");
     const socs=[...new Set(WAGES.map(w=>w.soc))];
     qs("#wg-soc").innerHTML=socs.map(s=>`<option value="${s}">${esc(SOC_TITLES[s]||s)} (${s})</option>`).join("");
     refreshStates();
@@ -3486,7 +3504,7 @@ function downloadReport(node) {
       <div class="big">${money(row.wage)} <span style="font-size:.6em;color:var(--ink-faint)">prevailing / yr</span></div>${extra}</div>`;
   }
 
-  renderWages();
+  if(!DATA){ window.VDFresh(qs("#wg-fresh"), null); } else { renderWages(); }
 })();
 
 ;
@@ -3497,11 +3515,11 @@ function downloadReport(node) {
   const qsa = (s,r=document)=>[...r.querySelectorAll(s)];
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-  const EMP_FETCHED="2026-03-18", EMP_SOURCE="USCIS H-1B Employer Data Hub FY2025";
-  const EMPLOYERS=[{name:"AMAZON.COM SERVICES LLC",total:13670,rate:88.4,grade:"B",state:"WA",dep:false},{name:"INFOSYS LIMITED",total:12480,rate:85.2,grade:"B",state:"TX",dep:true},{name:"TATA CONSULTANCY SERVICES",total:11500,rate:84.0,grade:"B",state:"NJ",dep:true},{name:"GOOGLE LLC",total:10842,rate:97.8,grade:"A",state:"CA",dep:false},{name:"COGNIZANT TECHNOLOGY SOLUTIONS",total:9840,rate:83.1,grade:"B",state:"NJ",dep:true},{name:"MICROSOFT CORPORATION",total:9410,rate:96.2,grade:"A",state:"WA",dep:false},{name:"WIPRO LIMITED",total:9320,rate:82.4,grade:"B-",state:"CA",dep:true},{name:"META PLATFORMS INC",total:7900,rate:96.0,grade:"A",state:"CA",dep:false},{name:"HCL AMERICA INC",total:7290,rate:83.8,grade:"B",state:"TX",dep:true},{name:"APPLE INC",total:7040,rate:96.5,grade:"A+",state:"CA",dep:false},{name:"ERNST & YOUNG LLP",total:6400,rate:88.1,grade:"B+",state:"NY",dep:false},{name:"DELOITTE CONSULTING LLP",total:6380,rate:88.5,grade:"B+",state:"NY",dep:false},{name:"DELL TECHNOLOGIES INC",total:4970,rate:93.2,grade:"A-",state:"TX",dep:false},{name:"JPMORGAN CHASE BANK",total:4640,rate:93.1,grade:"A-",state:"NY",dep:false},{name:"SALESFORCE INC",total:3824,rate:94.8,grade:"A",state:"CA",dep:false}];
+  const DATA = window.VDData("employers");
+  const EMPLOYERS = DATA ? DATA.employers : [];
 
-  const fresh=qs("#emp-fresh");
-  if(fresh) fresh.innerHTML=`<span class="dot"></span> ${EMP_SOURCE} &middot; snapshot ${EMP_FETCHED}`;
+  window.VDFresh(qs("#emp-fresh"), DATA, "H-1B sponsors");
+  if(!DATA) return;
 
   let empSort={key:"total",dir:-1};
   function renderEmployers(){
