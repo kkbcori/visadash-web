@@ -198,6 +198,32 @@ Have you ever been in the U.S.? NO`;
   assert.equal(r.rows.find(x => x.key === "beenInUS").outcome, "mismatch");
 });
 
+/* ── real completed "Print Application" quirks (synthetic values only) ── */
+test("DS-160 handles print quirks: Name Provided, Place of Birth, (n)-indexed labels", () => {
+  const text = `Online Nonimmigrant Visa Application (DS-160)
+Name Provided: DOE, JANE Q
+Full Name in Native Language: DOES NOT APPLY
+Place of Birth: SOMECITY, SOMESTATE, SOMELAND
+Country/Region of Origin (Nationality): SOMELAND
+Social Media Platform: (1): FACEBOOK
+Social Media Identifier: user@example.com
+Purpose of Trip to the U.S. (1): TEMPORARY WORKER (H)
+Specify: SPECIALTY OCCUPATION (H1B)
+Passport/Travel Document Number: X1234567
+Father's Given Names: RICHARD
+Mother's Given Names: MARY`;
+  const d = _mod.TYPE_BY_ID.ds160.extract({ text, lines: text.split("\n").map(s => s.trim()) });
+  assert.equal(d.fields.surname.value, "DOE");
+  assert.equal(d.fields.given.value, "JANE Q");
+  assert.equal(d.fields.placeOfBirth.value, "SOMECITY, SOMESTATE, SOMELAND");
+  assert.equal(d.fields.nativeName.value, "DOES NOT APPLY");
+  assert.equal(d.fields.socialMediaProvider.value, "FACEBOOK");        // strips ": (1):"
+  assert.equal(d.fields.purposeOfTrip.value, "TEMPORARY WORKER (H)");  // strips " (1):"
+  assert.equal(d.fields.fatherGiven.value, "RICHARD");
+  // "Given Names" must NOT bleed into the mother/father fields
+  assert.equal(d.fields.given.value, "JANE Q");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

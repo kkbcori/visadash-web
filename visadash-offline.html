@@ -1311,7 +1311,8 @@ function compareValues(a, b, normalizer) {
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normKey = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-const stripSep = s => s.replace(/^\s*\(\d+\)/, "").replace(/^[\s:.\-–—>|]+/, "").trim();
+// Strip leading separators AND "(n)" index tokens (the printout writes "Label: (1): VALUE").
+const stripSep = s => s.replace(/^(?:\s|[:.\-–—>|]|\(\d+\))+/, "").trim();
 
 function grabLabel(lines, labels, { key } = {}) {
   const arr = Array.isArray(labels) ? labels : [labels];
@@ -1460,13 +1461,14 @@ const DS160_FIELDS = [
   // ── Personal Information 1 ──  (the printout prints the name as "Name Provided: SURNAME, GIVEN"; see extract())
   { key: "surname", label: "Surname", cat: "Personal Information 1", n: norm.name, s: "same", sv: "critical", labels: ["Surnames", "Surname", "Last Name", "Family Name"] },
   { key: "given", label: "Given names", cat: "Personal Information 1", n: norm.name, s: "same", sv: "critical", labels: ["Given Names", "Given Name", "First Name"] },
-  { key: "nativeName", label: "Full name in native alphabet", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "high", labels: ["Full Name in Native Alphabet", "Name in Native Alphabet", "Native Alphabet"] },
+  { key: "nativeName", label: "Full name in native language", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "high", labels: ["Full Name in Native Language", "Full Name in Native Alphabet", "Name in Native Alphabet", "Native Alphabet"] },
   { key: "otherNames", label: "Other names used", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["Other Names Used", "Other Names"] },
   { key: "telecode", label: "Telecode name", cat: "Personal Information 1", n: norm.plain, s: "same", sv: "low", labels: ["Telecode Name Used", "Telecode Name", "Telecode"] },
   { key: "sex", label: "Sex", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "critical", labels: ["Sex", "Gender"] },
   { key: "maritalStatus", label: "Marital status", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "high", labels: ["Marital Status"] },
   { key: "dob", label: "Date of birth", cat: "Personal Information 1", n: norm.date, s: "same", sv: "critical", labels: ["Date of Birth", "Birth Date", "DOB"] },
-  { key: "cityOfBirth", label: "City of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["City of Birth", "Place of Birth"] },
+  { key: "placeOfBirth", label: "Place of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["Place of Birth"] },
+  { key: "cityOfBirth", label: "City of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "high", labels: ["City of Birth"] },
   { key: "stateOfBirth", label: "State/province of birth", cat: "Personal Information 1", n: norm.name, s: "same", sv: "medium", labels: ["State/Province of Birth", "State of Birth", "Province of Birth"] },
   { key: "countryOfBirth", label: "Country of birth", cat: "Personal Information 1", n: norm.upper, s: "same", sv: "high", labels: ["Country/Region of Birth", "Country of Birth"] },
   // ── Personal Information 2 ──
@@ -1497,7 +1499,7 @@ const DS160_FIELDS = [
   { key: "secondaryPhone", label: "Secondary phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "low", labels: ["Secondary Phone Number", "Secondary Phone"] },
   { key: "workPhone", label: "Work phone", cat: "Address and Phone", n: norm.id, s: "same", sv: "low", labels: ["Work Phone Number", "Work Phone"] },
   { key: "email", label: "Email address", cat: "Address and Phone", n: norm.upper, s: "same", sv: "medium", labels: ["E-mail Address", "Email Address"] },
-  { key: "socialMediaProvider", label: "Social media platform", cat: "Address and Phone", n: norm.upper, s: "same", sv: "low", labels: ["Social Media Provider/Platform", "Social Media Provider"] },
+  { key: "socialMediaProvider", label: "Social media platform", cat: "Address and Phone", n: norm.upper, s: "same", sv: "low", labels: ["Social Media Platform", "Social Media Provider/Platform", "Social Media Provider"] },
   { key: "socialMediaId", label: "Social media identifier", cat: "Address and Phone", n: norm.plain, s: "same", sv: "low", labels: ["Social Media Identifier"] },
   // ── Passport ──
   { key: "passportType", label: "Passport type", cat: "Passport", n: norm.upper, s: "same", sv: "low", labels: ["Passport/Travel Document Type", "Passport Type", "Document Type"] },
@@ -1517,9 +1519,13 @@ const DS160_FIELDS = [
   // ── Family ──
   { key: "fatherSurname", label: "Father's surname", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Father's Surnames", "Father's Surname", "Fathers Surname"] },
   { key: "fatherGiven", label: "Father's given names", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Father's Given Names", "Fathers Given Names"] },
+  { key: "fatherDob", label: "Father's date of birth", cat: "Family", n: norm.date, s: "same", sv: "low", labels: ["Father's Date of Birth", "Fathers Date of Birth"] },
   { key: "motherSurname", label: "Mother's surname", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Mother's Surnames", "Mother's Surname", "Mothers Surname"] },
   { key: "motherGiven", label: "Mother's given names", cat: "Family", n: norm.name, s: "same", sv: "medium", labels: ["Mother's Given Names", "Mothers Given Names"] },
+  { key: "motherDob", label: "Mother's date of birth", cat: "Family", n: norm.date, s: "same", sv: "low", labels: ["Mother's Date of Birth", "Mothers Date of Birth"] },
   { key: "spouseName", label: "Spouse's full name", cat: "Family", n: norm.name, s: "same", sv: "low", labels: ["Spouse's Full Name", "Spouse Full Name", "Spouse Name"] },
+  { key: "spouseDob", label: "Spouse's date of birth", cat: "Family", n: norm.date, s: "same", sv: "low", labels: ["Spouse's Date of Birth", "Spouse Date of Birth"] },
+  { key: "spouseNationality", label: "Spouse's nationality", cat: "Family", n: norm.upper, s: "same", sv: "low", labels: ["Spouse's Country/Region of Origin (Nationality)", "Spouse's Nationality"] },
   // ── Work / Education / Training ──
   { key: "occupation", label: "Primary occupation", cat: "Work / Education / Training", n: norm.upper, s: "same", sv: "medium", labels: ["Primary Occupation"] },
   { key: "presentEmployer", label: "Present employer or school", cat: "Work / Education / Training", n: norm.name, s: "same", sv: "medium", labels: ["Present Employer or School Name", "Employer Name", "Present Employer"] },
