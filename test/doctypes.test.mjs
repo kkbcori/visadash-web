@@ -245,6 +245,33 @@ NO`;
   assert.equal(d.fields.visaRefused.value, "NO");      // answer 3 lines below
 });
 
+/* ── sequential cursor: repeated generic labels bind per-section (synthetic) ── */
+test("DS-160 binds the first City/State/Country to the home address, not the employer", () => {
+  const text = `Name Provided: DOE, JANE
+Country/Region of Origin (Nationality): SOMELAND
+Home Address: 1 MAIN ST
+City: HOMECITY
+State/Province: HOMESTATE
+Postal Zone/ZIP Code: 11111
+Country/Region: HOMELAND
+Same Mailing Address? YES
+Primary Phone Number: 5550001
+Email Address: a@example.com
+Passport/Travel Document Number: X1234567
+City Where Issued: ISSUECITY
+Primary Occupation: ENGINEER
+Present Employer or School Name: ACME CORP
+Address: 2 WORK ROAD
+City: WORKCITY`;
+  const d = _mod.TYPE_BY_ID.ds160.extract({ text, lines: text.split("\n").map(s => s.trim()) });
+  assert.equal(d.fields.homeCity.value, "HOMECITY");        // first City → home
+  assert.equal(d.fields.homeState.value, "HOMESTATE");
+  assert.equal(d.fields.homeCountry.value, "HOMELAND");     // not the nationality line above
+  assert.equal(d.fields.passportIssueCity.value, "ISSUECITY");
+  assert.equal(d.fields.employerAddress.value, "2 WORK ROAD");
+  assert.equal(d.fields.sameMailingAddress.value, "YES");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

@@ -758,24 +758,31 @@ function showDemoReport() {
       Sex: FEMALE
       Marital Status: SINGLE
       Date of Birth: 01-JAN-1988
-      Country/Region of Birth: INDIA
+      Place of Birth: PUNE, MAHARASHTRA, INDIA
       Country/Region of Origin (Nationality): INDIA
+      Home Address: 12 SAMPLE STREET
+      City: AUSTIN
+      State/Province: TEXAS
+      Postal Zone/ZIP Code: 78701
+      Country/Region: UNITED STATES OF AMERICA
+      Same Mailing Address? YES
+      Primary Phone Number: 5125550101
+      Email Address: priya.old@example.com
+      Passport/Travel Document Number: Z1234567
+      Passport Expiration Date: 01-JAN-2030
       Purpose of Trip to the U.S.: TEMP. BUSINESS OR PLEASURE VISITOR (B)
       Intended Date of Arrival: 15-JUN-2024
       Person/Entity Paying for Your Trip: SELF
       Have you ever been in the U.S.? NO
-      Primary Phone Number: +91 98765 43210
-      Email Address: priya.old@gmail.com
-      Passport/Travel Document Number: Z1234567
-      Passport Expiration Date: 01-JAN-2030
       Father's Surnames: SHARMA
       Mother's Given Names: SUNITA
       Primary Occupation: COMPUTER SCIENTIST
       Present Employer or School Name: ACME SOFTWARE`;
     const B = A.replace("PRIYA ANIL", "PRIYA A").replace("Z1234567", "Z7654321")
       .replace("01-JAN-2030", "01-JAN-2034").replace("SINGLE", "MARRIED")
-      .replace("priya.old@gmail.com", "priya.sharma@work.com").replace("15-JUN-2024", "10-SEP-2026")
-      .replace("been in the U.S.? NO", "been in the U.S.? YES").replace("ACME SOFTWARE", "GLOBEX CORP");
+      .replace("priya.old@example.com", "priya.sharma@work.example").replace("15-JUN-2024", "10-SEP-2026")
+      .replace("been in the U.S.? NO", "been in the U.S.? YES").replace("ACME SOFTWARE", "GLOBEX CORP")
+      .replace("City: AUSTIN", "City: DALLAS").replace("Same Mailing Address? YES", "Same Mailing Address? NO");
     const docOf = t => ({ type: "ds160", ...E.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
     const res = E.compareVersions("ds160", docOf(A), docOf(B));
     renderEngineResult({ ...res, title: "DS-160 — sample comparison", labels: ["Earlier", "Later"] });

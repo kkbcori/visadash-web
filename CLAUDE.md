@@ -46,7 +46,14 @@ Passport, Travel, U.S. Point of Contact, Family, Work/Education/Training); `extr
 comparator groups rows into **collapsible category sections** (`renderEngineResult` → `<details
 class="cmp-cat">`, red header + auto-open when it has changes, Expand/Collapse-all), and the
 downloadable/print report groups the same way (`buildReportHtml`, `<details>` per category).
-To add/rename DS-160 fields or sections: edit `DS160_FIELDS`/`DS160_CATEGORIES` only.
+To add/rename DS-160 fields or sections: edit `DS160_FIELDS`/`DS160_CATEGORIES` only —
+**keep both in document (printout) order.** `ds160.extract` walks `DS160_FIELDS` with a
+**moving cursor** (`findLabel`/`findYesNo` take a start index), so repeated generic labels
+(`City`, `State`, `Postal`, `Country`, `Address`) bind per-section: the first `City` → home,
+the next → employer, etc. Fields flagged `generic:true` skip the global fallback (so a missing
+home value can't grab a later section's). `q:true` fields are wrapped yes/no questions handled by
+`grabYesNo`. Category order = the real print sequence (Personal → Address & Phone → Passport →
+Travel → Travel Companions → Previous U.S. Travel → U.S. Contact → Family → Work). ~80 fields.
 Labels and the 10 categories mirror the **real DS-160 "Print Application" printout** (exemplar at
 `/Users/kkbcori/_KKB/Personal/VisaDash/Visadash_docs/DS-160-Example_11012019.pdf`): the printout
 prints the name once as `Name Provided: SURNAME, GIVEN` — `ds160.extract` splits it into
