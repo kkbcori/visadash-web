@@ -1311,8 +1311,10 @@ function compareValues(a, b, normalizer) {
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normKey = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-// Strip leading separators AND "(n)" index tokens (the printout writes "Label: (1): VALUE").
-const stripSep = s => s.replace(/^(?:\s|[:.\-–—>|]|\(\d+\))+/, "").trim();
+// Strip leading separators, "(n)" index tokens ("Label: (1): VALUE") and a leading
+// parenthetical qualifier that sits between the label and the value
+// ("Monthly Salary in Local Currency (if employed): 7500").
+const stripSep = s => s.replace(/^(?:\s|[:.\-–—>|]|\([^)]*\))+/, "").trim();
 
 const normLines = lines => lines.map(l => String(l).replace(/\s+/g, " ").trim());
 const labelRe = label => new RegExp("^\\W*" + label.trim().split(/\s+/).map(escRe).join("\\W+") + "(?![A-Za-z0-9])", "i");

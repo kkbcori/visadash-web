@@ -349,6 +349,11 @@ Language Name (1): ENGLISH`;
   assert.equal(f.languages.value, "ENGLISH");
 });
 
+/* ── label with a parenthetical qualifier before the value ── */
+test("grabLabel strips a leading parenthetical qualifier (…if employed)", () => {
+  assert.equal(grabLabel(["Monthly Salary in Local Currency (if employed): 7500"], ["Monthly Salary in Local Currency"]).value, "7500");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);
