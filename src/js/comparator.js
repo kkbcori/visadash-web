@@ -541,7 +541,10 @@ function cmpTable(colA, colB, rowsHtml) {
       <thead><tr><th>Item</th><th>${escapeHtml(colA)}</th><th>${escapeHtml(colB)}</th><th>Difference</th></tr></thead>
       <tbody>${rowsHtml}</tbody></table></div>`;
 }
+let lastReport = null;   // structured payload for the downloadable report
+
 function paintComparison(o) {
+  lastReport = o.report || null;
   const html = `<div class="verdict ${o.verdictClass}">
       <div class="v-title">${escapeHtml(o.title)}</div>
       <div class="v-sub">${o.summary}</div>
@@ -552,11 +555,79 @@ function paintComparison(o) {
       : `<div class="callout note"><div class="sub">No differences found between the two documents in the compared items.</div></div>`}
     ${o.sameRows
       ? `<details class="cmp-collapse"><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"} — click to expand</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}
+    ${lastReport ? `<div class="actions no-print" style="margin-top:14px">
+      <button class="btn ghost sm" id="dlReportBtn">&#11015; Download report (HTML)</button>
+      <button class="btn ghost sm" id="printReportBtn">&#128424; Print / Save as PDF</button></div>` : ""}
     ${o.belowHtml || ""}`;
   const el = $("#results");
   el.innerHTML = html;
   el.classList.add("show");
+  const dl = $("#dlReportBtn"), pr = $("#printReportBtn");
+  if (dl) dl.addEventListener("click", downloadReportFile);
+  if (pr) pr.addEventListener("click", printReport);
   el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---- downloadable / printable report (all entries, self-contained, on-device) ---- */
+function buildReportHtml(rep) {
+  const stamp = new Date().toLocaleString();
+  const cellBg = o => o === "match" ? "#e9f2ec" : o === "unreadable" ? "#eee9f3" : "#fbe9e7";
+  const cellFg = o => o === "match" ? "#255e37" : o === "unreadable" ? "#5b4a76" : "#9a2f22";
+  const rowsHtml = rep.rows.map(r => `<tr>
+      <td class="it">${r.n}. ${escapeHtml(r.label || "")}${r.severity && r.outcome !== "match" ? ` <b>[${escapeHtml(r.severity)}]</b>` : ""}</td>
+      <td style="background:${cellBg(r.outcome)};color:${cellFg(r.outcome)}">${escapeHtml(r.old || "—")}</td>
+      <td style="background:${cellBg(r.outcome)};color:${cellFg(r.outcome)}">${escapeHtml(r.new || "—")}</td>
+      <td class="nt">${escapeHtml(r.note || "")}</td>
+    </tr>`).join("");
+  const findingsHtml = (rep.findings && rep.findings.length)
+    ? `<h3>Flags</h3><ul>${rep.findings.map(f => `<li><b>${escapeHtml(f.severity)}:</b> ${escapeHtml(f.title)}${f.detail ? " — " + escapeHtml(f.detail) : ""}</li>`).join("")}</ul>` : "";
+  const skippedHtml = (rep.skipped && rep.skipped.length)
+    ? `<h3>Not checked</h3><ul>${rep.skipped.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : "";
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>VisaDash comparison report — ${escapeHtml(rep.title)}</title>
+<style>
+  body{font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#20211d;max-width:900px;margin:28px auto;padding:0 18px}
+  h1{font-size:1.4rem;margin:0 0 2px} h2{font-size:1.1rem;margin:20px 0 6px}
+  .meta{color:#777;font-size:.82rem;margin:0 0 14px}
+  .summary{background:#f3f0e8;border:1px solid #e2ddce;border-radius:8px;padding:10px 14px;margin:8px 0 16px}
+  table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+  th,td{border:1px solid #ddd;padding:7px 9px;text-align:left;vertical-align:top;word-break:break-word}
+  th{background:#f3f0e8} td.it{width:32%} td.nt{width:14%;color:#777;font-size:12px}
+  .disc{color:#777;font-size:12px;margin-top:18px;border-top:1px solid #eee;padding-top:10px}
+  @media print{body{margin:0}}
+</style></head><body>
+<h1>VisaDash — comparison report</h1>
+<p class="meta">${escapeHtml(rep.title)} &middot; generated ${escapeHtml(stamp)} &middot; produced on-device, nothing uploaded</p>
+<div class="summary">${escapeHtml(rep.summary)}</div>
+${findingsHtml}
+<h2>All items</h2>
+<table><thead><tr><th>Item</th><th>${escapeHtml(rep.colA)}</th><th>${escapeHtml(rep.colB)}</th><th>Difference</th></tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+${skippedHtml}
+<p class="disc"><b>Not legal advice.</b> VisaDash is a free educational toolkit and is not affiliated with USCIS, the Department of State, or the Department of Labor. Every item above is for a human to verify against the original documents and the official instructions on uscis.gov and travel.state.gov.</p>
+</body></html>`;
+}
+function downloadReportFile() {
+  if (!lastReport) return;
+  const blob = new Blob([buildReportHtml(lastReport)], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `visadash-report-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function printReport() {
+  if (!lastReport) return;
+  const ifr = document.createElement("iframe");
+  ifr.style.position = "fixed"; ifr.style.right = "0"; ifr.style.bottom = "0";
+  ifr.style.width = "0"; ifr.style.height = "0"; ifr.style.border = "0";
+  document.body.appendChild(ifr);
+  const doc = ifr.contentWindow.document;
+  doc.open(); doc.write(buildReportHtml(lastReport)); doc.close();
+  const done = () => { try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch (e) {}
+    setTimeout(() => ifr.remove(), 1000); };
+  if (ifr.contentWindow.document.readyState === "complete") setTimeout(done, 150);
+  else ifr.onload = () => setTimeout(done, 150);
 }
 
 function renderEngineResult(eng) {
@@ -573,7 +644,7 @@ function renderEngineResult(eng) {
       ${f.detail ? `<div class="sub">${escapeHtml(f.detail)}</div>` : ""}</div>`;
   };
 
-  let n = 0; const changed = [], same = [];
+  let n = 0; const changed = [], same = [], reportRows = [];
   for (const r of (eng.rows || [])) {
     if (r.outcome === "absent") continue;
     n++;
@@ -582,6 +653,8 @@ function renderEngineResult(eng) {
     const chip = (r.outcome !== "match" && sv.label) ? ` <span class="eng-chip ${sv.cls}">${sv.label}</span>` : "";
     const html = cmpRow(n, r.label, av.value, bv.value, r.outcome, srcTitle(av), srcTitle(bv), chip);
     (r.outcome === "match" ? same : changed).push(html);
+    reportRows.push({ n, label: r.label, old: av.value, new: bv.value, outcome: r.outcome,
+      note: diffNote(av.value, bv.value, r.outcome), severity: (r.outcome !== "match" && sv.label) ? sv.label : "" });
   }
 
   const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review`
@@ -599,19 +672,29 @@ function renderEngineResult(eng) {
     summary, aboveHtml: above, colA: la, colB: lb,
     changedRows: changed.join(""), sameRows: same.length ? same.join("") : "", sameCount: same.length,
     belowHtml: below,
+    report: {
+      title: eng.title, summary, colA: la, colB: lb, rows: reportRows,
+      findings: findings.map(f => ({ severity: (ENG_SEV[f.severity] || ENG_SEV.info).label, title: f.title, detail: f.detail })),
+      skipped: skipped.map(s => s.id + " — " + s.reason),
+    },
   });
 }
 
 /* general / "other docs": present the line diff as the same 4-column table */
 function renderGeneralTable(gres) {
   const diff = gres.diff || [];
-  let n = 0; const changed = [], same = [];
+  let n = 0; const changed = [], same = [], reportRows = [];
+  const addRow = (oldV, newV, outcome) => {
+    n++;
+    (outcome === "match" ? same : changed).push(cmpRow(n, "", oldV, newV, outcome));
+    reportRows.push({ n, label: "", old: oldV, new: newV, outcome, note: diffNote(oldV, newV, outcome) });
+  };
   for (let i = 0; i < diff.length; i++) {
     const d = diff[i];
-    if (d.t === "same") { n++; same.push(cmpRow(n, "", d.x, d.x, "match")); }
-    else if (d.t === "del" && diff[i + 1] && diff[i + 1].t === "add") { n++; changed.push(cmpRow(n, "", d.x, diff[i + 1].x, "mismatch")); i++; }
-    else if (d.t === "del") { n++; changed.push(cmpRow(n, "", d.x, "", "one-sided")); }
-    else { n++; changed.push(cmpRow(n, "", "", d.x, "one-sided")); }
+    if (d.t === "same") addRow(d.x, d.x, "match");
+    else if (d.t === "del" && diff[i + 1] && diff[i + 1].t === "add") { addRow(d.x, diff[i + 1].x, "mismatch"); i++; }
+    else if (d.t === "del") addRow(d.x, "", "one-sided");
+    else addRow("", d.x, "one-sided");
   }
   const summary = `${changed.length} changed line${changed.length === 1 ? "" : "s"}`
     + (same.length ? ` · ${same.length} unchanged` : "") + " — review below.";
@@ -621,6 +704,7 @@ function renderGeneralTable(gres) {
     summary, colA: "Earlier", colB: "Later",
     changedRows: changed.join(""), sameRows: same.length ? same.join("") : "", sameCount: same.length,
     belowHtml: `<div class="tool-notes">Line-by-line comparison of the extracted text. This is not legal advice — verify against your documents.</div>`,
+    report: { title: "Document text comparison", summary, colA: "Earlier", colB: "Later", rows: reportRows },
   });
 }
 

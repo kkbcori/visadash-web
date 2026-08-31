@@ -45,6 +45,10 @@ passport, and the new types all route through `VDEngine` (`engineCompare`); only
 uses the legacy line-diff, itself rendered into the same table (`renderGeneralTable`). The legacy
 card renderer (`renderResults`, `compareDS160`, `comparePassport`, `buildDemoComparison`) is now
 **dead code** kept for reference; the demo button builds a sample via the engine.
+Results carry a **Download report (HTML)** + **Print / Save as PDF** action: `paintComparison`
+stashes a structured `lastReport` (all rows incl. unchanged, findings, skipped) and
+`buildReportHtml` renders a self-contained, styled, printable report client-side (`printReport`
+uses a hidden iframe → `print()`, so Save-as-PDF works with no library). Nothing is uploaded.
 **OCR hardening:** `ocrPdf` caps canvas to 2600px/side (large passport scans were overflowing the
 browser canvas limit and throwing an empty error that surfaced as "undefined"), wraps per-page
 failures with a real message, and errors clearly if OCR yields no text.
