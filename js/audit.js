@@ -18,23 +18,50 @@
   var mrzText = "";
 
   root.innerHTML =
-    SLOTS.map(function(s){
-      return '<div class="ctrl" style="margin-bottom:10px">'
-        + '<label>'+s.label+(s.required?' <b style="color:#a3271b">(required)</b>':' <span style="color:var(--ink-faint)">(optional)</span>')+'</label>'
-        + '<input type="file" accept=".pdf,image/*,.txt" data-k="'+s.key+'">'
-        + (s.mrz ? '<textarea class="mrz" data-mrz="1" spellcheck="false" placeholder="…or paste the passport MRZ (two lines)" style="margin-top:6px;width:100%;min-height:52px"></textarea>' : '')
-        + '</div>';
-    }).join("")
-    + '<div class="actions no-print" style="margin-top:12px">'
+    '<div class="slots no-print audit-slots">'
+    + SLOTS.map(function(s, i){
+        return '<div class="slot">'
+          + '<div class="slot-head"><span class="slot-tag">'+(i+1)+'</span><h3>'+s.label+'</h3>'
+          + '<span class="when">'+(s.required?'required':'optional')+'</span></div>'
+          + '<div class="slot-body">'
+          + '<div class="drop" tabindex="0" role="button" data-k="'+s.key+'">'
+          + '<div class="ico">&#128228;</div><p>Drop file here, or click to browse</p>'
+          + '<div class="hint">PDF, JPG or PNG</div></div>'
+          + '<input type="file" accept=".pdf,image/*,.txt" data-k="'+s.key+'" hidden>'
+          + '<div class="filelist" data-list="'+s.key+'"></div>'
+          + (s.mrz ? '<textarea class="mrz" data-mrz="1" spellcheck="false" placeholder="…or paste the passport MRZ (two lines) instead" style="margin-top:8px;width:100%;min-height:56px"></textarea>' : '')
+          + '</div></div>';
+      }).join("")
+    + '</div>'
+    + '<div class="actions no-print" style="margin-top:14px">'
     + '<button class="btn" id="auditRun">Run audit</button>'
-    + '<button class="btn ghost sm" id="auditReset">Clear</button></div>'
+    + '<button class="btn ghost sm" id="auditReset">Clear all</button></div>'
     + '<div id="audit-log" class="no-print" style="font:.8rem/1.5 \'IBM Plex Mono\',monospace;color:var(--ink-soft);margin:10px 0"></div>'
     + '<section id="audit-results"></section>';
 
   var log = function(m){ document.getElementById("audit-log").textContent = m; };
 
-  root.querySelectorAll('input[type=file]').forEach(function(inp){
-    inp.addEventListener("change", function(){ files[inp.dataset.k] = inp.files[0] || null; });
+  function showFile(key){
+    var list = root.querySelector('[data-list="'+key+'"]');
+    var f = files[key];
+    list.innerHTML = f
+      ? '<div class="fileitem"><span>&#128196; '+esc(f.name)+'</span><button type="button" class="x" data-rm="'+key+'">&times;</button></div>'
+      : "";
+  }
+  // wire each drop zone to its hidden input, with drag-and-drop
+  root.querySelectorAll('.slot-body').forEach(function(body){
+    var drop = body.querySelector('.drop'), input = body.querySelector('input[type=file]');
+    var key = drop.dataset.k;
+    drop.addEventListener("click", function(){ input.click(); });
+    drop.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); input.click(); } });
+    ["dragover","dragenter"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("over"); }); });
+    ["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove("over"); }); });
+    drop.addEventListener("drop", function(e){ if(e.dataTransfer.files[0]){ files[key]=e.dataTransfer.files[0]; showFile(key); } });
+    input.addEventListener("change", function(){ files[key]=input.files[0]||null; showFile(key); input.value=""; });
+  });
+  root.addEventListener("click", function(e){
+    var b = e.target.closest("button[data-rm]"); if(!b) return;
+    files[b.dataset.rm]=null; showFile(b.dataset.rm);
   });
   var mrzBox = root.querySelector('textarea[data-mrz]');
   if(mrzBox) mrzBox.addEventListener("input", function(){ mrzText = mrzBox.value.trim(); });
