@@ -844,9 +844,3 @@
 .cmp-collapse > summary{ cursor:pointer; padding:11px 14px; font:600 .88rem/1 "IBM Plex Sans",sans-serif; color:var(--ink-soft); }
 .cmp-collapse[open] > summary{ border-bottom:1px solid var(--line); }
 .cmp-collapse .tbl-wrap{ padding:4px 8px 10px; }
-
-/* ============ DS-160 audit upload grid ============ */
-.audit-slots{ grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
-.audit-slots .slot-head h3{ font-size:.98rem; }
-.audit-slots .drop{ padding:18px 12px; }
-.audit-slots .drop p{ font-size:.85rem; }

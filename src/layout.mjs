@@ -12,7 +12,6 @@ export const SITE = {
 // Order here is the order shown in the toolkit rail.
 export const NAV = [
   { path: "/ds-160-compare",   ico: "&#128196;", label: "DS-160 Compare" },
-  { path: "/ds-160-audit",     ico: "&#129534;", label: "DS-160 Audit" },
   { path: "/form-guides",      ico: "&#128221;", label: "Form Guides" },
   { path: "/visa-bulletin",    ico: "&#128197;", label: "Visa Bulletin" },
   { path: "/processing-times", ico: "&#9203;",   label: "Processing Times" },

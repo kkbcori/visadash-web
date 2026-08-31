@@ -460,10 +460,10 @@ function engineCompare(a, b) {
   if (mode === "general") return null;         // "Other docs" → legacy text diff
   const docOf = (id, side) => ({ type: id, ...E.TYPE_BY_ID[id].extract({ text: side.text, lines: side.lines }) });
   const crossPair = (x, y) => (x === "lca" && y === "offer") || (x === "offer" && y === "lca");
-  const KNOWN = ["ds160", "passport", "i797", "i20", "ead"];
+  const KNOWN = ["ds160", "i797", "i20", "ead"];   // passport comparison removed (poor output)
 
   // Explicit mode overrides detection.
-  if (mode === "ds160" || mode === "passport") {
+  if (mode === "ds160") {
     const res = E.compareVersions(mode, docOf(mode, a), docOf(mode, b));
     if (res.error) return { error: res.error };
     return { ...res, title: `${E.TYPE_BY_ID[mode].label} — version comparison`, labels: ["Earlier", "Later"], a, b };

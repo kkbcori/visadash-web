@@ -6,8 +6,6 @@ const OCR_LIBS = `<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>`;
 const OCR_HEAD = `${OCR_LIBS}
 <script type="module">import * as E from "/engine/doctypes.mjs"; window.VDEngine = E; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
-const AUDIT_HEAD = `${OCR_LIBS}
-<script type="module">import * as E from "/engine/doctypes.mjs"; import * as A from "/engine/audit.mjs"; window.VDEngine = E; window.VDAudit = A; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
 
 const softwareApp = (name, desc, url) => ({
   "@context": "https://schema.org",
@@ -35,11 +33,6 @@ const slot = (tag, title, when) => `      <div class="slot">
           </div>
           <input type="file" multiple accept=".pdf,image/*">
           <div class="filelist"></div>
-          <div class="mrztoggle">&#9662; or paste the passport MRZ instead</div>
-          <div class="mrzbox">
-            <label>Machine-Readable Zone &mdash; two lines, from the bottom of the passport page</label>
-            <textarea class="mrz" spellcheck="false" placeholder="P&lt;INDSHARMA&lt;&lt;PRIYA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;Z1234567&lt;8IND8801019F3001012&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04"></textarea>
-          </div>
         </div>
       </div>`;
 
@@ -48,10 +41,10 @@ export const PAGES = [
   {
     route: "/", dir: "",
     title: "VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages",
-    description: "A free, 100% on-device immigration toolkit: compare & audit DS-160s and passports, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.",
+    description: "A free, 100% on-device immigration toolkit: compare two DS-160 versions, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.",
     ogTitle: "VisaDash — Free On-Device Immigration Toolkit",
-    ogDescription: "DS-160 compare & audit, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.",
-    hero: "Compare and audit visa documents, track priority dates, and check processing times &mdash; entirely in your browser.",
+    ogDescription: "DS-160 compare, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.",
+    hero: "Compare DS-160 versions, track priority dates, and check processing times &mdash; entirely in your browser.",
     jsonld: [{
       "@context": "https://schema.org", "@type": "WebSite",
       name: SITE.name, url: SITE.origin + "/",
@@ -82,20 +75,20 @@ ${NAV.map(n=>`    <a class="hub-card" href="${n.path}">
   /* ─────────────── DS-160 / passport compare ─────────────── */
   {
     route: "/ds-160-compare", dir: "ds-160-compare",
-    title: "DS-160 & Passport Compare — On-Device A/B Document Diff | VisaDash",
-    description: "Compare two versions of a DS-160 or passport side by side and get a field-by-field report of every difference before it reaches a consular officer. Runs entirely in your browser — nothing is uploaded.",
-    ogTitle: "DS-160 & Passport Compare — On-Device Document Diff",
-    ogDescription: "Field-by-field A/B comparison of DS-160s and passports, entirely on-device.",
-    hero: "Upload two versions of the same document and get a clear, field-by-field report of every difference.",
+    title: "DS-160 Compare — On-Device A/B Document Diff | VisaDash",
+    description: "Compare two versions of a DS-160 side by side and get a field-by-field report of every difference before it reaches a consular officer. Runs entirely in your browser — nothing is uploaded.",
+    ogTitle: "DS-160 Compare — On-Device Document Diff",
+    ogDescription: "Field-by-field A/B comparison of DS-160 printouts, entirely on-device.",
+    hero: "Upload two versions of the same DS-160 and get a clear, field-by-field report of every difference.",
     headExtra: OCR_HEAD,
     scripts: ["/js/comparator.js"],
-    jsonld: [softwareApp("DS-160 & Passport Compare", "On-device A/B comparison of DS-160s and passports.", SITE.origin + "/ds-160-compare")],
+    jsonld: [softwareApp("DS-160 Compare", "On-device A/B comparison of DS-160 printouts.", SITE.origin + "/ds-160-compare")],
     bodyHtml: `
   <div class="compare-trust no-print">
     <div class="stamp"><span class="lock">&#128274;</span>On-device<br>processing</div>
   </div>
 
-  <p class="intro">Upload two versions of the same document &mdash; a prior DS-160 against a refile, an expiring passport against a renewal &mdash; and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
+  <p class="intro">Upload two versions of the same DS-160 &mdash; a prior filing against a refile &mdash; and get a clear, field-by-field report of every difference before it reaches a consular officer.</p>
 
   <div class="privacy no-print">
     <span>&#128274;</span>
@@ -112,7 +105,6 @@ ${NAV.map(n=>`    <a class="hub-card" href="${n.path}">
     <div class="seg" id="modeSeg">
       <button data-m="auto" class="on">Auto-detect</button>
       <button data-m="ds160">DS-160</button>
-      <button data-m="passport">Passport</button>
       <button data-m="general">Other docs</button>
     </div>
   </div>
@@ -136,36 +128,8 @@ ${slot("B", "Later version", "current filing")}
   <div class="tool-notes no-print">
     <b>How to get the cleanest results.</b><br>
     &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
-    &bull; <b>Passports:</b> a sharp, flat photo of the photo page works, but pasting the two MRZ lines is faster and 100% reliable &mdash; the tool validates them against ICAO check digits.<br>
     &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
   </div>`,
-  },
-
-  /* ─────────────── DS-160 single-document audit (engine lands in Task 3) ─────────────── */
-  {
-    route: "/ds-160-audit", dir: "ds-160-audit",
-    title: "DS-160 Audit — Cross-Check Your DS-160 Against Your Documents | VisaDash",
-    description: "Audit a filled DS-160 against your passport, prior visa, I-797, I-20/DS-2019 and I-94 — on-device — to surface name, passport-number, date and consistency issues before your consular interview. Nothing is uploaded.",
-    ogTitle: "DS-160 Audit — On-Device Consistency Check",
-    ogDescription: "Cross-check a DS-160 against your supporting documents, entirely in your browser.",
-    hero: "Cross-check a filled DS-160 against your supporting documents and get a findings report by severity.",
-    headExtra: AUDIT_HEAD,
-    scripts: ["/js/audit.js"],
-    jsonld: [softwareApp("DS-160 Audit", "On-device cross-check of a DS-160 against supporting documents.", SITE.origin + "/ds-160-audit")],
-    bodyHtml: `
-  <div class="privacy privacy-strong no-print" style="margin-top:0">
-    <span>&#128274;</span>
-    <span><b>This page processes your most sensitive documents &mdash; passports and visas &mdash; and none of them leave your browser.</b> Extraction, OCR and every cross-check run on this device. No file is uploaded, nothing is sent to any server, and nothing is saved after you close the tab.</span>
-  </div>
-
-  <p class="intro">Instead of comparing two versions of one document, the audit validates a single filled DS-160 against the documents behind it &mdash; your passport, a prior U.S. visa, an I-797 approval, an I-20/DS-2019, or an I-94 travel history &mdash; and returns a findings report grouped by severity.</p>
-
-  <div class="tool-notes no-print">
-    <b>What it checks.</b> Name spelling and order against the passport, passport number character-for-character, dates of birth and expiry, petition/receipt and SEVIS numbers, program and travel dates, and internal DS-160 consistency. Findings are graded <b>Blocker</b>, <b>Warning</b> or <b>Info</b> &mdash; never "ready to submit". A low-confidence OCR read is reported as "couldn't read reliably", not as a mismatch.
-  </div>
-
-  <noscript><p class="intro">The audit runs in JavaScript on your device. Enable JavaScript to use it — your documents still never leave the browser.</p></noscript>
-  <div id="audit-app"></div>`,
   },
 
   /* ─────────────── Form guides index ─────────────── */

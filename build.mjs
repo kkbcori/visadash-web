@@ -120,7 +120,7 @@ function build() {
   for (const f of fs.readdirSync(path.join(SRC, "js"))) {
     fs.copyFileSync(path.join(SRC, "js", f), path.join(jsOut, f));
   }
-  // engine (pure ESM module, loaded on compare/audit as <script type="module">)
+  // engine (pure ESM module, loaded on the compare page as <script type="module">)
   const engOut = path.join(ROOT, "engine");
   fs.mkdirSync(engOut, { recursive: true });
   for (const f of fs.readdirSync(path.join(SRC, "engine"))) {
@@ -154,7 +154,6 @@ function buildSingleFile(pages) {
   // tab order + which script(s) each pulls in
   const TABS = [
     { id:"compare",    route:"/ds-160-compare",   label:"DS-160 Compare",   ico:"&#128196;" },
-    { id:"audit",      route:"/ds-160-audit",     label:"DS-160 Audit",     ico:"&#129534;" },
     { id:"guides",     route:"/form-guides",      label:"Form Guides",      ico:"&#128221;" },
     { id:"bulletin",   route:"/visa-bulletin",    label:"Visa Bulletin",    ico:"&#128197;" },
     { id:"processing", route:"/processing-times", label:"Processing Times", ico:"&#9203;" },
@@ -170,17 +169,13 @@ function buildSingleFile(pages) {
     return `  <section class="tab${i===0?" active":""}" id="tab-${t.id}">\n${body}${dataScript}\n  </section>`;
   }).join("\n");
 
-  // Inline the ESM engines as globals for the offline file (module imports can't
-  // resolve from file://). Strip `export ` + the internal import, expose on window.
+  // Inline the ESM engine as a global for the offline file (module imports can't
+  // resolve from file://). Strip `export ` and expose the public API on window.
   const engineSrc = read(path.join(SRC, "engine", "doctypes.mjs")).replace(/^export\s+/gm, "");
-  const auditSrc = read(path.join(SRC, "engine", "audit.mjs"))
-    .replace(/^import[^\n]*\n/m, "")     // drop `import ... from "./doctypes.mjs"` (symbols already in scope)
-    .replace(/^export\s+/gm, "");
-  const engineGlobal = `(function(){\n${engineSrc}\n${auditSrc}\n`
-    + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n`
-    + `window.VDAudit={runAudit,nameOutcome,parseVisaFoil,parseI94,RULES};\n})();`;
+  const engineGlobal = `(function(){\n${engineSrc}\n`
+    + `window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};\n})();`;
 
-  const scriptFiles = ["vddata","comparator","audit","bulletin","processing","wages","sponsors"];
+  const scriptFiles = ["vddata","comparator","bulletin","processing","wages","sponsors"];
   const inlineJs = engineGlobal + "\n;\n" + scriptFiles.map(f => resolveInline(`/js/${f}.js`)).join("\n;\n");
   const promoJs = resolveInline("/js/promo.js");
 

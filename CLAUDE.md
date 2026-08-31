@@ -73,7 +73,15 @@ still use the original rich renderer** — the engine implements+tests them too,
 is deferred to avoid regressing the Task-1 results UI. `npm run build` inlines the engine as a
 global into `visadash-offline.html` (module imports can't resolve from `file://`).
 
-## DS-160 audit (Task 3, 2026-08)
+## Removed features (2026-08)
+Per user request (poor output): **Passport comparison** and the **DS-160 Audit** feature were
+removed. Passport is no longer a mode button and is not routed through the engine (the MRZ paste
+UI and passport notes are gone; two passports now fall back to the plain text diff). The audit
+route/nav/hub-card/offline-tab and `src/js/audit.js`, `src/engine/audit.mjs`, `test/audit.test.mjs`
+were deleted. The passport DocumentType still exists in `doctypes.mjs` (used by detection/tests)
+but no UI routes to it. History below kept for reference.
+
+## DS-160 audit (Task 3, 2026-08) — REMOVED, see above
 `src/engine/audit.mjs` — pure, tested (`test/audit.test.mjs`, 13 tests). `runAudit(docs,{now})`
 validates ONE DS-160 against supporting docs via a data-driven `RULES` array
 (`{id,severity,requires,evaluate(ctx)}`). Severities **blocker / warning / info** only; it
