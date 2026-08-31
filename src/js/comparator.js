@@ -19,8 +19,7 @@ $$(".slot-body").forEach(body => {
   const key   = body.dataset.slot;
   const drop  = body.querySelector(".drop");
   const input = body.querySelector("input[type=file]");
-  const toggle= body.querySelector(".mrztoggle");
-  const mrzbox= body.querySelector(".mrzbox");
+  if (!drop || !input) return;
 
   drop.addEventListener("click", () => input.click());
   drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") input.click(); });
@@ -30,13 +29,6 @@ $$(".slot-body").forEach(body => {
     drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => addFiles(key, e.dataTransfer.files));
   input.addEventListener("change", e => { addFiles(key, e.target.files); input.value = ""; });
-
-  toggle.addEventListener("click", () => {
-    slots[key].mrzShown = !slots[key].mrzShown;
-    mrzbox.classList.toggle("show", slots[key].mrzShown);
-    toggle.innerHTML = (slots[key].mrzShown ? "&#9652;" : "&#9662;") +
-      " or paste the passport MRZ instead";
-  });
 });
 
 function addFiles(key, fileList) {
