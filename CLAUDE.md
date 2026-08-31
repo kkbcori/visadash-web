@@ -36,6 +36,18 @@ Tools: **compare** = DS-160/passport comparator (verbatim, pdf.js+tesseract, MRZ
 by form×center. **wages** = `WAGES` prevailing-wage + offer check. **sponsors** = `EMPLOYERS`
 H-1B grades (sortable). **audit** = single-doc cross-check (scaffold now, engine Task 3).
 
+## DS-160 comparison — categorized + robust extraction (2026-08)
+`grabLabel` is now punctuation/whitespace/case tolerant (normalized-key reject + a
+words-joined `\W+` regex to pull the value; same-line conf 0.9, next-line 0.6). The DS-160 schema
+is driven by **one source** `DS160_FIELDS` in `doctypes.mjs` (~50 fields) each tagged with a
+`cat` = official DS-160 section (`DS160_CATEGORIES`: Personal Information 1/2, Address and Phone,
+Passport, Travel, U.S. Point of Contact, Family, Work/Education/Training); `extract()` and
+`fieldSchema` are generated from it, and `compareVersions` puts `category` on every row. The
+comparator groups rows into **collapsible category sections** (`renderEngineResult` → `<details
+class="cmp-cat">`, red header + auto-open when it has changes, Expand/Collapse-all), and the
+downloadable/print report groups the same way (`buildReportHtml`, `<details>` per category).
+To add/rename DS-160 fields or sections: edit `DS160_FIELDS`/`DS160_CATEGORIES` only.
+
 ## Comparator UI (2026-08, post-Task-2)
 The compare tool now renders **every** comparison as a single **4-column table** —
 `Item (# + field) | Earlier | Later | Difference` — via `paintComparison`/`cmpRow` in

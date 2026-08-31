@@ -537,16 +537,18 @@ let lastReport = null;   // structured payload for the downloadable report
 
 function paintComparison(o) {
   lastReport = o.report || null;
+  const content = o.contentHtml != null ? o.contentHtml
+    : `${o.changedRows
+        ? cmpTable(o.colA, o.colB, o.changedRows)
+        : `<div class="callout note"><div class="sub">No differences found between the two documents in the compared items.</div></div>`}
+       ${o.sameRows
+        ? `<details class="cmp-collapse"><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"} — click to expand</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}`;
   const html = `<div class="verdict ${o.verdictClass}">
       <div class="v-title">${escapeHtml(o.title)}</div>
       <div class="v-sub">${o.summary}</div>
     </div>
     ${o.aboveHtml || ""}
-    ${o.changedRows
-      ? cmpTable(o.colA, o.colB, o.changedRows)
-      : `<div class="callout note"><div class="sub">No differences found between the two documents in the compared items.</div></div>`}
-    ${o.sameRows
-      ? `<details class="cmp-collapse"><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"} — click to expand</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}
+    ${content}
     ${lastReport ? `<div class="actions no-print" style="margin-top:14px">
       <button class="btn ghost sm" id="dlReportBtn">&#11015; Download report (HTML)</button>
       <button class="btn ghost sm" id="printReportBtn">&#128424; Print / Save as PDF</button></div>` : ""}
@@ -557,6 +559,10 @@ function paintComparison(o) {
   const dl = $("#dlReportBtn"), pr = $("#printReportBtn");
   if (dl) dl.addEventListener("click", downloadReportFile);
   if (pr) pr.addEventListener("click", printReport);
+  el.querySelectorAll("[data-exp]").forEach(b => b.addEventListener("click", () => {
+    const open = b.dataset.exp === "1";
+    el.querySelectorAll("details.cmp-cat").forEach(d => { d.open = open; });
+  }));
   el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -565,12 +571,26 @@ function buildReportHtml(rep) {
   const stamp = new Date().toLocaleString();
   const cellBg = o => o === "match" ? "#e9f2ec" : o === "unreadable" ? "#eee9f3" : "#fbe9e7";
   const cellFg = o => o === "match" ? "#255e37" : o === "unreadable" ? "#5b4a76" : "#9a2f22";
-  const rowsHtml = rep.rows.map(r => `<tr>
+  const rowHtml = r => `<tr>
       <td class="it">${r.n}. ${escapeHtml(r.label || "")}${r.severity && r.outcome !== "match" ? ` <b>[${escapeHtml(r.severity)}]</b>` : ""}</td>
       <td style="background:${cellBg(r.outcome)};color:${cellFg(r.outcome)}">${escapeHtml(r.old || "—")}</td>
       <td style="background:${cellBg(r.outcome)};color:${cellFg(r.outcome)}">${escapeHtml(r.new || "—")}</td>
       <td class="nt">${escapeHtml(r.note || "")}</td>
-    </tr>`).join("");
+    </tr>`;
+  const tableFor = rows => `<table><thead><tr><th>Item</th><th>${escapeHtml(rep.colA)}</th><th>${escapeHtml(rep.colB)}</th><th>Difference</th></tr></thead><tbody>${rows.map(rowHtml).join("")}</tbody></table>`;
+  // group by category when present, else one flat table
+  const cats = rep.categories && rep.categories.length ? rep.categories : null;
+  let itemsHtml;
+  if (cats) {
+    itemsHtml = cats.map(cat => {
+      const rows = rep.rows.filter(r => (r.category || "Details") === cat);
+      if (!rows.length) return "";
+      const changed = rows.filter(r => r.outcome !== "match").length;
+      return `<details${changed ? " open" : ""}><summary><b>${escapeHtml(cat)}</b> — ${changed} changed &middot; ${rows.length - changed} unchanged</summary>${tableFor(rows)}</details>`;
+    }).join("");
+  } else {
+    itemsHtml = tableFor(rep.rows);
+  }
   const findingsHtml = (rep.findings && rep.findings.length)
     ? `<h3>Flags</h3><ul>${rep.findings.map(f => `<li><b>${escapeHtml(f.severity)}:</b> ${escapeHtml(f.title)}${f.detail ? " — " + escapeHtml(f.detail) : ""}</li>`).join("")}</ul>` : "";
   const skippedHtml = (rep.skipped && rep.skipped.length)
@@ -582,19 +602,20 @@ function buildReportHtml(rep) {
   h1{font-size:1.4rem;margin:0 0 2px} h2{font-size:1.1rem;margin:20px 0 6px}
   .meta{color:#777;font-size:.82rem;margin:0 0 14px}
   .summary{background:#f3f0e8;border:1px solid #e2ddce;border-radius:8px;padding:10px 14px;margin:8px 0 16px}
-  table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+  details{border:1px solid #e2ddce;border-radius:8px;margin:8px 0;padding:2px 10px}
+  summary{cursor:pointer;font-size:14px;padding:8px 2px}
+  table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;margin:6px 0 10px}
   th,td{border:1px solid #ddd;padding:7px 9px;text-align:left;vertical-align:top;word-break:break-word}
   th{background:#f3f0e8} td.it{width:32%} td.nt{width:14%;color:#777;font-size:12px}
   .disc{color:#777;font-size:12px;margin-top:18px;border-top:1px solid #eee;padding-top:10px}
-  @media print{body{margin:0}}
+  @media print{body{margin:0} details{break-inside:avoid}}
 </style></head><body>
 <h1>VisaDash — comparison report</h1>
 <p class="meta">${escapeHtml(rep.title)} &middot; generated ${escapeHtml(stamp)} &middot; produced on-device, nothing uploaded</p>
 <div class="summary">${escapeHtml(rep.summary)}</div>
 ${findingsHtml}
-<h2>All items</h2>
-<table><thead><tr><th>Item</th><th>${escapeHtml(rep.colA)}</th><th>${escapeHtml(rep.colB)}</th><th>Difference</th></tr></thead>
-<tbody>${rowsHtml}</tbody></table>
+<h2>Items by category</h2>
+${itemsHtml}
 ${skippedHtml}
 <p class="disc"><b>Not legal advice.</b> VisaDash is a free educational toolkit and is not affiliated with USCIS, the Department of State, or the Department of Labor. Every item above is for a human to verify against the original documents and the official instructions on uscis.gov and travel.state.gov.</p>
 </body></html>`;
@@ -636,36 +657,58 @@ function renderEngineResult(eng) {
       ${f.detail ? `<div class="sub">${escapeHtml(f.detail)}</div>` : ""}</div>`;
   };
 
-  let n = 0; const changed = [], same = [], reportRows = [];
+  // group rows by DS-160 category (or a single "Details" group for other types)
+  const order = (window.VDEngine && window.VDEngine.TYPE_BY_ID[eng.type]
+    && window.VDEngine.TYPE_BY_ID[eng.type].categories) || [];
+  const groups = new Map();
+  let n = 0; const reportRows = [];
   for (const r of (eng.rows || [])) {
     if (r.outcome === "absent") continue;
     n++;
     const av = r.a || { value: "", confidence: 0 }, bv = r.b || { value: "", confidence: 0 };
     const sv = ENG_SEV[r.severity] || ENG_SEV.none;
     const chip = (r.outcome !== "match" && sv.label) ? ` <span class="eng-chip ${sv.cls}">${sv.label}</span>` : "";
-    const html = cmpRow(n, r.label, av.value, bv.value, r.outcome, srcTitle(av), srcTitle(bv), chip);
-    (r.outcome === "match" ? same : changed).push(html);
-    reportRows.push({ n, label: r.label, old: av.value, new: bv.value, outcome: r.outcome,
+    const cat = r.category || "Details";
+    if (!groups.has(cat)) groups.set(cat, { rows: [], changed: 0, same: 0 });
+    const g = groups.get(cat);
+    g.rows.push(cmpRow(n, r.label, av.value, bv.value, r.outcome, srcTitle(av), srcTitle(bv), chip));
+    if (r.outcome === "match") g.same++; else g.changed++;
+    reportRows.push({ n, category: cat, label: r.label, old: av.value, new: bv.value, outcome: r.outcome,
       note: diffNote(av.value, bv.value, r.outcome), severity: (r.outcome !== "match" && sv.label) ? sv.label : "" });
   }
+  const cats = [...order.filter(c => groups.has(c)), ...[...groups.keys()].filter(c => !order.includes(c))];
+  const totalChanged = [...groups.values()].reduce((s, g) => s + g.changed, 0);
+  const totalSame = [...groups.values()].reduce((s, g) => s + g.same, 0);
 
-  const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review`
-    + (same.length ? ` · ${same.length} unchanged` : "") + " — verify each against your documents.";
+  const groupsHtml = cats.map(cat => {
+    const g = groups.get(cat);
+    const open = g.changed > 0 ? " open" : "";
+    const meta = `${g.changed} changed${g.same ? ` &middot; ${g.same} unchanged` : ""}`;
+    return `<details class="cmp-cat${g.changed ? " has-changes" : ""}"${open}>`
+      + `<summary><span class="cat-name">${escapeHtml(cat)}</span><span class="cat-meta">${meta}</span></summary>`
+      + cmpTable(la, lb, g.rows.join("")) + `</details>`;
+  }).join("");
+
+  const controls = cats.length > 1
+    ? `<div class="expand-controls no-print"><button class="btn ghost sm" data-exp="1">Expand all</button><button class="btn ghost sm" data-exp="0">Collapse all</button></div>` : "";
+
+  const summary = `${blockers} ${blockers === 1 ? "blocker" : "blockers"}, ${warns} to review &middot; `
+    + `${totalChanged} changed &middot; ${totalSame} unchanged across ${cats.length} categor${cats.length === 1 ? "y" : "ies"} — verify each against your documents.`;
   const above = (eng.detA && eng.detB && (eng.detA.ambiguous || eng.detB.ambiguous)
       ? `<div class="callout note"><div class="sub">Detection was not clear-cut for at least one side — confirm the document types are what you intended.</div></div>` : "")
     + (findings.length ? `<div class="eng-findings">${findings.map(findingCard).join("")}</div>` : "");
   const below = (skipped.length
       ? `<div class="tool-notes"><b>Rules skipped</b> (a required field wasn't found on both documents):<br>${skipped.map(s => "&bull; " + escapeHtml(s.id) + " — " + escapeHtml(s.reason)).join("<br>")}</div>` : "")
-    + `<div class="tool-notes"><b>Green = same, red = different.</b> Hover a value to see the exact source line it came from. A mismatch between two low-confidence reads is marked <i>couldn't read reliably</i>, not a discrepancy. This is not legal advice — verify every item against your original documents.</div>`;
+    + `<div class="tool-notes"><b>Green = same, red = different.</b> Items are grouped by DS-160 section; click a category to expand/collapse. Hover a value to see the source line. A mismatch between two low-confidence reads is marked <i>couldn't read reliably</i>. This is not legal advice — verify every item against your original documents.</div>`;
 
   paintComparison({
     title: eng.title,
-    verdictClass: blockers ? "verdict-bad" : (warns || changed.length) ? "verdict-warn" : "verdict-ok",
+    verdictClass: blockers ? "verdict-bad" : (warns || totalChanged) ? "verdict-warn" : "verdict-ok",
     summary, aboveHtml: above, colA: la, colB: lb,
-    changedRows: changed.join(""), sameRows: same.length ? same.join("") : "", sameCount: same.length,
+    contentHtml: controls + groupsHtml,
     belowHtml: below,
     report: {
-      title: eng.title, summary, colA: la, colB: lb, rows: reportRows,
+      title: eng.title, summary, colA: la, colB: lb, rows: reportRows, categories: cats,
       findings: findings.map(f => ({ severity: (ENG_SEV[f.severity] || ENG_SEV.info).label, title: f.title, detail: f.detail })),
       skipped: skipped.map(s => s.id + " — " + s.reason),
     },

@@ -152,6 +152,30 @@ test("cross-compare of two unrelated types refuses rather than diffing garbage",
   assert.ok(r.undefinedPair);
 });
 
+/* ── robust label matching: punctuation / case / spacing tolerant ── */
+test("grabLabel tolerates punctuation, case and spacing differences", () => {
+  assert.equal(grabLabel(["GIVEN  NAMES : PRIYA ANIL"], ["Given Names"]).value, "PRIYA ANIL");
+  assert.equal(grabLabel(["given-names> Priya"], ["Given Names"]).value, "Priya");
+  assert.equal(grabLabel(["Marital Status.... SINGLE"], ["Marital Status"]).value, "SINGLE");
+});
+
+/* ── expanded, categorized DS-160 schema ── */
+test("DS-160 schema is categorized and expanded", () => {
+  const ds = _mod.TYPE_BY_ID.ds160;
+  assert.ok(ds.fieldSchema.length >= 35, "schema should be expanded, got " + ds.fieldSchema.length);
+  assert.ok(Array.isArray(ds.categories) && ds.categories.includes("Family") && ds.categories.includes("Travel"));
+  assert.ok(ds.fieldSchema.every(f => f.category), "every field has a category");
+});
+test("DS-160 rows carry their category and pick up new fields", () => {
+  const doc = t => ({ type: "ds160", ..._mod.TYPE_BY_ID.ds160.extract({ text: t, lines: t.split("\n").map(s => s.trim()) }) });
+  const A = `DS-160\nSurname: SHARMA\nGiven Names: PRIYA\nFather's Surname: SHARMA\nPurpose of Trip to the U.S.: BUSINESS`;
+  const B = A.replace("SHARMA\nGiven", "SHARNA\nGiven");
+  const r = compareVersions("ds160", doc(A), doc(B));
+  const father = r.rows.find(x => x.key === "fatherSurname");
+  assert.ok(father && father.category === "Family", "father field present under Family");
+  assert.ok(r.rows.every(x => x.category), "every compared row has a category");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

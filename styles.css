@@ -844,3 +844,17 @@
 .cmp-collapse > summary{ cursor:pointer; padding:11px 14px; font:600 .88rem/1 "IBM Plex Sans",sans-serif; color:var(--ink-soft); }
 .cmp-collapse[open] > summary{ border-bottom:1px solid var(--line); }
 .cmp-collapse .tbl-wrap{ padding:4px 8px 10px; }
+
+/* ============ category-grouped comparison (collapsible) ============ */
+.expand-controls{ display:flex; gap:8px; margin:4px 0 10px; }
+.cmp-cat{ border:1px solid var(--line); border-radius:10px; margin:8px 0; background:var(--panel); overflow:hidden; }
+.cmp-cat > summary{ cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:11px 14px; font:600 .95rem/1 "IBM Plex Sans",sans-serif; }
+.cmp-cat > summary::-webkit-details-marker{ display:none; }
+.cmp-cat > summary::before{ content:"\25B8"; color:var(--ink-faint); margin-right:8px; transition:transform .12s; }
+.cmp-cat[open] > summary::before{ transform:rotate(90deg); }
+.cmp-cat.has-changes > summary .cat-name{ color:#9a2f22; }
+.cmp-cat .cat-name{ flex:1; }
+.cmp-cat .cat-meta{ font:500 .78rem/1 "IBM Plex Mono",monospace; color:var(--ink-faint); }
+.cmp-cat[open] > summary{ border-bottom:1px solid var(--line); }
+.cmp-cat .tbl-wrap{ padding:4px 8px 10px; }
