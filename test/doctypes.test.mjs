@@ -290,6 +290,65 @@ Visa Number: N0000000`;
   assert.equal(d.fields.priorVisaNumber.value, "N0000000");
 });
 
+/* ── repeating groups: previous employers + schools (synthetic) ── */
+test("DS-160 extracts repeating previous-employer and education entries in order", () => {
+  const text = `Home Address: 1 HOME ST
+City: HOMECITY
+State/Province: HOMESTATE
+Postal Zone/ZIP Code: 99999
+Country/Region: HOMELAND
+Primary Occupation: ENGINEERING
+Present Employer or School Name: CURRENT CORP
+Address: 100 NOW BLVD
+City: NOWCITY
+State/Province: NOWSTATE
+Postal Zone/Zip Code: 00000
+Country/Region: NOWLAND
+Start Date: 01 JAN 2020
+Were you previously employed? YES
+Employer Name (1): ACME PREV
+Employer Address: 1 OLD ST
+City: OLDCITY
+State/Province: OLDSTATE
+Postal Zone/Zip Code: 11111
+Country/Region: OLDLAND
+Telephone Number: 5559999
+Job Title: SENIOR ENGINEER
+Supervisor's Surname: SMITH
+Supervisor's Given Name: JOHN
+Employment Date From: 01 JULY 2008
+Employment Date To: 01 SEPTEMBER 2011
+Have you attended any educational institutions at a secondary level or above? YES
+Name of Institution (1): TECH UNIVERSITY
+Address of Institution: CAMPUS RD
+City: EDUCITY
+State/Province: EDUSTATE
+Postal Zone/ZIP Code: 22222
+Country/Region: EDULAND
+Course of Study: NETWORKING
+Date of Attendance From: 01 AUGUST 2006
+Date of Attendance To: 30 JUNE 2008
+Name of Institution (2): SECOND COLLEGE
+Course of Study: ELECTRONICS
+Do you belong to a clan or tribe? NO
+Language Name (1): ENGLISH`;
+  const f = _mod.TYPE_BY_ID.ds160.extract({ text, lines: text.split("\n").map(s => s.trim()) }).fields;
+  assert.equal(f.homeCity.value, "HOMECITY");
+  assert.equal(f.presentEmployerCity.value, "NOWCITY");
+  assert.equal(f.prevEmployed.value, "YES");
+  assert.equal(f.prevEmp1_name.value, "ACME PREV");
+  assert.equal(f.prevEmp1_city.value, "OLDCITY");          // 2nd City → previous employer
+  assert.equal(f.prevEmp1_jobTitle.value, "SENIOR ENGINEER");
+  assert.equal(f.prevEmp1_supSurname.value, "SMITH");
+  assert.equal(f.attendedSchool.value, "YES");
+  assert.equal(f.inst1_name.value, "TECH UNIVERSITY");
+  assert.equal(f.inst1_city.value, "EDUCITY");             // 3rd City → first school
+  assert.equal(f.inst1_course.value, "NETWORKING");
+  assert.equal(f.inst2_name.value, "SECOND COLLEGE");
+  assert.equal(f.clanTribe.value, "NO");
+  assert.equal(f.languages.value, "ENGLISH");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

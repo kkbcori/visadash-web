@@ -129,6 +129,29 @@ export function grabYesNo(lines, labels) {
   return mkField(r.value, r.confidence, r.source);
 }
 
+// Repeating groups (prev employers, schools): each entry starts with an anchor label
+// ("Employer Name", "Name of Institution"). Read each entry's sub-fields ONLY within its
+// window [anchor, next anchor / boundary) so an empty Nth entry can't swallow later data.
+function findAnchors(L, Lk, label, from = 0, to = L.length) {
+  const lk = normKey(label), re = labelRe(label), out = [];
+  for (let i = from; i < Math.min(to, L.length); i++) if (Lk[i].indexOf(lk) === 0 && re.test(L[i])) out.push(i);
+  return out;
+}
+function extractGroups(L, Lk, anchorLabel, subs, prefix, maxN, boundary, fields) {
+  const anchors = findAnchors(L, Lk, anchorLabel, 0, boundary);
+  for (let g = 0; g < Math.min(anchors.length, maxN); g++) {
+    const start = anchors[g];
+    const end = (g + 1 < anchors.length) ? Math.min(anchors[g + 1], boundary) : boundary;
+    const subL = L.slice(start, end), subK = Lk.slice(start, end);
+    for (const sf of subs) {
+      const r = (sf.q ? findYesNo : findLabel)(subL, subK, sf.labels, 0);
+      fields[`${prefix}${g + 1}_${sf.key}`] = mkField(r.value, r.confidence,
+        r.source ? { ...r.source, line: r.source.line + start } : null);
+    }
+  }
+}
+const isGroupKey = k => /^(prevEmp|inst)\d+_/.test(k);
+
 /* ───────────────────────── MRZ (ICAO 9303 TD3) ───────────────────────── */
 
 const pad44 = l => ((l || "").replace(/\s+/g, "").toUpperCase() + "<".repeat(44)).slice(0, 44);
@@ -244,8 +267,43 @@ const passport = {
 const DS160_CATEGORIES = [
   "Personal Information 1", "Personal Information 2", "Address and Phone", "Passport",
   "Travel", "Travel Companions", "Previous U.S. Travel", "U.S. Point of Contact",
-  "Family", "Work / Education / Training",
+  "Family", "Work / Education — Present", "Work / Education — Previous", "Work / Education — Additional",
 ];
+
+// Repeating groups (previous employers, schools). extract()'s moving cursor binds each
+// group's generic City/State/etc. to the next occurrence, so employer 1, employer 2, etc.
+// stay distinct. Duties descriptions are intentionally not extracted.
+const PREV_EMP_SUBS = [
+  { key: "name", label: "Employer name", n: norm.name, sv: "low", labels: ["Employer Name"] },
+  { key: "address", label: "Employer address", n: norm.plain, sv: "low", labels: ["Employer Address", "Employer Street Address (Line 1)", "Employer Street Address"] },
+  { key: "city", label: "City", n: norm.name, sv: "low", generic: true, labels: ["City"] },
+  { key: "state", label: "State/province", n: norm.name, sv: "low", generic: true, labels: ["State/Province", "State"] },
+  { key: "postal", label: "Postal/ZIP code", n: norm.id, sv: "low", generic: true, labels: ["Postal Zone/ZIP Code", "Postal Zone/Zip Code"] },
+  { key: "country", label: "Country/region", n: norm.upper, sv: "low", generic: true, labels: ["Country/Region"] },
+  { key: "phone", label: "Telephone", n: norm.id, sv: "low", labels: ["Telephone Number"] },
+  { key: "jobTitle", label: "Job title", n: norm.upper, sv: "low", labels: ["Job Title"] },
+  { key: "supSurname", label: "Supervisor's surname", n: norm.name, sv: "low", labels: ["Supervisor's Surname"] },
+  { key: "supGiven", label: "Supervisor's given name", n: norm.name, sv: "low", labels: ["Supervisor's Given Names", "Supervisor's Given Name"] },
+  { key: "from", label: "Employment from", n: norm.date, sv: "low", labels: ["Employment Date From"] },
+  { key: "to", label: "Employment to", n: norm.date, sv: "low", labels: ["Employment Date To"] },
+];
+const INST_SUBS = [
+  { key: "name", label: "Institution name", n: norm.name, sv: "low", labels: ["Name of Institution"] },
+  { key: "address", label: "Institution address", n: norm.plain, sv: "low", labels: ["Address of Institution"] },
+  { key: "city", label: "City", n: norm.name, sv: "low", generic: true, labels: ["City"] },
+  { key: "state", label: "State/province", n: norm.name, sv: "low", generic: true, labels: ["State/Province", "State"] },
+  { key: "postal", label: "Postal/ZIP code", n: norm.id, sv: "low", generic: true, labels: ["Postal Zone/ZIP Code", "Postal Zone/Zip Code"] },
+  { key: "country", label: "Country/region", n: norm.upper, sv: "low", generic: true, labels: ["Country/Region"] },
+  { key: "course", label: "Course of study", n: norm.upper, sv: "low", labels: ["Course of Study"] },
+  { key: "from", label: "Attendance from", n: norm.date, sv: "low", labels: ["Date of Attendance From"] },
+  { key: "to", label: "Attendance to", n: norm.date, sv: "low", labels: ["Date of Attendance To"] },
+];
+const repeatGroup = (cat, prefix, count, subs) => {
+  const out = [];
+  for (let i = 1; i <= count; i++) for (const sf of subs)
+    out.push({ key: `${prefix}${i}_${sf.key}`, label: `${sf.label} (${i})`, cat, n: sf.n, s: "same", sv: sf.sv, generic: sf.generic, q: sf.q, labels: sf.labels });
+  return out;
+};
 const DS160_FIELDS = [
   // ── Personal Information 1 ──  (the printout prints the name as "Name Provided: SURNAME, GIVEN"; see extract())
   { key: "surname", label: "Surname", cat: "Personal Information 1", n: norm.name, s: "same", sv: "critical", labels: ["Surnames", "Surname", "Last Name", "Family Name"] },
@@ -335,13 +393,25 @@ const DS160_FIELDS = [
   { key: "spouseDob", label: "Spouse's date of birth", cat: "Family", n: norm.date, s: "same", sv: "low", labels: ["Spouse's Date of Birth", "Spouse Date of Birth"] },
   { key: "spouseNationality", label: "Spouse's nationality", cat: "Family", n: norm.upper, s: "same", sv: "low", labels: ["Spouse's Country/Region of Origin (Nationality)", "Spouse's Nationality"] },
   { key: "spouseCityOfBirth", label: "Spouse's city of birth", cat: "Family", n: norm.name, s: "same", sv: "low", labels: ["Spouse's City of Birth"] },
-  // ── Work / Education / Training ──
-  { key: "occupation", label: "Primary occupation", cat: "Work / Education / Training", n: norm.upper, s: "same", sv: "medium", labels: ["Primary Occupation"] },
-  { key: "presentEmployer", label: "Present employer or school", cat: "Work / Education / Training", n: norm.name, s: "same", sv: "medium", labels: ["Present Employer or School Name", "Employer Name", "Present Employer"] },
-  { key: "employerAddress", label: "Employer/school address", cat: "Work / Education / Training", n: norm.plain, s: "same", sv: "low", generic: true, labels: ["Present Employer or School Address", "Employer/School Address", "Employer Address", "Address"] },
-  { key: "startDate", label: "Start date", cat: "Work / Education / Training", n: norm.date, s: "same", sv: "low", labels: ["Start Date"] },
-  { key: "monthlyIncome", label: "Monthly income", cat: "Work / Education / Training", n: norm.money, s: "same", sv: "low", labels: ["Monthly Salary in Local Currency", "Monthly Income in Local Currency", "Monthly Income", "Monthly Salary"] },
-  { key: "prevEmployed", label: "Previously employed?", cat: "Work / Education / Training", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Were you previously employed"] },
+  // ── Work / Education — Present ──
+  { key: "occupation", label: "Primary occupation", cat: "Work / Education — Present", n: norm.upper, s: "same", sv: "medium", labels: ["Primary Occupation"] },
+  { key: "presentEmployer", label: "Present employer or school", cat: "Work / Education — Present", n: norm.name, s: "same", sv: "medium", labels: ["Present Employer or School Name", "Present Employer"] },
+  { key: "employerAddress", label: "Employer/school address", cat: "Work / Education — Present", n: norm.plain, s: "same", sv: "low", generic: true, labels: ["Present Employer or School Address", "Address"] },
+  { key: "presentEmployerCity", label: "City", cat: "Work / Education — Present", n: norm.name, s: "same", sv: "low", generic: true, labels: ["City"] },
+  { key: "presentEmployerState", label: "State/province", cat: "Work / Education — Present", n: norm.name, s: "same", sv: "low", generic: true, labels: ["State/Province", "State"] },
+  { key: "presentEmployerPostal", label: "Postal/ZIP code", cat: "Work / Education — Present", n: norm.id, s: "same", sv: "low", generic: true, labels: ["Postal Zone/ZIP Code", "Postal Zone/Zip Code"] },
+  { key: "presentEmployerCountry", label: "Country/region", cat: "Work / Education — Present", n: norm.upper, s: "same", sv: "low", generic: true, labels: ["Country/Region"] },
+  { key: "presentEmployerPhone", label: "Work phone", cat: "Work / Education — Present", n: norm.id, s: "same", sv: "low", generic: true, labels: ["Work Phone Number", "Phone Number"] },
+  { key: "startDate", label: "Start date", cat: "Work / Education — Present", n: norm.date, s: "same", sv: "low", labels: ["Start Date"] },
+  { key: "monthlyIncome", label: "Monthly income", cat: "Work / Education — Present", n: norm.money, s: "same", sv: "low", labels: ["Monthly Salary in Local Currency", "Monthly Income in Local Currency", "Monthly Income", "Monthly Salary"] },
+  // ── Work / Education — Previous ──  (repeating: employers, then schools)
+  { key: "prevEmployed", label: "Previously employed?", cat: "Work / Education — Previous", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Were you previously employed"] },
+  ...repeatGroup("Work / Education — Previous", "prevEmp", 3, PREV_EMP_SUBS),
+  { key: "attendedSchool", label: "Attended school (secondary+)?", cat: "Work / Education — Previous", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Have you attended any educational institutions at a secondary level or above", "Have you attended any educational institutions"] },
+  ...repeatGroup("Work / Education — Previous", "inst", 4, INST_SUBS),
+  // ── Work / Education — Additional ──
+  { key: "clanTribe", label: "Belong to a clan or tribe?", cat: "Work / Education — Additional", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Do you belong to a clan or tribe"] },
+  { key: "languages", label: "Languages spoken", cat: "Work / Education — Additional", n: norm.upper, s: "same", sv: "low", labels: ["Language Name", "Provide a List of Languages You Speak"] },
 ];
 
 const ds160 = {
@@ -353,12 +423,17 @@ const ds160 = {
     const fields = {};
     let cursor = 0;   // walk the document in field order so repeated labels bind per-section
     for (const f of DS160_FIELDS) {
+      if (isGroupKey(f.key)) continue;                              // repeating groups handled below
       const find = f.q ? findYesNo : findLabel;
       let r = find(L, Lk, f.labels, cursor);
       if (r.index < 0 && !f.generic) r = find(L, Lk, f.labels, 0);  // unique labels may search globally
       fields[f.key] = mkField(r.value, r.confidence, r.source);
       if (r.index >= cursor) cursor = r.index;                      // advance forward only
     }
+    // repeating groups: employers bounded by the education section, schools by the rest
+    const instBoundary = (findAnchors(L, Lk, "Name of Institution")[0] ?? L.length);
+    extractGroups(L, Lk, "Employer Name", PREV_EMP_SUBS, "prevEmp", 3, instBoundary, fields);
+    extractGroups(L, Lk, "Name of Institution", INST_SUBS, "inst", 4, L.length, fields);
     // The print writes the name once as "Name Provided: SURNAME, GIVEN".
     if (!fields.surname.value || !fields.given.value) {
       const np = findLabel(L, Lk, ["Name Provided", "Full Name Provided"], 0);
