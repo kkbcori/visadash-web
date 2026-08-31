@@ -272,6 +272,23 @@ City: WORKCITY`;
   assert.equal(d.fields.sameMailingAddress.value, "YES");
 });
 
+/* ── Previous U.S. Travel: driver's license + last-visa-issued (synthetic) ── */
+test("DS-160 extracts the driver's license block and date last visa issued", () => {
+  const text = `Have you ever been in the U.S.? YES
+Do you or did you hold a U.S. Driver's License? YES
+Driver's License Number (1): 12345678
+State of Driver's License: TEXAS
+Have you ever been issued a U.S. Visa? YES
+Date Last Visa was Issued: 17 OCTOBER 2018
+Visa Number: N0000000`;
+  const d = _mod.TYPE_BY_ID.ds160.extract({ text, lines: text.split("\n").map(s => s.trim()) });
+  assert.equal(d.fields.hasDriversLicense.value, "YES");
+  assert.equal(d.fields.driversLicenseNumber.value, "12345678");   // strips "(1):"
+  assert.equal(d.fields.driversLicenseState.value, "TEXAS");
+  assert.equal(d.fields.dateLastVisaIssued.value, "2018-10-17");   // parsed to ISO
+  assert.equal(d.fields.priorVisaNumber.value, "N0000000");
+});
+
 /* ── extraction carries a source snippet ── */
 test("grabLabel returns a source line + snippet and a confidence", () => {
   const f = grabLabel(["Receipt Number: WAC2100000001"], ["Receipt Number"]);

@@ -308,7 +308,11 @@ const DS160_FIELDS = [
   { key: "travelCompanions", label: "Other persons traveling with you?", cat: "Travel Companions", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Are there other persons traveling with you", "Other Persons Traveling with You"] },
   // ── Previous U.S. Travel ──
   { key: "beenInUS", label: "Ever been in the U.S.?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", q: true, labels: ["Have you ever been in the U.S."] },
+  { key: "hasDriversLicense", label: "Hold a U.S. driver's license?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Do you or did you hold a U.S. Driver's License", "Do you or did you hold a U.S. Drivers License"] },
+  { key: "driversLicenseNumber", label: "Driver's license number", cat: "Previous U.S. Travel", n: norm.id, s: "same", sv: "medium", labels: ["Driver's License Number", "Drivers License Number"] },
+  { key: "driversLicenseState", label: "Driver's license state", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", labels: ["State of Driver's License", "State of Drivers License"] },
   { key: "issuedUSVisa", label: "Ever issued a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "medium", q: true, labels: ["Have you ever been issued a U.S. Visa", "Have you ever been issued a U.S. visa"] },
+  { key: "dateLastVisaIssued", label: "Date last visa was issued", cat: "Previous U.S. Travel", n: norm.date, s: "same", sv: "low", labels: ["Date Last Visa was Issued", "Date Last Visa Issued"] },
   { key: "priorVisaNumber", label: "Previous visa number", cat: "Previous U.S. Travel", n: norm.id, s: "same", sv: "medium", labels: ["Visa Number"] },
   { key: "visaRefused", label: "Ever refused a U.S. visa?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "high", q: true, labels: ["Have you ever been refused a U.S. Visa", "been refused admission to the United States"] },
   { key: "immigrantPetition", label: "Immigrant petition filed for you?", cat: "Previous U.S. Travel", n: norm.upper, s: "same", sv: "low", q: true, labels: ["Has anyone ever filed an immigrant petition on your behalf"] },
