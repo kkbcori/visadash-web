@@ -32,7 +32,7 @@ const promoRail = () => `  <aside class="promo-rail" id="promoRail" aria-label="
     <div class="promo-head">More from KKB CoRi</div>
     <div class="promo-viewport">
       <div class="promo-track" id="promoTrack">
-${PROMO_APPS.map(a=>`        <a class="promo-slide" href="${a.href}" target="_blank" rel="noopener">
+${PROMO_APPS.map((a,i)=>`        <a class="promo-slide${i===0?" on":""}" href="${a.href}" target="_blank" rel="noopener"${i===0?"":` aria-hidden="true"`}>
           <div class="promo-img"><img src="/promo/${a.img}" alt="${a.name} app icon" width="88" height="88" loading="lazy"></div>
           <div class="promo-name">${a.name}</div>
           <div class="promo-desc">${a.desc}</div>
@@ -73,7 +73,7 @@ function head(page, mode, styles) {
   const ogDesc  = page.ogDescription || page.description;
   const styleTag = mode === "single"
     ? `<style>\n${styles}\n</style>`
-    : `<link rel="stylesheet" href="/styles.css">`;
+    : `<link rel="stylesheet" href="/styles.css?v=2">`;
   const jsonld = (page.jsonld || [])
     .map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("\n");
   return `<!DOCTYPE html>
@@ -110,7 +110,8 @@ function scriptTags(page, mode, resolve) {
   const shared = ["/js/nav.js", ...(page.scripts || []), "/js/promo.js"];
   return shared.map(src => {
     if (mode === "single") return `<script>\n${resolve(src)}\n</script>`;
-    return `<script defer src="${src}"></script>`;
+    const bust = src.endsWith("/promo.js") ? "?v=2" : "";
+    return `<script defer src="${src}${bust}"></script>`;
   }).join("\n");
 }
 

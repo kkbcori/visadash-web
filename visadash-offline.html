@@ -702,7 +702,9 @@
   .promo-rail{
     display:none;                       /* shown only on wide screens (min-width:1121px) */
     position:sticky;top:18px;align-self:start;
-    min-width:0;max-width:100%;overflow:hidden; /* contain carousel track — see .wrap note */
+    /* contain:inline-size = width ignores children (Chrome otherwise lets the
+       carousel track's min-content blow out .wrap past max-width). */
+    contain:inline-size;min-width:0;max-width:100%;overflow:hidden;width:248px;box-sizing:border-box;
     background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:14px 14px 16px;
   }
@@ -710,13 +712,16 @@
     font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.14em;
     text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;text-align:center;
   }
+  /* One-slide-at-a-time: inactive slides are display:none so they contribute
+     zero horizontal min-content (transform carousels still do in Chrome). */
   .promo-viewport{overflow:hidden;border-radius:9px;width:100%}
-  .promo-track{display:flex;width:100%;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+  .promo-track{display:block;width:100%}
   .promo-slide{
-    flex:0 0 100%;width:100%;min-width:0;box-sizing:border-box;
-    display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
+    display:none;width:100%;min-width:0;box-sizing:border-box;
+    flex-direction:column;align-items:center;text-align:center;gap:8px;
     padding:8px 6px 12px;color:inherit;text-decoration:none;
   }
+  .promo-slide.on{display:flex}
   .promo-slide:hover{text-decoration:none}
   .promo-img{
     width:88px;height:88px;border-radius:20px;overflow:hidden;background:#fff;
@@ -3570,7 +3575,10 @@ function downloadReport(node) {
 
 </script>
 <script>
-/* KKB CoRi app promo rail: auto-rotating one-by-one slider (shared, all pages). */
+/* KKB CoRi app promo rail: auto-rotating one-by-one slider (shared, all pages).
+   Uses display toggling (not a horizontal flex+transform track) so inactive
+   slides contribute zero min-content width — Chrome was letting the old track
+   inflate .wrap past max-width and clip the rail. */
 (function(){
   var track=document.getElementById('promoTrack');
   var dotsWrap=document.getElementById('promoDots');
@@ -3588,7 +3596,10 @@ function downloadReport(node) {
   var dots=dotsWrap.children;
   function go(idx){
     i=(idx+n)%n;
-    track.style.transform='translateX(-'+(i*100)+'%)';
+    for(var s=0;s<n;s++){
+      slides[s].classList.toggle('on', s===i);
+      slides[s].setAttribute('aria-hidden', s===i ? 'false' : 'true');
+    }
     for(var d=0;d<n;d++){ dots[d].classList.toggle('on', d===i); }
   }
   function start(){ if(!timer) timer=setInterval(function(){ go(i+1); }, DELAY); }

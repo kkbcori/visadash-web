@@ -1,4 +1,7 @@
-/* KKB CoRi app promo rail: auto-rotating one-by-one slider (shared, all pages). */
+/* KKB CoRi app promo rail: auto-rotating one-by-one slider (shared, all pages).
+   Uses display toggling (not a horizontal flex+transform track) so inactive
+   slides contribute zero min-content width — Chrome was letting the old track
+   inflate .wrap past max-width and clip the rail. */
 (function(){
   var track=document.getElementById('promoTrack');
   var dotsWrap=document.getElementById('promoDots');
@@ -16,7 +19,10 @@
   var dots=dotsWrap.children;
   function go(idx){
     i=(idx+n)%n;
-    track.style.transform='translateX(-'+(i*100)+'%)';
+    for(var s=0;s<n;s++){
+      slides[s].classList.toggle('on', s===i);
+      slides[s].setAttribute('aria-hidden', s===i ? 'false' : 'true');
+    }
     for(var d=0;d<n;d++){ dots[d].classList.toggle('on', d===i); }
   }
   function start(){ if(!timer) timer=setInterval(function(){ go(i+1); }, DELAY); }
