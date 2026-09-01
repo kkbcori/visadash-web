@@ -735,6 +735,9 @@
     .wrap{max-width:1300px;grid-template-columns:216px minmax(0,1fr) 248px}
     .promo-rail{display:block}
   }
+  /* Hub (launcher): no left nav rail — the cards are the navigation. */
+  .wrap-hub{grid-template-columns:minmax(0,1fr)}
+  @media(min-width:1121px){ .wrap-hub{grid-template-columns:minmax(0,1fr) 248px} }
   .tool-notes{
     margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
     font-size:.78rem;color:var(--ink-faint);line-height:1.7;

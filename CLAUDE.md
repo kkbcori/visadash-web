@@ -153,6 +153,12 @@ for r in "" ds-160-compare/ form-guides/ visa-bulletin/ processing-times/ prevai
 Also open `visadash-offline.html` from `file://` to confirm the single-file build works.
 JS sanity: `npm run check` (`node --check` over `src/js/*.js`).
 
+## Hub layout (2026-08)
+The hub (`/`) is a **launcher** and sets `hideNav:true` (in `pages.mjs`), so `renderPage` omits
+the left nav rail and uses `.wrap.wrap-hub` (single content column + promo rail on wide screens).
+The hub cards ARE the navigation — don't also show the nav rail there (it looked duplicated).
+Inner tool pages keep the nav rail as normal.
+
 ## Main menu (2026-08)
 The toolkit menu is a **left-side vertical rail**, not the old horizontal tab bar. **`.wrap`
 itself is the grid** (`216px | minmax(0,1fr)`, `align-items:start`): `<header>` spans both

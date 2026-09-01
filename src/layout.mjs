@@ -119,11 +119,11 @@ export function renderPage(page, { mode = "multi", styles = "", resolve = () => 
     ? `\n  <script type="application/json" id="vd-data">${dataJson}</script>` : "";
   return `${head(page, mode, styles)}
 <body>
-<div class="wrap">
+<div class="wrap${page.hideNav ? " wrap-hub" : ""}">
 
 ${header()}
 
-${nav(page.route)}
+${page.hideNav ? "" : nav(page.route)}
 
   <div class="page">
 

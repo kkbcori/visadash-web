@@ -39,7 +39,7 @@ const slot = (tag, title, when) => `      <div class="slot">
 export const PAGES = [
   /* ─────────────── Hub ─────────────── */
   {
-    route: "/", dir: "",
+    route: "/", dir: "", hideNav: true,   // hub is the launcher; cards replace the nav rail
     title: "VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages",
     description: "A free, 100% on-device immigration toolkit: compare two DS-160 versions, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.",
     ogTitle: "VisaDash — Free On-Device Immigration Toolkit",
