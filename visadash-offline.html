@@ -2528,7 +2528,7 @@ function paintComparison(o) {
         ? cmpTable(o.colA, o.colB, o.changedRows)
         : `<div class="callout note"><div class="sub">No differences found between the two documents in the compared items.</div></div>`}
        ${o.sameRows
-        ? `<details class="cmp-collapse"><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"} — click to expand</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}`;
+        ? `<details class="cmp-collapse" open><summary>${o.sameCount} unchanged item${o.sameCount === 1 ? "" : "s"}</summary>${cmpTable(o.colA, o.colB, o.sameRows)}</details>` : ""}`;
   const html = `<div class="verdict ${o.verdictClass}">
       <div class="v-title">${escapeHtml(o.title)}</div>
       <div class="v-sub">${o.summary}</div>
@@ -2668,7 +2668,7 @@ function renderEngineResult(eng) {
 
   const groupsHtml = cats.map(cat => {
     const g = groups.get(cat);
-    const open = g.changed > 0 ? " open" : "";
+    const open = " open";   // all sections expanded by default (Collapse all still available)
     const meta = `${g.changed} changed${g.same ? ` &middot; ${g.same} unchanged` : ""}`;
     return `<details class="cmp-cat${g.changed ? " has-changes" : ""}"${open}>`
       + `<summary><span class="cat-name">${escapeHtml(cat)}</span><span class="cat-meta">${meta}</span></summary>`
