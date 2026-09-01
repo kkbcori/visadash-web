@@ -188,3 +188,9 @@ your browser" promise. To add/remove an app: edit the `.promo-slide` list (dots 
   (internal to the export). Left as-is; rebrand only if asked.
 - Brand is **VisaDash** (site) ; "DS-160 Comparison Tool" is the first tab's label.
 - **Comparison results UI (2026-08):** issue-first card layout with verdict hero, consistency ring, filter tabs (Needs review / Matches / All), DS-160 field grouping, collapsible matches panel, optional table view, **severity tiers** (Critical / High / Medium / Low), **sample report** button + `#demo` hash. Export filenames use `visadash-report-*`. Single **nav-main** toolbar (icons + short hints) — no duplicate card grid.
+- **Chrome horizontal shift (2026-08):** the promo carousel lays all slides out in a row
+  (`.promo-track` flex). Chrome can let that track's min-content inflate `.wrap` past
+  `max-width` (Firefox clamps it), which centers the oversized wrap and clips the promo on
+  the right with a page scrollbar. Keep `.wrap { min-width:0 }`,
+  `.promo-rail { min-width:0; overflow:hidden }`, and `html { overflow-x:clip }`. Hub grid
+  override must be `.wrap.wrap-hub` (two classes) so it beats `.wrap`'s 3-col media rule.

@@ -10,6 +10,7 @@
     --radius:7px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html{overflow-x:clip} /* belt: promo carousel track must never create a page scrollbar */
   html,body{height:100%}
   body{
     font-family:'IBM Plex Sans',sans-serif;
@@ -22,9 +23,13 @@
     -webkit-font-smoothing:antialiased;
   }
   .wrap{
-    max-width:1180px;margin:0 auto;padding:34px 28px 80px;
+    max-width:1180px;width:100%;margin:0 auto;padding:34px 28px 80px;
     display:grid;grid-template-columns:216px minmax(0,1fr);
     column-gap:40px;align-items:start;
+    /* min-width:auto would let the promo carousel's flex track (all slides
+       side-by-side) inflate the grid past max-width in Chrome — page shifts
+       right and grows a horizontal scrollbar. Firefox already clamps this. */
+    min-width:0;
   }
 
   /* ---- header ---- */
@@ -685,6 +690,7 @@
   .promo-rail{
     display:none;                       /* shown only on wide screens (min-width:1121px) */
     position:sticky;top:18px;align-self:start;
+    min-width:0;max-width:100%;overflow:hidden; /* contain carousel track — see .wrap note */
     background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:14px 14px 16px;
   }
@@ -692,10 +698,10 @@
     font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.14em;
     text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;text-align:center;
   }
-  .promo-viewport{overflow:hidden;border-radius:9px}
-  .promo-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+  .promo-viewport{overflow:hidden;border-radius:9px;width:100%}
+  .promo-track{display:flex;width:100%;transition:transform .55s cubic-bezier(.4,0,.2,1)}
   .promo-slide{
-    flex:0 0 100%;min-width:0;box-sizing:border-box;
+    flex:0 0 100%;width:100%;min-width:0;box-sizing:border-box;
     display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
     padding:8px 6px 12px;color:inherit;text-decoration:none;
   }
@@ -723,9 +729,10 @@
     .wrap{max-width:1300px;grid-template-columns:216px minmax(0,1fr) 248px}
     .promo-rail{display:block}
   }
-  /* Hub (launcher): no left nav rail — the cards are the navigation. */
-  .wrap-hub{grid-template-columns:minmax(0,1fr)}
-  @media(min-width:1121px){ .wrap-hub{grid-template-columns:minmax(0,1fr) 248px} }
+  /* Hub (launcher): no left nav rail — the cards are the navigation.
+     Use .wrap.wrap-hub so this reliably overrides .wrap's 3-col rule. */
+  .wrap.wrap-hub{grid-template-columns:minmax(0,1fr)}
+  @media(min-width:1121px){ .wrap.wrap-hub{grid-template-columns:minmax(0,1fr) 248px} }
   .tool-notes{
     margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
     font-size:.78rem;color:var(--ink-faint);line-height:1.7;
