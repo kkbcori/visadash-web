@@ -6,6 +6,10 @@ const OCR_LIBS = `<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>`;
 const OCR_HEAD = `${OCR_LIBS}
 <script type="module">import * as E from "/engine/doctypes.mjs"; window.VDEngine = E; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
+const VERIFY_HEAD = `${OCR_LIBS}
+<script type="module">import * as E from "/engine/doctypes.mjs"; import * as A from "/engine/audit.mjs"; window.VDEngine = E; window.VDAudit = A; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
+const AUDIT_HEAD = `${OCR_LIBS}
+<script type="module">import * as E from "/engine/doctypes.mjs"; import * as A from "/engine/audit.mjs"; window.VDEngine = E; window.VDAudit = A; window.dispatchEvent(new Event("vdengine-ready"));</script>`;
 
 const softwareApp = (name, desc, url) => ({
   "@context": "https://schema.org",
@@ -41,10 +45,10 @@ export const PAGES = [
   {
     route: "/", dir: "", hideNav: true,   // hub is the launcher; cards replace the nav rail
     title: "VisaDash — On-Device Immigration Toolkit: DS-160, Visa Bulletin, Processing Times & Wages",
-    description: "A free, 100% on-device immigration toolkit: compare two DS-160 versions, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.",
+    description: "A free, 100% on-device immigration toolkit: compare and verify DS-160s against your documents, follow form-filling guides, track the Visa Bulletin & priority dates, check USCIS processing times, and look up prevailing wages & H-1B sponsors. Nothing is uploaded.",
     ogTitle: "VisaDash — Free On-Device Immigration Toolkit",
-    ogDescription: "DS-160 compare, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.",
-    hero: "Compare DS-160 versions, track priority dates, and check processing times &mdash; entirely in your browser.",
+    ogDescription: "DS-160 compare & verify, form guides, Visa Bulletin, processing times, prevailing wages & H-1B sponsors. 100% on-device — nothing is uploaded.",
+    hero: "Compare and verify DS-160s, track priority dates, and check processing times &mdash; entirely in your browser.",
     jsonld: [{
       "@context": "https://schema.org", "@type": "WebSite",
       name: SITE.name, url: SITE.origin + "/",
@@ -129,6 +133,40 @@ ${slot("B", "Later version", "current filing")}
     <b>How to get the cleanest results.</b><br>
     &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
     &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
+  </div>`,
+  },
+
+  /* ─────────────── DS-160 verify (cross-check against sources) ─────────────── */
+  {
+    route: "/ds-160-verify", dir: "ds-160-verify",
+    title: "DS-160 Verify — Cross-Check Your Form Against Your Documents | VisaDash",
+    description: "Upload a filled DS-160 Application printout from CEAC, then add passport, personal details, addresses, visa copy, I-797, I-20 or I-94 — each in its own card (upload or paste). VisaDash consolidates the sources and returns a verified report. Entirely on-device; nothing is uploaded.",
+    ogTitle: "DS-160 Verify — On-Device Consistency Check",
+    ogDescription: "Cross-check a filled DS-160 against passport, addresses, visa and supporting docs — entirely in your browser.",
+    hero: "Add your supporting details card by card, upload the filled DS-160, and get a verified field report.",
+    headExtra: VERIFY_HEAD,
+    scripts: ["/js/audit.js"],
+    jsonld: [softwareApp("DS-160 Verify", "On-device cross-check of a DS-160 against supporting documents and pasted details.", SITE.origin + "/ds-160-verify")],
+    bodyHtml: `
+  <div class="privacy privacy-strong no-print" style="margin-top:0">
+    <span>&#128274;</span>
+    <span><b>This page processes your most sensitive documents &mdash; passports and visas &mdash; and none of them leave your browser.</b> Extraction, OCR and every cross-check run on this device. No file is uploaded, nothing is sent to any server, and nothing is saved after you close the tab.</span>
+  </div>
+
+  <p class="intro">Fill each card with what you have &mdash; upload a scan <i>or</i> paste the values. Then drop in the filled DS-160 Application printout from CEAC. VisaDash consolidates every entry, compares it to the form, and returns a verified report (matches + issues by severity).</p>
+
+  <div class="tool-notes no-print">
+    <b>What it checks.</b> Names, passport number, dates of birth/expiry, home address &amp; contact, prior visa foil, I-797 receipt/petitioner, I-20 SEVIS &amp; arrival window, I-94 travel history, and internal DS-160 consistency. Findings are graded <b>Blocker</b>, <b>Warning</b> or <b>Info</b> &mdash; never &ldquo;ready to submit&rdquo;. Matching fields show as <b>Verified</b>.
+  </div>
+
+  <noscript><p class="intro">Verification runs in JavaScript on your device. Enable JavaScript to use it — your documents still never leave the browser.</p></noscript>
+  <div id="audit-app"></div>
+
+  <div class="tool-notes no-print" style="margin-top:18px">
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout from the CEAC review screen, not the one-page confirmation barcode page.<br>
+    &bull; <b>Passport:</b> a clear photo of the bio page, or paste the two MRZ lines from the bottom of the page.<br>
+    &bull; Born-digital PDFs compare instantly; scanned pages run through on-device OCR.
   </div>`,
   },
 

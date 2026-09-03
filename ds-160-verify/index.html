@@ -3,26 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>I-129 Guide — Petition for a Nonimmigrant Worker | VisaDash</title>
-<meta name="description" content="Plain-language guide to the I-129 (Petition for a Nonimmigrant Worker): what it is for, who files it, the fields that trip people up, common mistakes, and the documents to have ready.">
+<title>DS-160 Verify — Cross-Check Your Form Against Your Documents | VisaDash</title>
+<meta name="description" content="Upload a filled DS-160 Application printout from CEAC, then add passport, personal details, addresses, visa copy, I-797, I-20 or I-94 — each in its own card (upload or paste). VisaDash consolidates the sources and returns a verified report. Entirely on-device; nothing is uploaded.">
 <meta name="theme-color" content="#1f3b54">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://visadash.org/form-guides/i-129">
+<link rel="canonical" href="https://visadash.org/ds-160-verify">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="VisaDash">
-<meta property="og:title" content="I-129 — Petition for a Nonimmigrant Worker">
-<meta property="og:description" content="What the I-129 is for, who files it, and the mistakes to avoid.">
-<meta property="og:url" content="https://visadash.org/form-guides/i-129">
+<meta property="og:title" content="DS-160 Verify — On-Device Consistency Check">
+<meta property="og:description" content="Cross-check a filled DS-160 against passport, addresses, visa and supporting docs — entirely in your browser.">
+<meta property="og:url" content="https://visadash.org/ds-160-verify">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="I-129 — Petition for a Nonimmigrant Worker">
-<meta name="twitter:description" content="What the I-129 is for, who files it, and the mistakes to avoid.">
+<meta name="twitter:title" content="DS-160 Verify — On-Device Consistency Check">
+<meta name="twitter:description" content="Cross-check a filled DS-160 against passport, addresses, visa and supporting docs — entirely in your browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<script type="module">import * as E from "/engine/doctypes.mjs"; import * as A from "/engine/audit.mjs"; window.VDEngine = E; window.VDAudit = A; window.dispatchEvent(new Event("vdengine-ready"));</script>
 <link rel="stylesheet" href="/styles.css?v=2">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Who files the I-129?","acceptedAnswer":{"@type":"Answer","text":"The U.S. employer files it to classify a worker in a nonimmigrant category such as H-1B, L-1, O-1 or TN. The worker is the beneficiary, not the filer."}},{"@type":"Question","name":"Does the I-129 require an LCA?","acceptedAnswer":{"@type":"Answer","text":"The H-1B version does — you need a certified Labor Condition Application (ETA-9035) first, and the job title, SOC code and worksite on the petition must match it."}},{"@type":"Question","name":"What triggers an I-129 wage RFE?","acceptedAnswer":{"@type":"Answer","text":"An offered wage below the prevailing wage for the occupation, area and level. Verify the offer against the prevailing wage before filing."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DS-160 Verify","description":"On-device cross-check of a DS-160 against supporting documents and pasted details.","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://visadash.org/ds-160-verify","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"provider":{"@type":"Organization","name":"KKB CoRi","url":"https://www.kkbcori.com"}}</script>
 </head>
 <body>
 <div class="wrap">
@@ -42,7 +44,7 @@
       <span class="nav-ico" aria-hidden="true">&#128196;</span>
       <span>DS-160 Compare</span>
     </a>
-    <a href="/ds-160-verify" data-path="/ds-160-verify">
+    <a href="/ds-160-verify" data-path="/ds-160-verify" class="on" aria-current="page">
       <span class="nav-ico" aria-hidden="true">&#9989;</span>
       <span>DS-160 Verify</span>
     </a>
@@ -71,26 +73,31 @@
   <div class="page">
 
   <section class="hero no-print" aria-label="Introduction">
-    <p class="hero-lede">Petition for a Nonimmigrant Worker</p>
+    <p class="hero-lede">Add your supporting details card by card, upload the filled DS-160, and get a verified field report.</p>
   </section>
 
   <div class="content">
 
-  <nav class="crumbs"><a href="/form-guides">Form Guides</a> &rsaquo; I-129</nav>
-  <h2 style="margin:0 0 4px">I-129 &mdash; Petition for a Nonimmigrant Worker</h2>
-  <p class="who" style="color:var(--ink-faint);font-size:.85rem;margin:0 0 14px">Typically filed by: U.S. employers</p>
-<article class="guide">
-  <p>Employer-filed petition to classify a worker in H-1B, L-1, O-1, TN and similar categories. The H-1B version requires a certified LCA first.</p>
-  <h3>Key fields to get right</h3>
-  <ul><li>Job title, SOC code and worksite must match the certified LCA exactly.</li><li>Offered wage must be at or above the prevailing wage for that SOC, area and level.</li><li>Beneficiary's name and dates of birth must match the passport and prior I-94s.</li></ul>
-  <h3>Common mistakes</h3>
-  <ul><li class="warn">Filing before the LCA is certified, or with an LCA wage level below prevailing.</li><li class="warn">Worksite address on the petition not matching the LCA.</li><li class="warn">Specialty-occupation argument that doesn't tie the degree to the duties.</li></ul>
-  <h3>Documents to have ready</h3>
-  <ul><li class="ok">Certified LCA (ETA-9035)</li><li class="ok">Beneficiary's degree/credential evaluation</li><li class="ok">Detailed job description &amp; itinerary</li><li class="ok">Company financials / ability to pay</li></ul>
-  <div class="tip"><b>Tip.</b> Check the offer against the <b>Prevailing Wage</b> tool before filing — a wage below the prevailing level is the most common avoidable RFE.</div>
-  <h3>Frequently asked</h3>
-  <div class="faq"><details><summary>Who files the I-129?</summary><p>The U.S. employer files it to classify a worker in a nonimmigrant category such as H-1B, L-1, O-1 or TN. The worker is the beneficiary, not the filer.</p></details><details><summary>Does the I-129 require an LCA?</summary><p>The H-1B version does — you need a certified Labor Condition Application (ETA-9035) first, and the job title, SOC code and worksite on the petition must match it.</p></details><details><summary>What triggers an I-129 wage RFE?</summary><p>An offered wage below the prevailing wage for the occupation, area and level. Verify the offer against the prevailing wage before filing.</p></details></div>
-</article>
+  <div class="privacy privacy-strong no-print" style="margin-top:0">
+    <span>&#128274;</span>
+    <span><b>This page processes your most sensitive documents &mdash; passports and visas &mdash; and none of them leave your browser.</b> Extraction, OCR and every cross-check run on this device. No file is uploaded, nothing is sent to any server, and nothing is saved after you close the tab.</span>
+  </div>
+
+  <p class="intro">Fill each card with what you have &mdash; upload a scan <i>or</i> paste the values. Then drop in the filled DS-160 Application printout from CEAC. VisaDash consolidates every entry, compares it to the form, and returns a verified report (matches + issues by severity).</p>
+
+  <div class="tool-notes no-print">
+    <b>What it checks.</b> Names, passport number, dates of birth/expiry, home address &amp; contact, prior visa foil, I-797 receipt/petitioner, I-20 SEVIS &amp; arrival window, I-94 travel history, and internal DS-160 consistency. Findings are graded <b>Blocker</b>, <b>Warning</b> or <b>Info</b> &mdash; never &ldquo;ready to submit&rdquo;. Matching fields show as <b>Verified</b>.
+  </div>
+
+  <noscript><p class="intro">Verification runs in JavaScript on your device. Enable JavaScript to use it — your documents still never leave the browser.</p></noscript>
+  <div id="audit-app"></div>
+
+  <div class="tool-notes no-print" style="margin-top:18px">
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout from the CEAC review screen, not the one-page confirmation barcode page.<br>
+    &bull; <b>Passport:</b> a clear photo of the bio page, or paste the two MRZ lines from the bottom of the page.<br>
+    &bull; Born-digital PDFs compare instantly; scanned pages run through on-device OCR.
+  </div>
   </div><!-- /.content -->
   </div><!-- /.page -->
 
@@ -148,6 +155,7 @@
 
 </div>
 <script defer src="/js/nav.js"></script>
+<script defer src="/js/audit.js"></script>
 <script defer src="/js/promo.js?v=2"></script>
 </body>
 </html>

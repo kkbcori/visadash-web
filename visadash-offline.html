@@ -850,6 +850,57 @@
 .verdict-ok{ background:#e9f2ec; border-color:#b6d6bf; }
 .verdict .v-title{ font:600 1.05rem/1.2 "Newsreader",serif; }
 .verdict .v-sub{ color:var(--ink-soft); font-size:.9rem; margin-top:3px; }
+.verdict .v-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.verdict .v-chip{
+  font:600 .72rem/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
+  padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.55);
+  border:1px solid rgba(0,0,0,.06);
+}
+
+/* ============ DS-160 verify cards ============ */
+.audit-slots{ grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+.audit-slots .slot-head h3{ font-size:.98rem; }
+.audit-slots .drop{ padding:18px 12px; }
+.audit-slots .drop p{ font-size:.85rem; }
+.verify-card .verify-hint{ font-size:.82rem; color:var(--ink-faint); margin:0 0 8px; line-height:1.4; }
+.verify-card .paste-tog{
+  display:inline-block; margin-top:8px; padding:0; border:0; background:none;
+  color:var(--navy,#1f3b54); font:600 .78rem/1.3 "IBM Plex Sans",sans-serif;
+  cursor:pointer; text-decoration:underline; text-underline-offset:2px;
+}
+.verify-card .paste-tog.on{ color:var(--ink-soft); text-decoration:none; }
+.verify-card .paste-panel{
+  margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);
+  display:flex; flex-direction:column; gap:8px;
+}
+.verify-fields{ display:flex; flex-direction:column; gap:8px; }
+.verify-card .vf{
+  display:flex; flex-direction:column; gap:3px;
+  font:500 .72rem/1.2 "IBM Plex Sans",sans-serif; color:var(--ink-faint);
+}
+.verify-card .vf.full{ width:100%; }
+.verify-card .vf input,
+.verify-card .vf textarea{
+  font:500 .88rem/1.35 "IBM Plex Sans",sans-serif; color:var(--ink);
+  border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+  background:#fff; width:100%; box-sizing:border-box;
+}
+.verify-card .vf textarea{ resize:vertical; font-family:"IBM Plex Mono",monospace; font-size:.8rem; }
+.verify-card .vf input:focus,
+.verify-card .vf textarea:focus{ outline:2px solid rgba(31,59,84,.25); border-color:var(--navy,#1f3b54); }
+.audit-log{
+  font:.8rem/1.5 "IBM Plex Mono",monospace; color:var(--ink-soft);
+  margin:10px 0; max-height:160px; overflow:auto;
+}
+.audit-log.show{ padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel,#fafbfc); }
+.audit-log .ln.ok{ color:#2e6b3e; }
+.audit-log .ln.err{ color:#a3271b; }
+.verify-vals{ margin-top:6px; font-size:.85rem; }
+.verify-vals td:first-child{ width:88px; color:var(--ink-faint); }
+.sev-ok{ background:#e3f0e6; color:#2e6b3e; }
+.verify-group{ margin:14px 0; }
+.verify-match-list{ display:flex; flex-direction:column; gap:8px; padding:8px 10px 12px; }
+.verify-matches{ margin-top:12px; }
 
 /* ============ data freshness / staleness (Task 4) ============ */
 .dot-stale{ background:#c8892a !important; box-shadow:0 0 0 3px rgba(200,137,42,.18); }
@@ -897,6 +948,9 @@
     <span class="nav-label" aria-hidden="true">Toolkit</span>
     <button type="button" data-tab="compare" class="on">
       <span class="nav-ico" aria-hidden="true">&#128196;</span><span>DS-160 Compare</span>
+    </button>
+    <button type="button" data-tab="verify">
+      <span class="nav-ico" aria-hidden="true">&#9989;</span><span>DS-160 Verify</span>
     </button>
     <button type="button" data-tab="guides">
       <span class="nav-ico" aria-hidden="true">&#128221;</span><span>Form Guides</span>
@@ -994,6 +1048,29 @@
     <b>How to get the cleanest results.</b><br>
     &bull; <b>DS-160:</b> use the full <i>Application</i> printout (the multi-page PDF from the review screen), not the one-page confirmation &mdash; only the full printout carries every answer.<br>
     &bull; <b>Born-digital PDFs</b> (with a real text layer) compare instantly; scanned PDFs and photos are run through OCR, which takes a few seconds per page.
+  </div>
+  </section>
+  <section class="tab" id="tab-verify">
+
+  <div class="privacy privacy-strong no-print" style="margin-top:0">
+    <span>&#128274;</span>
+    <span><b>This page processes your most sensitive documents &mdash; passports and visas &mdash; and none of them leave your browser.</b> Extraction, OCR and every cross-check run on this device. No file is uploaded, nothing is sent to any server, and nothing is saved after you close the tab.</span>
+  </div>
+
+  <p class="intro">Fill each card with what you have &mdash; upload a scan <i>or</i> paste the values. Then drop in the filled DS-160 Application printout from CEAC. VisaDash consolidates every entry, compares it to the form, and returns a verified report (matches + issues by severity).</p>
+
+  <div class="tool-notes no-print">
+    <b>What it checks.</b> Names, passport number, dates of birth/expiry, home address &amp; contact, prior visa foil, I-797 receipt/petitioner, I-20 SEVIS &amp; arrival window, I-94 travel history, and internal DS-160 consistency. Findings are graded <b>Blocker</b>, <b>Warning</b> or <b>Info</b> &mdash; never &ldquo;ready to submit&rdquo;. Matching fields show as <b>Verified</b>.
+  </div>
+
+  <noscript><p class="intro">Verification runs in JavaScript on your device. Enable JavaScript to use it — your documents still never leave the browser.</p></noscript>
+  <div id="audit-app"></div>
+
+  <div class="tool-notes no-print" style="margin-top:18px">
+    <b>How to get the cleanest results.</b><br>
+    &bull; <b>DS-160:</b> use the full <i>Application</i> printout from the CEAC review screen, not the one-page confirmation barcode page.<br>
+    &bull; <b>Passport:</b> a clear photo of the bio page, or paste the two MRZ lines from the bottom of the page.<br>
+    &bull; Born-digital PDFs compare instantly; scanned pages run through on-device OCR.
   </div>
   </section>
   <section class="tab" id="tab-guides">
@@ -1969,7 +2046,370 @@ function daysBetween(isoA, isoB) {
   return Math.round((Date.parse(isoB) - Date.parse(isoA)) / 86400000);
 }
 
+// VisaDash DS-160 verification engine — pure, framework-free, testable.
+// Validates ONE filled DS-160 against supporting sources (uploaded docs and/or
+// pasted field values). Rules are data: { id, severity, requires, evaluate }.
+// Severities: "blocker" | "warning" | "info". NEVER imply the form is approved.
+// A mismatch between two low-confidence reads is downgraded to INFO, never a BLOCKER.
+
+const PLACEHOLDERS = new Set(["N/A", "NA", "TBD", "-", "--", "NONE", "XX", "XXX"]);
+const LOWCONF = 0.5;
+
+/* ---- name comparison → exact | normalized | mismatch ---- */
+function nameOutcome(a, b) {
+  const raw = s => String(s || "").trim();
+  if (!raw(a) || !raw(b)) return "absent";
+  if (raw(a) === raw(b)) return "exact";
+  if (norm.name(a) === norm.name(b)) return "normalized";
+  return "mismatch";
+}
+
+/* ---- confusable digits/letters O↔0, I↔1 ---- */
+function confusableOnly(a, b) {
+  const canon = s => norm.id(s).replace(/[O0]/g, "0").replace(/[I1]/g, "1");
+  return norm.id(a) !== norm.id(b) && canon(a) === canon(b);
+}
+
+const F = (severity, category, message, extra = {}) => ({ severity, category, message, ...extra });
+const M = (category, message, extra = {}) => ({ category, message, ...extra });
+
+function pair(ds160Field, docField) {
+  return {
+    ds160Value: ds160Field?.value ?? "",
+    docValue: docField?.value ?? "",
+    ds160Source: ds160Field?.source ?? null,
+    docSource: docField?.source ?? null,
+    lowConfidence: Math.min(ds160Field?.confidence ?? 0, docField?.confidence ?? 0) < LOWCONF,
+  };
+}
+
+/** Build a high-confidence field bag from a plain object of pasted values. */
+function fieldsFromPaste(obj, label = "pasted") {
+  const fields = {};
+  for (const [k, v] of Object.entries(obj || {})) {
+    const val = String(v ?? "").trim();
+    if (!val) continue;
+    fields[k] = mkField(val, 1.0, { line: -1, label: k, snippet: `${label}: ${val}` });
+  }
+  return { fields };
+}
+
+/* ─────────────────────────── rules ─────────────────────────── */
+const RULES = [
+  /* DS-160 ↔ Passport */
+  { id: "name-surname", severity: "blocker", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const d = c.ds160.fields.surname, p = c.passport.fields.surname;
+      const o = nameOutcome(d?.value, p?.value);
+      if (o === "absent") return null;
+      const pr = pair(d, p);
+      if (o === "exact") return { match: M("DS-160 ↔ Passport", "Surname matches the passport.", pr) };
+      if (pr.lowConfidence) return F("info", "DS-160 ↔ Passport", "Couldn't read the surname reliably on both documents — verify by eye.", pr);
+      if (o === "normalized") return F("warning", "DS-160 ↔ Passport", "Surname matches only after normalizing case/accents/spacing — confirm it is spelled exactly as in the passport.", pr);
+      return F("blocker", "DS-160 ↔ Passport", "Surname does not match the passport.", pr);
+    } },
+  { id: "name-given", severity: "blocker", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const d = c.ds160.fields.given, p = c.passport.fields.given;
+      const o = nameOutcome(d?.value, p?.value);
+      if (o === "absent") return null;
+      const pr = pair(d, p);
+      if (o === "exact") return { match: M("DS-160 ↔ Passport", "Given names match the passport.", pr) };
+      if (pr.lowConfidence) return F("info", "DS-160 ↔ Passport", "Couldn't read the given names reliably on both documents — verify by eye.", pr);
+      if (o === "normalized") return F("warning", "DS-160 ↔ Passport", "Given names match only after normalization — confirm exact spelling and order vs the passport.", pr);
+      return F("blocker", "DS-160 ↔ Passport", "Given names do not match the passport.", pr);
+    } },
+  { id: "name-order", severity: "warning", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const ds = norm.name(c.ds160.fields.surname?.value), dg = norm.name(c.ds160.fields.given?.value);
+      const ps = norm.name(c.passport.fields.surname?.value), pg = norm.name(c.passport.fields.given?.value);
+      if (ds && dg && ds === pg && dg === ps && ds !== dg)
+        return F("warning", "DS-160 ↔ Passport", "Given name and surname appear to be reversed relative to the passport.", pair(c.ds160.fields.surname, c.passport.fields.surname));
+      return null;
+    } },
+  { id: "passport-number", severity: "blocker", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const d = c.ds160.fields.passportNumber, p = c.passport.fields.docNumber;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.id(d.value) === norm.id(p.value)) return { match: M("DS-160 ↔ Passport", "Passport number matches.", pr) };
+      if (pr.lowConfidence) return F("info", "DS-160 ↔ Passport", "Couldn't read the passport number reliably — verify character-for-character.", pr);
+      if (confusableOnly(d.value, p.value))
+        return F("blocker", "DS-160 ↔ Passport", "Passport number differs only by confusable characters (O/0 or I/1) — check each character.", pr);
+      return F("blocker", "DS-160 ↔ Passport", "Passport number does not match the passport.", pr);
+    } },
+  { id: "dob", severity: "blocker", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const d = c.ds160.fields.dob, p = c.passport.fields.dob;
+      if (!d?.value || !p?.value) return null;
+      const di = toISO(d.value), pi = toISO(p.value);
+      const pr = pair(d, p);
+      if (di && pi && di === pi) return { match: M("DS-160 ↔ Passport", "Date of birth matches the passport.", pr) };
+      if (pr.lowConfidence) return F("info", "DS-160 ↔ Passport", "Couldn't read the date of birth reliably on both documents.", pr);
+      return F("blocker", "DS-160 ↔ Passport", "Date of birth does not match the passport.", pr);
+    } },
+  { id: "sex", severity: "warning", category: "DS-160 ↔ Passport", requires: ["ds160", "passport"],
+    evaluate: c => {
+      const d = c.ds160.fields.sex, p = c.passport.fields.sex;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.upper(d.value)[0] === norm.upper(p.value)[0]) return { match: M("DS-160 ↔ Passport", "Sex matches the passport.", pr) };
+      return F("warning", "DS-160 ↔ Passport", "Sex differs between the DS-160 and the passport.", pr);
+    } },
+  { id: "passport-expiry-6mo", severity: "warning", category: "Passport", requires: ["passport"],
+    evaluate: c => {
+      const iso = toISO(c.passport.fields.expiry?.value);
+      if (!iso) return null;
+      const days = Math.round((Date.parse(iso) - c.now) / 86400000);
+      if (days < 0) return F("warning", "Passport", "The passport appears to be expired.", { docValue: iso });
+      if (days < 183) return F("warning", "Passport", `Passport expires in under 6 months (${days} days) — many consulates require 6 months' validity.`, { docValue: iso });
+      return { match: M("Passport", `Passport validity looks OK (${days} days remaining).`, { docValue: iso }) };
+    } },
+  { id: "mrz-viz", severity: "warning", category: "Passport", requires: ["passport"],
+    evaluate: c => {
+      const checks = c.passport.mrz?.checks;
+      if (!checks) return null;
+      const bad = Object.entries(checks).filter(([, ok]) => ok === false).map(([k]) => k);
+      if (bad.length) return F("warning", "Passport", `MRZ check digit failed for: ${bad.join(", ")} — the machine-readable zone may have been misread or altered.`, {});
+      return { match: M("Passport", "MRZ check digits passed.", {}) };
+    } },
+
+  /* DS-160 ↔ Personal details (pasted) */
+  { id: "personal-surname", severity: "blocker", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldNameCheck(c, "surname", "Surname", "DS-160 ↔ Personal details") },
+  { id: "personal-given", severity: "blocker", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldNameCheck(c, "given", "Given names", "DS-160 ↔ Personal details") },
+  { id: "personal-dob", severity: "blocker", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldDateCheck(c, "dob", "Date of birth", "DS-160 ↔ Personal details") },
+  { id: "personal-sex", severity: "warning", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => {
+      const d = c.ds160.fields.sex, p = c.personal.fields.sex;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.upper(d.value)[0] === norm.upper(p.value)[0]) return { match: M("DS-160 ↔ Personal details", "Sex matches your pasted details.", pr) };
+      return F("warning", "DS-160 ↔ Personal details", "Sex differs from your pasted personal details.", pr);
+    } },
+  { id: "personal-nationality", severity: "warning", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldPlainCheck(c, "nationality", "Nationality", "DS-160 ↔ Personal details", norm.upper) },
+  { id: "personal-pob", severity: "info", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldPlainCheck(c, "countryOfBirth", "Country of birth", "DS-160 ↔ Personal details", norm.upper) },
+  { id: "personal-national-id", severity: "warning", category: "DS-160 ↔ Personal details", requires: ["ds160", "personal"],
+    evaluate: c => fieldPlainCheck(c, "nationalId", "National ID", "DS-160 ↔ Personal details", norm.id) },
+
+  /* DS-160 ↔ Addresses (pasted) */
+  { id: "addr-street", severity: "warning", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homeAddress", "Home street address", "DS-160 ↔ Addresses", norm.plain, true) },
+  { id: "addr-city", severity: "warning", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homeCity", "Home city", "DS-160 ↔ Addresses", norm.name) },
+  { id: "addr-state", severity: "info", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homeState", "Home state/province", "DS-160 ↔ Addresses", norm.name) },
+  { id: "addr-postal", severity: "info", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homePostal", "Home postal/ZIP", "DS-160 ↔ Addresses", norm.id) },
+  { id: "addr-country", severity: "warning", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homeCountry", "Home country", "DS-160 ↔ Addresses", norm.upper) },
+  { id: "addr-phone", severity: "info", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "homePhone", "Primary phone", "DS-160 ↔ Addresses", norm.id) },
+  { id: "addr-email", severity: "warning", category: "DS-160 ↔ Addresses", requires: ["ds160", "address"],
+    evaluate: c => fieldPlainCheck(c, "email", "Email", "DS-160 ↔ Addresses", norm.upper) },
+
+  /* DS-160 ↔ Prior U.S. visa foil */
+  { id: "visa-number", severity: "warning", category: "DS-160 ↔ Prior visa", requires: ["ds160", "priorVisa"],
+    evaluate: c => {
+      const d = c.ds160.fields.priorVisaNumber, p = c.priorVisa.fields.foilNumber;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.id(d.value) === norm.id(p.value)) return { match: M("DS-160 ↔ Prior visa", "Prior visa number matches the foil.", pr) };
+      return F("warning", "DS-160 ↔ Prior visa", "Prior visa number on the DS-160 does not match the visa foil.", pr);
+    } },
+  { id: "visa-class", severity: "info", category: "DS-160 ↔ Prior visa", requires: ["ds160", "priorVisa"],
+    evaluate: c => {
+      const d = c.ds160.fields.purposeSpecify || c.ds160.fields.purposeOfTrip;
+      const p = c.priorVisa.fields.visaClass;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.upper(d.value).includes(norm.upper(p.value)) || norm.upper(p.value).includes(norm.upper(d.value)))
+        return { match: M("DS-160 ↔ Prior visa", "Visa class looks consistent with the foil.", pr) };
+      return F("info", "DS-160 ↔ Prior visa", "Visa class on the foil may differ from the DS-160 purpose — confirm if this is a new class.", pr);
+    } },
+
+  /* DS-160 ↔ I-797 */
+  { id: "i797-receipt", severity: "blocker", category: "DS-160 ↔ I-797", requires: ["ds160", "i797"],
+    evaluate: c => {
+      const d = c.ds160.fields.petitionNumber, r = c.i797.fields.receiptNumber;
+      if (!d?.value || !r?.value) return null;
+      const pr = pair(d, r);
+      if (norm.id(d.value) === norm.id(r.value)) return { match: M("DS-160 ↔ I-797", "Petition/receipt number matches the I-797.", pr) };
+      return F("blocker", "DS-160 ↔ I-797", "The petition/receipt number on the DS-160 does not match the I-797 receipt number.", pr);
+    } },
+  { id: "i797-petitioner", severity: "warning", category: "DS-160 ↔ I-797", requires: ["ds160", "i797"],
+    evaluate: c => {
+      const d = c.ds160.fields.presentEmployer || c.ds160.fields.petitioner, p = c.i797.fields.petitioner;
+      if (!d?.value || !p?.value) return null;
+      const pr = pair(d, p);
+      if (norm.name(d.value) === norm.name(p.value)) return { match: M("DS-160 ↔ I-797", "Petitioner/employer name matches the I-797.", pr) };
+      return F("warning", "DS-160 ↔ I-797", "Petitioner/employer name differs between the DS-160 and the I-797.", pr);
+    } },
+  { id: "i797-travel-window", severity: "warning", category: "DS-160 ↔ I-797", requires: ["ds160", "i797"],
+    evaluate: c => {
+      const arr = toISO(c.ds160.fields.intendedArrival?.value);
+      const from = toISO(c.i797.fields.validFrom?.value), to = toISO(c.i797.fields.validTo?.value);
+      if (!arr) return null;
+      if (from && arr < from) return F("warning", "DS-160 ↔ I-797", "Intended arrival date is before the I-797 validity start.", { ds160Value: arr, docValue: from });
+      if (to && arr > to) return F("warning", "DS-160 ↔ I-797", "Intended arrival date is after the I-797 validity end.", { ds160Value: arr, docValue: to });
+      return null;
+    } },
+
+  /* DS-160 ↔ I-20 / DS-2019 */
+  { id: "i20-sevis", severity: "blocker", category: "DS-160 ↔ I-20/DS-2019", requires: ["ds160", "i20"],
+    evaluate: c => {
+      const d = c.ds160.fields.sevisId || c.ds160.fields.petitionNumber, s = c.i20.fields.sevisId;
+      if (!d?.value || !s?.value) return null;
+      const pr = pair(d, s);
+      if (norm.id(d.value) === norm.id(s.value)) return { match: M("DS-160 ↔ I-20/DS-2019", "SEVIS ID matches the I-20/DS-2019.", pr) };
+      return F("blocker", "DS-160 ↔ I-20/DS-2019", "SEVIS ID on the DS-160 does not match the I-20/DS-2019.", pr);
+    } },
+  { id: "i20-arrival-before-start", severity: "warning", category: "DS-160 ↔ I-20/DS-2019", requires: ["ds160", "i20"],
+    evaluate: c => {
+      const arr = toISO(c.ds160.fields.intendedArrival?.value), start = toISO(c.i20.fields.programStart?.value);
+      if (!arr || !start) return null;
+      const days = Math.round((Date.parse(start) - Date.parse(arr)) / 86400000);
+      if (days > 30) return F("warning", "DS-160 ↔ I-20/DS-2019", `Intended arrival is more than 30 days before the program start (${days} days) — students are generally admitted at most 30 days early.`, { ds160Value: arr, docValue: start });
+      return null;
+    } },
+
+  /* DS-160 ↔ I-94 travel history */
+  { id: "i94-missing-trips", severity: "warning", category: "DS-160 ↔ I-94", requires: ["ds160", "i94"],
+    evaluate: c => {
+      const declared = new Set((c.ds160.priorTrips || []).map(t => toISO(t)).filter(Boolean));
+      const missing = (c.i94.trips || []).filter(t => t.arrival && !declared.has(toISO(t.arrival)));
+      if (!missing.length) return { match: M("DS-160 ↔ I-94", "No undeclared I-94 entries detected against available prior-travel data.", {}) };
+      return F("warning", "DS-160 ↔ I-94", `${missing.length} U.S. entr${missing.length === 1 ? "y is" : "ies are"} in the I-94 record but not reflected in the DS-160 prior-travel answers.`,
+        { docValue: missing.map(t => toISO(t.arrival)).join(", ") });
+    } },
+  { id: "i94-overstay", severity: "warning", category: "I-94", requires: ["i94"],
+    evaluate: c => {
+      const over = (c.i94.trips || []).filter(t => t.departure && t.admittedUntil && toISO(t.departure) > toISO(t.admittedUntil));
+      if (!over.length) return null;
+      return F("warning", "I-94", `${over.length} prior stay(s) appear to depart after the admitted-until date — a possible overstay to review carefully.`, {});
+    } },
+
+  /* DS-160 internal consistency */
+  { id: "placeholder-values", severity: "warning", category: "DS-160 internal", requires: ["ds160"],
+    evaluate: c => {
+      const hits = [];
+      for (const [k, f] of Object.entries(c.ds160.fields)) {
+        const v = (f?.value || "").trim().toUpperCase();
+        if (v && PLACEHOLDERS.has(v)) hits.push(k);
+      }
+      if (!hits.length) return null;
+      return F("warning", "DS-160 internal", `Placeholder text left in required-looking fields: ${hits.join(", ")}.`, {});
+    } },
+  { id: "arrival-in-future", severity: "warning", category: "DS-160 internal", requires: ["ds160"],
+    evaluate: c => {
+      const arr = toISO(c.ds160.fields.intendedArrival?.value);
+      if (!arr) return null;
+      if (Date.parse(arr) < c.now) return F("warning", "DS-160 internal", "Intended date of arrival is in the past.", { ds160Value: arr });
+      return null;
+    } },
+  { id: "date-format", severity: "info", category: "DS-160 internal", requires: ["ds160"],
+    evaluate: c => {
+      const bad = [];
+      for (const key of ["dob", "intendedArrival", "passportIssuance", "passportExpiration"]) {
+        const v = c.ds160.fields[key]?.value;
+        if (v && !toISO(v)) bad.push(key);
+      }
+      if (!bad.length) return null;
+      return F("info", "DS-160 internal", `Could not parse these dates as valid calendar dates (expected DD-MMM-YYYY): ${bad.join(", ")}.`, {});
+    } },
+  { id: "age-vs-dob", severity: "info", category: "DS-160 internal", requires: ["ds160"],
+    evaluate: c => {
+      const dob = toISO(c.ds160.fields.dob?.value), stated = c.ds160.fields.age?.value;
+      if (!dob || !stated) return null;
+      const age = Math.floor((c.now - Date.parse(dob)) / (365.25 * 86400000));
+      if (String(age) !== String(stated).replace(/\D/g, "")) return F("info", "DS-160 internal", `Stated age (${stated}) does not match age derived from date of birth (${age}).`, {});
+      return null;
+    } },
+];
+
+function fieldNameCheck(c, key, label, category) {
+  const d = c.ds160.fields[key], p = c.personal.fields[key];
+  const o = nameOutcome(d?.value, p?.value);
+  if (o === "absent") return null;
+  const pr = pair(d, p);
+  if (o === "exact") return { match: M(category, `${label} matches your pasted details.`, pr) };
+  if (o === "normalized") return F("warning", category, `${label} matches only after normalization — confirm exact spelling.`, pr);
+  return F("blocker", category, `${label} does not match your pasted personal details.`, pr);
+}
+function fieldDateCheck(c, key, label, category) {
+  const d = c.ds160.fields[key], p = c.personal.fields[key];
+  if (!d?.value || !p?.value) return null;
+  const di = toISO(d.value), pi = toISO(p.value);
+  const pr = pair(d, p);
+  if (di && pi && di === pi) return { match: M(category, `${label} matches your pasted details.`, pr) };
+  return F("blocker", category, `${label} does not match your pasted personal details.`, pr);
+}
+function fieldPlainCheck(c, key, label, category, normalizer, fuzzy = false) {
+  const src = category.includes("Addresses") ? c.address : c.personal;
+  const d = c.ds160.fields[key], p = src?.fields?.[key];
+  if (!d?.value || !p?.value) return null;
+  const pr = pair(d, p);
+  const na = normalizer(d.value), nb = normalizer(p.value);
+  if (na === nb) return { match: M(category, `${label} matches.`, pr) };
+  if (fuzzy && (na.includes(nb) || nb.includes(na))) return { match: M(category, `${label} looks consistent (partial match).`, pr) };
+  return F(fuzzy ? "warning" : "warning", category, `${label} differs from what you provided.`, pr);
+}
+
+/* ─────────────────────────── runner ─────────────────────────── */
+function runAudit(docs, opts = {}) {
+  const ctx = { ...docs, now: opts.now ?? Date.now() };
+  const present = k => docs[k] && (docs[k].fields || docs[k].trips);
+  const findings = [], matches = [], skipped = [];
+  for (const rule of RULES) {
+    const missing = rule.requires.filter(k => !present(k));
+    if (missing.length) { skipped.push({ id: rule.id, category: rule.category, missing }); continue; }
+    let out;
+    try { out = rule.evaluate(ctx); } catch { out = null; }
+    if (!out) continue;
+    for (const item of (Array.isArray(out) ? out : [out])) {
+      if (item.match) matches.push({ id: rule.id, ...item.match });
+      else if (item.severity) findings.push({ id: rule.id, ...item });
+    }
+  }
+  const count = sev => findings.filter(f => f.severity === sev).length;
+  const b = count("blocker"), w = count("warning"), i = count("info");
+  const m = matches.length;
+  const summary = `${m} verified, ${b} blocker${b === 1 ? "" : "s"}, ${w} warning${w === 1 ? "" : "s"}, ${i} info — review each against your documents.`;
+  return { findings, matches, skipped, counts: { blocker: b, warning: w, info: i, match: m }, summary };
+}
+
+/* ---- lightweight parsers for docs the DocumentType engine doesn't extract ---- */
+function parseVisaFoil(lines) {
+  return { fields: {
+    name: grabLabel(lines, ["Surname", "Name"]),
+    visaClass: grabLabel(lines, ["Visa Class", "Class"]),
+    foilNumber: grabLabel(lines, ["Control Number", "Visa Number", "Red Number"]),
+    issueDate: grabLabel(lines, ["Issue Date", "Issued"]),
+    expiration: grabLabel(lines, ["Expiration Date", "Expires"]),
+    post: grabLabel(lines, ["Issuing Post", "Post"]),
+    annotation: grabLabel(lines, ["Annotation"]),
+  } };
+}
+
+function parseI94(text) {
+  const trips = [];
+  const re = /(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/g;
+  for (const line of String(text).split(/\n/)) {
+    if (!/arriv|depart|entry|i-?94/i.test(line)) continue;
+    const dates = line.match(re);
+    if (dates && dates.length) trips.push({ arrival: dates[0], departure: dates[1] || null, admittedUntil: dates[2] || null });
+  }
+  return { trips };
+}
+
+{ TYPE_BY_ID, parseMRZ };
+
 window.VDEngine={detectType,compareVersions,compareCross,parseMRZ,toISO,norm,grabLabel,mkField,compareValues,TYPE_BY_ID,DOC_TYPES};
+window.VDAudit={runAudit,nameOutcome,parseVisaFoil,parseI94,fieldsFromPaste,RULES};
 })();
 ;
 "use strict";
@@ -3285,6 +3725,607 @@ function downloadReport(node) {
 
 ;
 "use strict";
+/* VisaDash — DS-160 verification UI.
+   Separate cards for each source (upload a doc OR paste details). Extracts on-device
+   via pdf.js → tesseract, consolidates via VDEngine + VDAudit, shows verified matches
+   and issues. Nothing is uploaded. */
+(function () {
+  var root = document.getElementById("audit-app");
+  if (!root) return;
+
+  /* Card definitions: upload and/or paste fields */
+  var CARDS = [
+    {
+      key: "ds160", tag: "1", title: "DS-160 printout", when: "required", required: true,
+      hint: "Full Application PDF from CEAC (not the one-page confirmation)",
+      upload: true, paste: false
+    },
+    {
+      key: "passport", tag: "2", title: "Passport", when: "recommended",
+      hint: "Photo page scan, or paste the two MRZ lines",
+      upload: true, mrz: true,
+      fields: [
+        { id: "surname", label: "Surname" },
+        { id: "given", label: "Given names" },
+        { id: "docNumber", label: "Passport number" },
+        { id: "dob", label: "Date of birth", ph: "01-JAN-1990" },
+        { id: "sex", label: "Sex", ph: "M / F" },
+        { id: "expiry", label: "Expiration", ph: "01-JAN-2030" }
+      ]
+    },
+    {
+      key: "personal", tag: "3", title: "Personal details", when: "optional",
+      hint: "Paste what you entered (or intended to enter) on the DS-160",
+      upload: false,
+      fields: [
+        { id: "surname", label: "Surname" },
+        { id: "given", label: "Given names" },
+        { id: "dob", label: "Date of birth", ph: "01-JAN-1990" },
+        { id: "sex", label: "Sex", ph: "Male / Female" },
+        { id: "nationality", label: "Nationality" },
+        { id: "countryOfBirth", label: "Country of birth" },
+        { id: "nationalId", label: "National ID number" }
+      ]
+    },
+    {
+      key: "address", tag: "4", title: "Addresses & contact", when: "optional",
+      hint: "Home address and contact info from your records",
+      upload: false,
+      fields: [
+        { id: "homeAddress", label: "Street address" },
+        { id: "homeCity", label: "City" },
+        { id: "homeState", label: "State / province" },
+        { id: "homePostal", label: "Postal / ZIP" },
+        { id: "homeCountry", label: "Country" },
+        { id: "homePhone", label: "Primary phone" },
+        { id: "email", label: "Email" }
+      ]
+    },
+    {
+      key: "priorVisa", tag: "5", title: "Visa copy", when: "optional",
+      hint: "Prior U.S. visa foil photo or PDF",
+      upload: true,
+      fields: [
+        { id: "foilNumber", label: "Visa / control number" },
+        { id: "visaClass", label: "Visa class", ph: "H1B, B1/B2…" },
+        { id: "issueDate", label: "Issue date" },
+        { id: "expiration", label: "Expiration" }
+      ]
+    },
+    {
+      key: "i797", tag: "6", title: "I-797 notice", when: "optional",
+      hint: "Approval / receipt notice (petitioned visas)",
+      upload: true
+    },
+    {
+      key: "i20", tag: "7", title: "I-20 / DS-2019", when: "optional",
+      hint: "Student or exchange-visitor certificate",
+      upload: true
+    },
+    {
+      key: "i94", tag: "8", title: "I-94 history", when: "optional",
+      hint: "Travel history export, or paste arrival/departure lines",
+      upload: true,
+      pasteArea: true
+    }
+  ];
+
+  var files = {};
+  var state = { ready: false };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function fieldHtml(card) {
+    if (!card.fields || !card.fields.length) return "";
+    return '<div class="verify-fields" data-fields="' + card.key + '">'
+      + card.fields.map(function (f) {
+        return '<label class="vf"><span>' + esc(f.label) + '</span>'
+          + '<input type="text" data-fk="' + card.key + '" data-fid="' + f.id + '"'
+          + (f.ph ? ' placeholder="' + esc(f.ph) + '"' : "") + ' autocomplete="off" spellcheck="false"></label>';
+      }).join("")
+      + "</div>";
+  }
+
+  function cardHtml(card) {
+    var pasteToggle = (card.fields || card.mrz || card.pasteArea)
+      ? '<button type="button" class="paste-tog" data-tog="' + card.key + '">or paste details</button>'
+      : "";
+    var uploadBlock = card.upload
+      ? '<div class="drop" tabindex="0" role="button" data-k="' + card.key + '">'
+        + '<div class="ico">&#128228;</div><p>Drop file, or click to browse</p>'
+        + '<div class="hint">' + esc(card.hint) + "</div></div>"
+        + '<input type="file" accept=".pdf,image/*,.txt" data-k="' + card.key + '" hidden>'
+        + '<div class="filelist" data-list="' + card.key + '"></div>'
+      : '<p class="verify-hint">' + esc(card.hint) + "</p>";
+    var pasteBlock = '<div class="paste-panel" data-paste="' + card.key + '" hidden>'
+      + (card.mrz
+        ? '<label class="vf full"><span>Passport MRZ (two lines)</span>'
+          + '<textarea class="mrz" data-mrz="1" spellcheck="false" rows="2"'
+          + ' placeholder="P&lt;UTOERIKSSON&lt;&lt;ANNA&lt;MARIA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#10;L898902C36UTO7408122F1204159ZE184226B&lt;&lt;&lt;&lt;&lt;10"></textarea></label>'
+        : "")
+      + (card.pasteArea
+        ? '<label class="vf full"><span>Paste I-94 travel lines</span>'
+          + '<textarea data-i94="1" rows="4" spellcheck="false"'
+          + ' placeholder="Arrival 2023-05-01 Departure 2023-05-20&#10;Entry 2024-02-10 2024-03-01"></textarea></label>'
+        : "")
+      + fieldHtml(card)
+      + "</div>";
+    return '<div class="slot verify-card" data-card="' + card.key + '">'
+      + '<div class="slot-head"><span class="slot-tag">' + card.tag + "</span>"
+      + "<h3>" + esc(card.title) + "</h3>"
+      + '<span class="when">' + esc(card.when) + "</span></div>"
+      + '<div class="slot-body">'
+      + uploadBlock + pasteToggle + pasteBlock
+      + "</div></div>";
+  }
+
+  root.innerHTML =
+    '<div class="compare-steps no-print" aria-hidden="true">'
+    + '<span class="on">1 · Add sources</span><span class="on">2 · DS-160 file</span><span>3 · Verified report</span></div>'
+    + '<div class="slots no-print audit-slots">'
+    + CARDS.map(cardHtml).join("")
+    + "</div>"
+    + '<div class="actions no-print" style="margin-top:14px">'
+    + '<button class="btn" id="auditRun">Verify against DS-160</button>'
+    + '<button class="btn ghost sm" id="auditDemo">View sample report</button>'
+    + '<button class="btn ghost sm" id="auditReset">Clear all</button></div>'
+    + '<div id="audit-log" class="no-print audit-log"></div>'
+    + '<section id="audit-results"></section>';
+
+  function log(m, cls) {
+    var box = document.getElementById("audit-log");
+    box.classList.add("show");
+    var ln = document.createElement("div");
+    ln.className = "ln" + (cls ? " " + cls : "");
+    ln.textContent = m;
+    box.appendChild(ln);
+    box.scrollTop = box.scrollHeight;
+  }
+  function clearLog() {
+    var box = document.getElementById("audit-log");
+    box.innerHTML = "";
+    box.classList.remove("show");
+  }
+
+  function showFile(key) {
+    var list = root.querySelector('[data-list="' + key + '"]');
+    if (!list) return;
+    var f = files[key];
+    list.innerHTML = f
+      ? '<div class="fileitem"><span>&#128196; ' + esc(f.name) + '</span>'
+        + '<span class="x" data-rm="' + key + '" title="Remove">&times;</span></div>'
+      : "";
+  }
+
+  /* wire upload zones */
+  root.querySelectorAll(".drop").forEach(function (drop) {
+    var key = drop.dataset.k;
+    var input = root.querySelector('input[type=file][data-k="' + key + '"]');
+    if (!input) return;
+    drop.addEventListener("click", function () { input.click(); });
+    drop.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    ["dragover", "dragenter"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); });
+    });
+    drop.addEventListener("drop", function (e) {
+      if (e.dataTransfer.files[0]) { files[key] = e.dataTransfer.files[0]; showFile(key); }
+    });
+    input.addEventListener("change", function () {
+      files[key] = input.files[0] || null; showFile(key); input.value = "";
+    });
+  });
+
+  root.addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-rm]");
+    if (rm) { files[rm.dataset.rm] = null; showFile(rm.dataset.rm); return; }
+    var tog = e.target.closest("[data-tog]");
+    if (tog) {
+      var panel = root.querySelector('[data-paste="' + tog.dataset.tog + '"]');
+      if (!panel) return;
+      var open = panel.hasAttribute("hidden");
+      if (open) panel.removeAttribute("hidden"); else panel.setAttribute("hidden", "");
+      tog.textContent = open ? "hide paste fields" : "or paste details";
+      tog.classList.toggle("on", open);
+    }
+  });
+
+  document.getElementById("auditReset").addEventListener("click", function () { location.reload(); });
+  document.getElementById("auditRun").addEventListener("click", run);
+  document.getElementById("auditDemo").addEventListener("click", showDemo);
+
+  function waitEngine() {
+    return new Promise(function (resolve) {
+      if (window.VDEngine && window.VDAudit) return resolve();
+      window.addEventListener("vdengine-ready", function () { resolve(); }, { once: true });
+      setTimeout(resolve, 2500);
+    });
+  }
+
+  function readPasteFields(key) {
+    var out = {};
+    root.querySelectorAll('input[data-fk="' + key + '"]').forEach(function (inp) {
+      var v = inp.value.trim();
+      if (v) out[inp.dataset.fid] = v;
+    });
+    return out;
+  }
+
+  /* ---- on-device extraction ---- */
+  function itemsToLines(items) {
+    var lines = items.filter(function (it) { return it.str.trim().length; })
+      .map(function (it) { return { s: it.str, x: it.transform[4], y: it.transform[5] }; })
+      .sort(function (a, b) { return (b.y - a.y) || (a.x - b.x); });
+    var out = [], cur = [], lastY = null;
+    lines.forEach(function (i) {
+      if (lastY === null || Math.abs(i.y - lastY) < 4) { cur.push(i); }
+      else { out.push(cur); cur = [i]; }
+      lastY = i.y;
+    });
+    if (cur.length) out.push(cur);
+    return out.map(function (ln) {
+      return ln.sort(function (a, b) { return a.x - b.x; }).map(function (i) { return i.s; }).join(" ").replace(/\s+/g, " ").trim();
+    });
+  }
+
+  async function readAny(file) {
+    var isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    var isImg = /^image\//.test(file.type) || /\.(png|jpe?g|webp|bmp|gif|tiff?)$/i.test(file.name);
+    if (isPdf) {
+      if (!window.pdfjsLib) throw new Error("PDF engine failed to load — check your connection and reload.");
+      var buf = await file.arrayBuffer();
+      var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      var lines = [], raw = 0;
+      for (var p = 1; p <= pdf.numPages; p++) {
+        var page = await pdf.getPage(p), tc = await page.getTextContent();
+        raw += tc.items.reduce(function (s, it) { return s + it.str.length; }, 0);
+        lines = lines.concat(itemsToLines(tc.items));
+      }
+      if (raw < 30 * pdf.numPages) {
+        if (!window.Tesseract) throw new Error("OCR engine failed to load — check your connection and reload.");
+        var otext = "";
+        var MAX = 2600;
+        for (var q = 1; q <= Math.min(pdf.numPages, 8); q++) {
+          var pg = await pdf.getPage(q);
+          var base = pg.getViewport({ scale: 1 });
+          var scale = Math.min(2, MAX / Math.max(base.width, base.height));
+          var vp = pg.getViewport({ scale: Math.max(1, scale) });
+          var cv = document.createElement("canvas");
+          cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+          await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+          var r = await window.Tesseract.recognize(cv, "eng");
+          otext += "\n" + (r && r.data ? r.data.text : "");
+          cv.width = cv.height = 0;
+        }
+        lines = otext.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+        return { text: otext, lines: lines };
+      }
+      return { text: lines.join("\n"), lines: lines };
+    }
+    if (isImg) {
+      if (!window.Tesseract) throw new Error("OCR engine failed to load — check your connection and reload.");
+      var res = await window.Tesseract.recognize(file, "eng");
+      var t = res.data.text;
+      return { text: t, lines: t.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean) };
+    }
+    var txt = await file.text();
+    return { text: txt, lines: txt.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean) };
+  }
+
+  function mergePassport(base, pasted) {
+    var fields = Object.assign({}, (base && base.fields) || {});
+    Object.keys(pasted).forEach(function (k) {
+      fields[k] = window.VDAudit ? window.VDEngine.mkField(pasted[k], 1.0, { snippet: "pasted: " + pasted[k] })
+        : { value: pasted[k], confidence: 1, source: null };
+    });
+    return { fields: fields, mrz: base && base.mrz };
+  }
+
+  async function run() {
+    clearLog();
+    await waitEngine();
+    var E = window.VDEngine, A = window.VDAudit;
+    if (!E || !A) { log("Engine not loaded — check your connection and reload.", "err"); return; }
+    if (!files.ds160) { log("A DS-160 Application printout is required (card 1).", "err"); return; }
+
+    var btn = document.getElementById("auditRun");
+    btn.disabled = true; btn.textContent = "Verifying…";
+    try {
+      var docs = {};
+      log("Reading DS-160 on-device…");
+      var ds = await readAny(files.ds160);
+      docs.ds160 = E.TYPE_BY_ID.ds160.extract({ text: ds.text, lines: ds.lines });
+      var extracted = Object.keys(docs.ds160.fields || {}).filter(function (k) {
+        return docs.ds160.fields[k] && docs.ds160.fields[k].value;
+      }).length;
+      log("  extracted " + extracted + " DS-160 fields", "ok");
+
+      /* Passport: MRZ paste > upload OCR > manual fields */
+      var mrzBox = root.querySelector("textarea[data-mrz]");
+      var mrzText = mrzBox ? mrzBox.value.trim() : "";
+      var passPaste = readPasteFields("passport");
+      var passport = null;
+      if (mrzText) {
+        var pm = E.parseMRZ(mrzText.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean), mrzText);
+        if (pm) { passport = { fields: pm.fields, mrz: { checks: pm.checks } }; log("Passport from pasted MRZ", "ok"); }
+        else log("Could not parse pasted MRZ — check the two lines.", "err");
+      } else if (files.passport) {
+        log("Reading passport on-device…");
+        var pp = await readAny(files.passport);
+        var pm2 = E.parseMRZ(pp.lines, pp.text);
+        if (pm2) passport = { fields: pm2.fields, mrz: { checks: pm2.checks } };
+        else {
+          /* OCR passport without clear MRZ — use pasted fields if any, else label grab */
+          passport = { fields: {
+            surname: E.grabLabel(pp.lines, ["Surname", "Last Name"]),
+            given: E.grabLabel(pp.lines, ["Given Names", "Given Name", "First Name"]),
+            docNumber: E.grabLabel(pp.lines, ["Passport No", "Passport Number", "Document No"]),
+            dob: E.grabLabel(pp.lines, ["Date of Birth", "Birth Date"]),
+            sex: E.grabLabel(pp.lines, ["Sex", "Gender"]),
+            expiry: E.grabLabel(pp.lines, ["Date of Expiry", "Expiry", "Expiration"])
+          } };
+        }
+      }
+      if (Object.keys(passPaste).length) {
+        passport = mergePassport(passport, passPaste);
+        log("Merged pasted passport fields", "ok");
+      }
+      if (passport && Object.keys(passport.fields).some(function (k) { return passport.fields[k] && passport.fields[k].value; }))
+        docs.passport = passport;
+
+      /* Personal + address pastes */
+      var personal = readPasteFields("personal");
+      if (Object.keys(personal).length) {
+        docs.personal = A.fieldsFromPaste(personal, "personal");
+        log("Personal details: " + Object.keys(personal).length + " fields", "ok");
+      }
+      var address = readPasteFields("address");
+      if (Object.keys(address).length) {
+        docs.address = A.fieldsFromPaste(address, "address");
+        log("Address details: " + Object.keys(address).length + " fields", "ok");
+      }
+
+      /* Prior visa */
+      var visaPaste = readPasteFields("priorVisa");
+      if (files.priorVisa) {
+        log("Reading visa foil…");
+        var pv = await readAny(files.priorVisa);
+        docs.priorVisa = A.parseVisaFoil(pv.lines);
+      }
+      if (Object.keys(visaPaste).length) {
+        var vf = A.fieldsFromPaste(visaPaste, "visa");
+        if (docs.priorVisa) Object.assign(docs.priorVisa.fields, vf.fields);
+        else docs.priorVisa = vf;
+      }
+
+      if (files.i797) {
+        log("Reading I-797…");
+        var n = await readAny(files.i797);
+        docs.i797 = E.TYPE_BY_ID.i797.extract({ text: n.text, lines: n.lines });
+      }
+      if (files.i20) {
+        log("Reading I-20 / DS-2019…");
+        var g = await readAny(files.i20);
+        docs.i20 = E.TYPE_BY_ID.i20.extract({ text: g.text, lines: g.lines });
+      }
+      var i94ta = root.querySelector("textarea[data-i94]");
+      var i94text = i94ta ? i94ta.value.trim() : "";
+      if (files.i94) {
+        log("Reading I-94…");
+        var w = await readAny(files.i94);
+        i94text = (i94text ? i94text + "\n" : "") + w.text;
+      }
+      if (i94text) docs.i94 = A.parseI94(i94text);
+
+      var sources = Object.keys(docs).filter(function (k) { return k !== "ds160"; });
+      if (!sources.length) {
+        log("Add at least one supporting source (passport, personal details, address, visa, etc.).", "err");
+        return;
+      }
+
+      log("Running " + A.RULES.length + " checks across " + sources.length + " source(s)…");
+      var report = A.runAudit(docs);
+      render(report, docs, sources);
+      log("Done — nothing was uploaded.", "ok");
+    } catch (err) {
+      log("Error: " + (err && err.message ? err.message : err), "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Verify against DS-160";
+    }
+  }
+
+  var SEV = {
+    blocker: { cls: "sev-crit", label: "Blocker", box: "danger" },
+    warning: { cls: "sev-high", label: "Warning", box: "note" },
+    info: { cls: "sev-info", label: "Info", box: "note" }
+  };
+
+  function valueTable(f) {
+    if (!(f.ds160Value || f.docValue)) return "";
+    return '<div class="sub"><table class="dt verify-vals"><tbody>'
+      + '<tr><td>DS-160</td><td>' + esc(f.ds160Value || "—")
+      + (f.ds160Source ? ' <span class="conf conf-mid" title="' + esc(f.ds160Source.snippet || "") + '">src</span>' : "")
+      + "</td></tr>"
+      + '<tr><td>Source</td><td>' + esc(f.docValue || "—")
+      + (f.docSource ? ' <span class="conf conf-mid" title="' + esc(f.docSource.snippet || "") + '">src</span>' : "")
+      + "</td></tr></tbody></table></div>";
+  }
+
+  function render(report, docs, sources) {
+    var order = ["blocker", "warning", "info"];
+    var issues = order.map(function (sev) {
+      var items = report.findings.filter(function (f) { return f.severity === sev; });
+      if (!items.length) return "";
+      return '<div class="verify-group">'
+        + '<h3 class="secTitle">' + SEV[sev].label + "s · " + items.length + "</h3>"
+        + items.map(function (f) {
+          var sv = SEV[f.severity];
+          return '<div class="callout ' + sv.box + '"><div class="lbl">'
+            + '<span class="eng-chip ' + sv.cls + '">' + sv.label + "</span> " + esc(f.category) + "</div>"
+            + '<div class="sub">' + esc(f.message)
+            + (f.lowConfidence ? " <i>(low-confidence extraction)</i>" : "") + "</div>"
+            + valueTable(f) + "</div>";
+        }).join("")
+        + "</div>";
+    }).join("");
+
+    var matchBlock = "";
+    if (report.matches && report.matches.length) {
+      matchBlock = '<details class="cmp-collapse verify-matches" open>'
+        + "<summary>" + report.matches.length + " verified match"
+        + (report.matches.length === 1 ? "" : "es") + "</summary>"
+        + '<div class="verify-match-list">'
+        + report.matches.map(function (m) {
+          return '<div class="callout safe"><div class="lbl"><span class="eng-chip sev-ok">Verified</span> '
+            + esc(m.category) + '</div><div class="sub">' + esc(m.message) + "</div>"
+            + valueTable(m) + "</div>";
+        }).join("")
+        + "</div></details>";
+    }
+
+    var skipped = report.skipped.length
+      ? '<details class="cmp-collapse"><summary>' + report.skipped.length
+        + " checks skipped (source not provided)</summary>"
+        + '<div class="tool-notes" style="margin:0">'
+        + report.skipped.map(function (s) {
+          return "&bull; " + esc(s.id) + " — needs " + esc(s.missing.join(", "));
+        }).join("<br>") + "</div></details>"
+      : "";
+
+    var srcLine = sources.map(function (s) { return esc(s); }).join(", ");
+    var el = document.getElementById("audit-results");
+    var vcls = report.counts.blocker ? "verdict-bad" : report.counts.warning ? "verdict-warn" : "verdict-ok";
+    el.innerHTML =
+      '<div class="verdict ' + vcls + '">'
+      + '<div class="v-title">Verification report</div>'
+      + '<div class="v-sub">' + esc(report.summary) + "</div>"
+      + '<div class="v-chips">'
+      + '<span class="v-chip">' + report.counts.match + " verified</span>"
+      + '<span class="v-chip">' + report.counts.blocker + " blockers</span>"
+      + '<span class="v-chip">' + report.counts.warning + " warnings</span>"
+      + '<span class="v-chip">' + report.counts.info + " info</span>"
+      + "</div>"
+      + '<div class="v-sub" style="margin-top:8px">Sources checked: ' + srcLine + "</div></div>"
+      + (issues || '<div class="callout safe"><div class="sub">No mismatches fired on the sources you provided. This does not mean the DS-160 is ready to submit — review every field against your originals.</div></div>')
+      + matchBlock
+      + skipped
+      + '<div class="actions no-print" style="margin-top:12px">'
+      + '<button class="btn ghost sm" id="auditDownload">Download report</button>'
+      + '<button class="btn ghost sm" id="auditPrint">Print / Save as PDF</button></div>'
+      + '<div class="tool-notes">Not legal advice. VisaDash never says a DS-160 is ready to submit. Verify every finding against your original documents and the CEAC form.</div>';
+    el.classList.add("show");
+    document.getElementById("auditDownload").addEventListener("click", function () { downloadReport(report, sources); });
+    document.getElementById("auditPrint").addEventListener("click", function () { printReport(report, sources); });
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function reportDoc(report, sources) {
+    var rows = report.findings.map(function (f) {
+      return "<tr><td>" + esc(f.severity.toUpperCase()) + "</td><td>" + esc(f.category)
+        + "</td><td>" + esc(f.message) + "</td><td>" + esc(f.ds160Value || "")
+        + "</td><td>" + esc(f.docValue || "") + "</td></tr>";
+    }).join("");
+    var matchRows = (report.matches || []).map(function (m) {
+      return "<tr><td>VERIFIED</td><td>" + esc(m.category) + "</td><td>" + esc(m.message)
+        + "</td><td>" + esc(m.ds160Value || "") + "</td><td>" + esc(m.docValue || "") + "</td></tr>";
+    }).join("");
+    return "<!doctype html><meta charset=utf-8><title>VisaDash DS-160 verification</title>"
+      + "<body style='font-family:system-ui,sans-serif;max-width:860px;margin:24px auto;padding:0 16px'>"
+      + "<h2>VisaDash — DS-160 verification report</h2>"
+      + "<p>" + esc(report.summary) + "</p>"
+      + "<p style='color:#666'>Sources: " + esc(sources.join(", "))
+      + ". Generated on-device. Not legal advice. Verify every finding against your originals.</p>"
+      + "<table border=1 cellpadding=6 cellspacing=0 style='border-collapse:collapse;font-size:13px;width:100%'>"
+      + "<thead><tr><th>Status</th><th>Category</th><th>Finding</th><th>DS-160</th><th>Source</th></tr></thead><tbody>"
+      + rows + matchRows + "</tbody></table></body>";
+  }
+
+  function downloadReport(report, sources) {
+    var blob = new Blob([reportDoc(report, sources)], { type: "text/html" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "visadash-ds160-verify.html";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function printReport(report, sources) {
+    var iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    document.body.appendChild(iframe);
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open(); doc.write(reportDoc(report, sources)); doc.close();
+    setTimeout(function () {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(function () { iframe.remove(); }, 1000);
+    }, 250);
+  }
+
+  function showDemo() {
+    var A = window.VDAudit, E = window.VDEngine;
+    if (!A || !E) {
+      waitEngine().then(showDemo);
+      return;
+    }
+    var dsText = [
+      "Nonimmigrant Visa Application DS-160",
+      "Name Provided: SHARMA, PRIYA",
+      "Surnames: SHARMA",
+      "Given Names: PRIYA",
+      "Sex: FEMALE",
+      "Date of Birth: 01-JAN-1990",
+      "Country/Region of Origin (Nationality): INDIA",
+      "Country/Region of Birth: INDIA",
+      "Street Address (Line 1): 12 MG ROAD",
+      "City: BENGALURU",
+      "State/Province: KARNATAKA",
+      "Postal Zone/ZIP Code: 560001",
+      "Country/Region: INDIA",
+      "Primary Phone Number: 919876543210",
+      "E-mail Address: PRIYA@EXAMPLE.COM",
+      "Passport/Travel Document Number: Z1234567",
+      "Intended Date of Arrival: 15-DEC-2026",
+      "Visa Number: 2020123456"
+    ].join("\n");
+    var docs = {
+      ds160: E.TYPE_BY_ID.ds160.extract({ text: dsText, lines: dsText.split("\n") }),
+      passport: (function () {
+        var p = E.parseMRZ(
+          ["P<INDSHARMA<<PRIYA<<<<<<<<<<<<<<<<<<<<<<<<<<<",
+           "Z1234567<8IND9001011F3001012<<<<<<<<<<<<<<04"],
+          "");
+        return { fields: p.fields, mrz: { checks: p.checks } };
+      })(),
+      personal: A.fieldsFromPaste({
+        surname: "SHARMA", given: "PRIYA", dob: "01-JAN-1990",
+        sex: "Female", nationality: "INDIA", countryOfBirth: "INDIA"
+      }),
+      address: A.fieldsFromPaste({
+        homeAddress: "12 MG Road", homeCity: "Bengaluru", homeState: "Karnataka",
+        homePostal: "560001", homeCountry: "INDIA", email: "priya@example.com"
+      }),
+      priorVisa: A.fieldsFromPaste({ foilNumber: "2020999999", visaClass: "H1B" })
+    };
+    var report = A.runAudit(docs, { now: Date.parse("2026-08-30") });
+    render(report, docs, ["passport", "personal", "address", "priorVisa"]);
+    clearLog();
+    log("Sample report — fictional data only.", "ok");
+  }
+
+  state.ready = true;
+})();
+
+;
+"use strict";
 /* VisaDash — Visa Bulletin tool (lazy-loaded only on /visa-bulletin). */
 (function(){
   const qs  = (s,r=document)=>r.querySelector(s);
@@ -3616,7 +4657,7 @@ function downloadReport(node) {
 </script>
 <script>
 (function(){
-  var TABS=["compare","guides","bulletin","processing","wages","sponsors"];
+  var TABS=["compare","verify","guides","bulletin","processing","wages","sponsors"];
   function show(name){
     if(TABS.indexOf(name)<0) name=TABS[0];
     document.querySelectorAll('#tabnav button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===name);});

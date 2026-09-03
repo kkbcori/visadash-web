@@ -27,14 +27,29 @@ built `index.html` + route folders + `js/` + `styles.css` + `sitemap.xml` **are 
 files. Don't hand-edit the root `index.html`/route folders — they're build output.
 
 ### Routes
-`/` hub · `/ds-160-compare` · `/ds-160-audit` (engine lands in Task 3) · `/form-guides` +
+`/` hub · `/ds-160-compare` · `/ds-160-verify` · `/form-guides` +
 `/form-guides/{ds-160,i-129,i-140,i-485,i-130,n-400}` · `/visa-bulletin` · `/processing-times`
-· `/prevailing-wage` · `/h1b-sponsors`. (Old `/#wages` etc. redirect via `hashredirect.js`.)
+· `/prevailing-wage` · `/h1b-sponsors`. (Old `/#hash` etc. redirect via `hashredirect.js`.)
 
-Tools: **compare** = DS-160/passport comparator (verbatim, pdf.js+tesseract, MRZ check digits).
-**bulletin** = `VB_MONTHS`/`BULLETIN` EB dates + "Am I current?". **processing** = `PROCESSING`
-by form×center. **wages** = `WAGES` prevailing-wage + offer check. **sponsors** = `EMPLOYERS`
-H-1B grades (sortable). **audit** = single-doc cross-check (scaffold now, engine Task 3).
+Tools: **compare** = DS-160 A/B printout diff (pdf.js+tesseract). **verify** = DS-160
+cross-check against supporting sources (passport / personal / address / visa / I-797 /
+I-20 / I-94) via card UI — upload or paste per card. **bulletin** / **processing** /
+**wages** / **sponsors** = data tools.
+
+## DS-160 Verify (2026-09)
+`/ds-160-verify` replaces the removed audit. Card grid: DS-160 (required upload) +
+optional Passport / Personal details / Addresses / Visa / I-797 / I-20 / I-94. Each
+non-DS-160 card supports **upload and/or paste**. Engine: `src/engine/audit.mjs`
+(`runAudit`, `fieldsFromPaste`); UI: `src/js/audit.js`. Report shows **Verified**
+matches plus Blocker/Warning/Info findings; never "ready to submit". Field keys
+follow current `DS160_FIELDS` (`intendedArrival`, `presentEmployer`, …). Offline
+build inlines both engines + audit tab. Tests: `test/audit.test.mjs`.
+
+## Removed features (2026-08) — partially restored 2026-09
+Per earlier request, Passport **comparison** (A/B two passports) stayed removed.
+**DS-160 Audit** was removed then brought back as **DS-160 Verify** with the card
+upload/paste UX. Passport DocumentType remains in `doctypes.mjs` for detection/tests
+and for verify's passport source.
 
 ## DS-160 comparison — categorized + robust extraction (2026-08)
 `grabLabel` is now punctuation/whitespace/case tolerant (normalized-key reject + a
@@ -98,26 +113,10 @@ still use the original rich renderer** — the engine implements+tests them too,
 is deferred to avoid regressing the Task-1 results UI. `npm run build` inlines the engine as a
 global into `visadash-offline.html` (module imports can't resolve from `file://`).
 
-## Removed features (2026-08)
-Per user request (poor output): **Passport comparison** and the **DS-160 Audit** feature were
-removed. Passport is no longer a mode button and is not routed through the engine (the MRZ paste
-UI and passport notes are gone; two passports now fall back to the plain text diff). The audit
-route/nav/hub-card/offline-tab and `src/js/audit.js`, `src/engine/audit.mjs`, `test/audit.test.mjs`
-were deleted. The passport DocumentType still exists in `doctypes.mjs` (used by detection/tests)
-but no UI routes to it. History below kept for reference.
-
-## DS-160 audit (Task 3, 2026-08) — REMOVED, see above
-`src/engine/audit.mjs` — pure, tested (`test/audit.test.mjs`, 13 tests). `runAudit(docs,{now})`
-validates ONE DS-160 against supporting docs via a data-driven `RULES` array
-(`{id,severity,requires,evaluate(ctx)}`). Severities **blocker / warning / info** only; it
-**never** implies the form is ready ("N blockers, M warnings — review each…"). Name matching
-reports exact / normalized / mismatch as distinct outcomes; passport-number O/0 & I/1 confusions
-are called out; **two <0.5-confidence reads downgrade to info, never a blocker**. Rules cover
-DS-160 ↔ passport / I-797 / I-20 / I-94 and DS-160 internal consistency; skipped rules (missing
-doc) are reported. `src/js/audit.js` is the real UI: on-device pdf.js→tesseract extraction,
-builds typed docs via `window.VDEngine`, runs `window.VDAudit`, renders findings by severity
-with source snippets + a client-side "download report". Audit page head (`AUDIT_HEAD` in
-pages.mjs) imports both engines as modules; build inlines both into `visadash-offline.html`.
+## Passport A/B comparison (still removed, 2026-08)
+Passport **side-by-side comparison** stays removed (poor output). The passport DocumentType
+remains in `doctypes.mjs` for detection/tests and for **DS-160 Verify**'s passport source.
+Two passport files in Compare fall back to the plain text diff.
 
 ## Data freshness (Task 4, 2026-08)
 Datasets now live in **versioned `data/*.json`** (`visa_bulletin`, `processing_times`,
