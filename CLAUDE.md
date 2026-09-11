@@ -193,3 +193,8 @@ your browser" promise. To add/remove an app: edit the `.promo-slide` list (dots 
   the right with a page scrollbar. Keep `.wrap { min-width:0 }`,
   `.promo-rail { min-width:0; overflow:hidden }`, and `html { overflow-x:clip }`. Hub grid
   override must be `.wrap.wrap-hub` (two classes) so it beats `.wrap`'s 3-col media rule.
+
+## Analytics (2026-09)
+Google tag **G-RLVPQXC8PJ** is injected in `src/layout.mjs` for **multi-page builds
+only** (live visadash.org). The offline single-file build omits it so `file://` /
+downloaded offline use does not phone home.

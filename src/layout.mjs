@@ -68,6 +68,17 @@ const header = () => `  <header>
     </div>
   </header>`;
 
+// Live site only — omit from visadash-offline.html so file:// builds don't phone home.
+const GTAG = `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RLVPQXC8PJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-RLVPQXC8PJ');
+</script>`;
+
 function head(page, mode, styles) {
   const url = SITE.origin + (page.route === "/" ? "/" : page.route);
   const ogTitle = page.ogTitle || page.title;
@@ -75,12 +86,13 @@ function head(page, mode, styles) {
   const styleTag = mode === "single"
     ? `<style>\n${styles}\n</style>`
     : `<link rel="stylesheet" href="/styles.css?v=2">`;
+  const gtag = mode === "single" ? "" : GTAG + "\n";
   const jsonld = (page.jsonld || [])
     .map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("\n");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+${gtag}<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${page.title}</title>
 <meta name="description" content="${page.description}">
